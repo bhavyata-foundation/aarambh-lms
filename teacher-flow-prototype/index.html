@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bhavyata Portal — teacher flow prototype</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="view-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="brand-badge">🌱</span>
+        <h2>Bhavyata portal</h2>
+      </div>
+      <p class="sub">Sign in to continue</p>
+      <span class="role-label">I am a...</span>
+      <div class="role-grid">
+        <div class="role-btn active" data-role="teacher" onclick="selectRole('teacher', this)"><span class="icon">🧑‍🏫</span>Teacher</div>
+        <div class="role-btn" data-role="supervisor" onclick="selectRole('supervisor', this)"><span class="icon">📋</span>Supervisor</div>
+        <div class="role-btn" data-role="parent" onclick="selectRole('parent', this)"><span class="icon">👪</span>Parent</div>
+      </div>
+      <label>Email address</label>
+      <input type="email" placeholder="name@bhavyata.org" />
+      <label>Password</label>
+      <input type="password" placeholder="Enter password" />
+      <button class="btn-primary" onclick="login()">Sign in</button>
+      <div class="forgot">Forgot password?</div>
+      <div class="login-footer">🛟 New here? Contact your school admin for access.</div>
+    </div>
+  </div>
+</div>
+
+<div id="view-attendance" class="hidden">
+  <div class="topbar">
+    <div><span class="brand">Bhavyata portal</span><span class="tag">Teacher</span></div>
+    <button onclick="logout()">Log out</button>
+  </div>
+  <div class="attend-wrap">
+    <div class="attend-card">
+      <div class="icon-big">🗓️</div>
+      <h2>Mark today's attendance</h2>
+      <p>Tue, 11 Aug 2026 · you can't view the dashboard until this is done</p>
+      <button class="btn-present" onclick="markAttendance()">Mark myself present</button>
+      <button class="btn-absent" onclick="markAttendance()">Mark leave / absent</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-dashboard" class="hidden">
+  <div class="topbar">
+    <div><button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button><span class="brand">Bhavyata portal</span><span class="tag">Teacher</span></div>
+    <button onclick="logout()">Log out</button>
+  </div>
+
+  <div class="layout">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-nav">
+      <button class="sidebar-nav-btn active" id="navWorkbook" onclick="switchSidebarSection('workbook')">📘 Weekly Activities</button>
+      <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ Attendance</button>
+    </div>
+    <div id="sidebar-workbook-section">
+      <div class="sidebar-label">Term 1 · June–Sept</div>
+      <div id="week-list"></div>
+    </div>
+  </div>
+
+  <div class="dash">
+    <div class="banner-success">
+      <span>✓ Attendance marked for today — Present</span>
+      <span id="attend-time">9:02 AM</span>
+    </div>
+
+    <h1>Mrs. Sharma — Jr KG B</h1>
+    <p class="sub" id="week-subheading">Week 1 · Term 1 · Theme: My Classroom</p>
+
+    <div id="today-overview" class="today-overview"></div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><p class="label">My attendance (term)</p><p class="value">96%</p></div>
+      <div class="stat-card"><p class="label">Class attendance today</p><p class="value" id="classAttendanceValue">26/28</p></div>
+      <div class="stat-card"><p class="label">Tasks pending today</p><p class="value warn" id="pending-count">0</p></div>
+      <div class="stat-card"><p class="label">Supervisor rating</p><p class="value">4.6</p></div>
+    </div>
+
+    <div id="week-body"></div>
+    <div id="attendance-body" class="hidden"></div>
+  </div>
+  </div>
+</div>
+
+<script src="js/main.js" defer></script>
+
+</body>
+</html>
