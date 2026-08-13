@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Bhavyata Portal — Textbooks</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div><span class="brand">Bhavyata portal</span><span class="tag">Textbooks</span></div>
+  <button onclick="location.href='index.html'">← Back to dashboard</button>
+</div>
+
+<div class="bookstore-wrap">
+  <div class="bookstore-filterbar">
+    <div id="division-tabs" class="division-tabs-row"></div>
+  </div>
+  <div id="textbook-body"></div>
+</div>
+
+<div id="book-reader-overlay" class="hidden">
+  <div class="reader-header">
+    <div class="reader-title-block">
+      <span id="reader-title"></span>
+      <span id="reader-page-count"></span>
+    </div>
+    <div class="reader-header-actions">
+      <button class="reader-fullscreen-btn" id="soundToggleBtn" onclick="toggleFlipSound()" title="Mute/unmute page-flip sound">🔊</button>
+      <button class="reader-fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Toggle fullscreen">⛶</button>
+      <button class="reader-close" onclick="closeBookReader()">✕</button>
+    </div>
+  </div>
+  <div class="book-stage-wrap">
+    <button class="reader-nav-btn" id="reader-prev" onclick="flipPage(-1)">◀</button>
+
+    <div id="page-stage">
+      <div id="page-status" class="page-loading hidden"></div>
+      <div id="page-base" class="page-layer">
+        <img id="page-base-img" class="page-image" alt="" />
+      </div>
+      <div id="page-leaf" class="page-layer">
+        <img id="page-leaf-img" class="page-image" alt="" />
+        <div class="leaf-shadow"></div>
+      </div>
+    </div>
+
+    <button class="reader-nav-btn" id="reader-next" onclick="flipPage(1)">▶</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+<script src="js/textbooks.js" defer></script>
+</body>
+</html>

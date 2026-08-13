@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bhavyata Portal — Supervisor</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div><button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button><span class="brand">Bhavyata portal</span><span class="tag">Supervisor</span></div>
+  <button onclick="location.href='index.html'">Log out</button>
+</div>
+
+<div class="layout">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-nav">
+      <button class="sidebar-nav-btn active" id="navVisits" onclick="switchSection('visits')">📋 Visit Checklist</button>
+      <button class="sidebar-nav-btn" id="navHistory" onclick="switchSection('history')">🕓 Visit History</button>
+    </div>
+    <div class="sidebar-label">Teachers · This week</div>
+    <div id="teacher-list"></div>
+  </div>
+
+  <div class="dash">
+    <h1>Mr. Kulin Maniar — Field Supervisor</h1>
+    <p class="sub" id="dash-sub">Today · Tue, 12 Aug 2026</p>
+
+    <div class="stat-grid">
+      <div class="stat-card"><p class="label">Visits this month</p><p class="value">14</p></div>
+      <div class="stat-card"><p class="label">Pending today</p><p class="value warn" id="pendingStat">3</p></div>
+      <div class="stat-card"><p class="label">Avg checklist score</p><p class="value" style="color:var(--role-supervisor)">88%</p></div>
+      <div class="stat-card"><p class="label">Flagged issues</p><p class="value" style="color:var(--danger)">2</p></div>
+    </div>
+
+    <div id="section-visits">
+      <div class="visit-banner">
+        <div><strong id="activeTeacherName">Mrs. Sharma — Jr KG B</strong><br/>Visit checklist for today</div>
+        <div><button class="btn-sup-outline" onclick="expandAll()">Expand all</button> <button class="btn-sup" onclick="submitChecklist()">Submit visit</button></div>
+      </div>
+
+      <div id="checklist-container"></div>
+
+      <div class="checklist-cat" style="border-top:3px solid var(--role-supervisor);">
+        <div class="cat-head" onclick="toggleCat('attendance')">
+          <span>G · ATTENDANCE <span class="cat-progress">— count heads before reading the register</span></span>
+          <span class="cat-chevron open" id="chev-attendance">▶</span>
+        </div>
+        <div class="cat-body" id="body-attendance">
+          <div style="padding:12px 16px; overflow-x:auto;">
+            <table class="attendance-table">
+              <thead><tr><th>Division</th><th>Enrolled</th><th>Present</th><th>% Present</th><th>Absentee follow-up</th></tr></thead>
+              <tbody id="attendance-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-bar">
+        <div class="overall-score">Checklist completion <b id="completionPct">0%</b></div>
+        <button class="btn-sup" onclick="submitChecklist()">Submit visit report</button>
+      </div>
+    </div>
+
+    <div id="section-history" class="hidden">
+      <h1 style="font-size:16px;">Recent visits</h1>
+      <div class="visit-history" id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/supervisor.js" defer></script>
+</body>
+</html>
