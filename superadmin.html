@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bhavyata Portal — Super Admin</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div><button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button><span class="brand">Bhavyata portal</span><span class="tag">Super Admin</span></div>
+  <button onclick="location.href='index.html'">Log out</button>
+</div>
+
+<div class="layout">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-nav">
+      <button class="sidebar-nav-btn active" id="navOverview" onclick="switchAdminSection('overview')">📊 Overview</button>
+      <button class="sidebar-nav-btn" id="navWeeklyReport" onclick="switchAdminSection('report')">🗒️ Weekly Report</button>
+      <button class="sidebar-nav-btn" id="navVisits" onclick="switchAdminSection('visits')">🚗 Supervisor Visits</button>
+      <button class="sidebar-nav-btn" id="navSchools" onclick="switchAdminSection('schools')">🏫 Schools & Teachers</button>
+    </div>
+    <div id="sidebar-schools-section" class="hidden">
+      <div class="sidebar-label">All Schools (25)</div>
+      <div id="school-accordion-list"></div>
+    </div>
+  </div>
+
+  <div class="dash">
+    <h1>Super Admin</h1>
+    <p class="sub" id="adminSubheading">Overview across all schools</p>
+    <div id="admin-body"></div>
+  </div>
+</div>
+
+<script src="js/superadmin.js" defer></script>
+</body>
+</html>

@@ -1,14 +1,14 @@
 // ===== Textbook data =====
 const TEXTBOOKS = {
   'jrkg': [
-    { id:'vaani-jr-1',   title:'Vaani — Part 1',        subject:'Language', color:'#1d9e75', file:'assets/textbooks/vaani-jr-part1.pdf' },
-    { id:'vaani-jr-2',   title:'Vaani — Part 2',        subject:'Language', color:'#2C8FC4', file:'assets/textbooks/vaani-jr-part2.pdf' },
-    { id:'khelika-jrkg', title:'Khelika Activity Book', subject:'Activity', color:'#EE8F35', file:'assets/textbooks/khelika-activity-jrkg.pdf' }
+    { id:'vaani-jr-alphabets',   title:'Vaani — Alphabets',        subject:'Language', color:'#1d9e75', file:'https://bhavyatafoundation.com/workbooks/vaani-jr-alphabets.pdf' },
+    { id:'vaani-jr-phonics',   title:'Vaani — Phonics & Alphabets',        subject:'Language', color:'#2C8FC4', file:'https://bhavyatafoundation.com/workbooks/vaani-jr-phonics.pdf' },
+    { id:'khelika-jrkg', title:'Khelika Activity Book', subject:'Activity', color:'#EE8F35', file:'https://bhavyatafoundation.com/workbooks/khelika-activity-jrkg.pdf' }
   ],
   'srkg': [
-    { id:'sopanika-srkg',       title:'Sopanika — All Activity', subject:'Activity', color:'#1d9e75', file:'assets/textbooks/sopanika-activity-srkg.pdf' },
-    { id:'uvach-alphabets-srkg', title:'Uvach — Alphabets',      subject:'Language', color:'#EE8F35', file:'assets/textbooks/uvach-alphabets-srkg.pdf' },
-    { id:'uvach-phonics-srkg',   title:'Uvach — Phonics',        subject:'Language', color:'#2C8FC4', file:'assets/textbooks/uvach-phonics-srkg.pdf' }
+    { id:'sopanika-srkg',       title:'Sopanika — All Activity', subject:'Activity', color:'#1d9e75', file:'https://bhavyatafoundation.com/workbooks/sopanika-activity-srkg.pdf' },
+    { id:'uvach-alphabets-srkg', title:'Uvach — Alphabets',      subject:'Language', color:'#EE8F35', file:'https://bhavyatafoundation.com/workbooks/uvach-alphabets-srkg.pdf' },
+    { id:'uvach-phonics-srkg',   title:'Uvach — Phonics',        subject:'Language', color:'#2C8FC4', file:'https://bhavyatafoundation.com/workbooks/uvach-phonics-srkg.pdf' }
   ]
 };
 

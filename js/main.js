@@ -88,6 +88,8 @@ function login(){
     document.getElementById('view-attendance').classList.remove('hidden');
   } else if(selectedRole === 'supervisor'){
     window.location.href = 'supervisor.html';
+  } else if(selectedRole === 'superadmin'){
+    window.location.href = 'superadmin.html';
   } else {
     alert('Parent flow not wired up yet in this prototype.');
   }
