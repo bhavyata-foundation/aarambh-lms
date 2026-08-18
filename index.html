@@ -8,6 +8,8 @@
 </head>
 <body>
 
+<div id="google_translate_element" style="position:fixed; top:10px; right:10px; z-index:9999; background:#fff; border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:12px;"></div>
+
 <div id="view-login">
   <div class="login-wrap">
     <div class="login-card">
@@ -18,51 +20,75 @@
       <p class="sub">Sign in to continue</p>
       <span class="role-label">I am a...</span>
       <div class="role-grid">
-        <div class="role-btn active" data-role="teacher" onclick="selectRole('teacher', this)"><span class="icon">🧑‍🏫</span>Teacher</div>
-        <div class="role-btn" data-role="supervisor" onclick="selectRole('supervisor', this)"><span class="icon">📋</span>Supervisor</div>
-        <div class="role-btn" data-role="parent" onclick="selectRole('parent', this)"><span class="icon">👪</span>Parent</div>
-        <div class="role-btn" data-role="superadmin" onclick="selectRole('superadmin', this)"><span class="icon">🛡️</span>Super Admin</div>
+        <div class="role-btn active" data-role="teacher" onclick="selectRole('teacher', this)"><span class="icon">🧑‍🏫</span><span>Teacher</span></div>
+        <div class="role-btn" data-role="supervisor" onclick="selectRole('supervisor', this)"><span class="icon">📋</span><span>Supervisor</span></div>
+        <div class="role-btn" data-role="parent" onclick="selectRole('parent', this)"><span class="icon">👪</span><span>Parent</span></div>
+        <div class="role-btn" data-role="superadmin" onclick="selectRole('superadmin', this)"><span class="icon">🛡️</span><span>Super Admin</span></div>
       </div>
       <label>Email address</label>
-      <input type="email" placeholder="name@bhavyata.org" />
+      <input type="email" id="loginEmail" placeholder="name@bhavyata.org" />
       <label>Password</label>
-      <input type="password" placeholder="Enter password" />
-      <button class="btn-primary" onclick="login()">Sign in</button>
+      <input type="password" id="loginPassword" placeholder="Enter password" />
+      <div id="loginError" class="login-error hidden"></div>
+      <button class="btn-primary" id="loginBtn" onclick="login()">Sign in</button>
       <div class="forgot">Forgot password?</div>
-      <div class="login-footer">🛟 New here? Contact your school admin for access.</div>
+      <div class="login-footer">🛟 <span>New here? Contact your school admin for access.</span></div>
+      <div id="devSkipLoginWrap" class="hidden" style="text-align:center; margin-top:10px;">
+        <a href="#" onclick="devSkipLogin(); return false;" style="font-size:12px; color:var(--text-muted); text-decoration:underline;">
+          Skip login (dev mode)
+        </a>
+      </div>
     </div>
   </div>
 </div>
 
 <div id="view-attendance" class="hidden">
   <div class="topbar">
-    <div><span class="brand">Bhavyata portal</span><span class="tag">Teacher</span></div>
+    <div class="topbar-left"><span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span><span class="tag">Teacher</span></div>
     <button onclick="logout()">Log out</button>
   </div>
   <div class="attend-wrap">
     <div class="attend-card">
       <div class="icon-big">🗓️</div>
       <h2>Mark today's attendance</h2>
-      <p>Tue, 11 Aug 2026 · you can't view the dashboard until this is done</p>
-      <button class="btn-present" onclick="markAttendance()">Mark myself present</button>
-      <button class="btn-absent" onclick="markAttendance()">Mark leave / absent</button>
+      <p id="attendGateMessage">It's past 12:30 PM — please mark today's attendance to continue.</p>
+      <button class="btn-present" onclick="markAttendance('present')">Mark myself present</button>
+      <button class="btn-absent" onclick="markAttendance('absent')">Mark leave / absent</button>
     </div>
   </div>
 </div>
 
 <div id="view-dashboard" class="hidden">
   <div class="topbar">
-    <div><button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button><span class="brand">Bhavyata portal</span><span class="tag">Teacher</span></div>
-    <button onclick="logout()">Log out</button>
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+      <span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span>
+      <span class="page-label" id="pageLabel">Weekly Activities</span>
+    </div>
+    <div class="user-menu" id="userMenu">
+      <button class="user-menu-trigger" onclick="toggleUserMenu()">
+        <span class="user-avatar">MS</span>
+        <span class="user-name-block">
+          <span class="user-name">Mrs. Sharma</span>
+          <span class="tag">Teacher</span>
+        </span>
+        <span class="user-caret">▾</span>
+      </button>
+      <div class="user-dropdown hidden" id="userDropdown">
+        <button onclick="logout()">Log out</button>
+      </div>
+    </div>
   </div>
 
   <div class="layout">
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-nav">
-      <button class="sidebar-nav-btn active" id="navWorkbook" onclick="switchSidebarSection('workbook')">📘 Weekly Activities</button>
-      <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ Attendance</button>
-      <button class="sidebar-nav-btn" onclick="location.href='textbooks.html'">📚 Textbooks</button>
+      <button class="sidebar-nav-btn active" id="navWorkbook" onclick="switchSidebarSection('workbook')">📘 <span>Weekly Activities</span></button>
+      <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ <span>Attendance</span></button>
+      <button class="sidebar-nav-btn" id="navCalendar" onclick="switchSidebarSection('calendar')">📅 <span>My Attendance</span></button>
+      <button class="sidebar-nav-btn" id="navEvents" onclick="switchSidebarSection('events')">📌 <span>School Events</span></button>
+      <button class="sidebar-nav-btn" onclick="location.href='textbooks.html'">📚 <span>Textbooks</span></button>
     </div>
     <div id="sidebar-workbook-section">
       <div class="sidebar-label">Term 1 · June–Sept</div>
@@ -82,19 +108,50 @@
     <div id="today-overview" class="today-overview"></div>
 
     <div class="stat-grid">
-      <div class="stat-card"><p class="label">My attendance (term)</p><p class="value">96%</p></div>
-      <div class="stat-card"><p class="label">Class attendance today</p><p class="value" id="classAttendanceValue">26/28</p></div>
-      <div class="stat-card"><p class="label">Tasks pending today</p><p class="value warn" id="pending-count">0</p></div>
-      <div class="stat-card"><p class="label">Supervisor rating</p><p class="value">4.6</p></div>
+      <div class="stat-card"><p class="label">My attendance (term)</p><p class="value notranslate">96%</p></div>
+      <div class="stat-card"><p class="label">Class attendance today</p><p class="value notranslate" id="classAttendanceValue">26/28</p></div>
+      <div class="stat-card"><p class="label">Tasks pending today</p><p class="value warn notranslate" id="pending-count">0</p></div>
+      <div class="stat-card"><p class="label">Supervisor rating</p><p class="value notranslate">4.6</p></div>
     </div>
 
     <div id="week-body"></div>
     <div id="attendance-body" class="hidden"></div>
+    <div id="calendar-body" class="hidden"></div>
+    <div id="events-body" class="hidden"></div>
   </div>
   </div>
 </div>
 
+<script src="js/i18n.js" defer></script>
+<script src="js/weeks/all-weeks.js" defer></script>
 <script src="js/main.js" defer></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+  });
+</script>
+
+<!-- ===========================================================
+     GOOGLE TRANSLATE — auto-translates the whole page.
+     includedLanguages restricts the dropdown to only these 3
+     extra languages (English is always the original/default,
+     so the dropdown effectively offers 4 total).
+     If this ever stops working (Google could withdraw the free
+     script without notice), the real fallback is the paid
+     Google Cloud Translation API, called from the backend —
+     a bigger change, not a drop-in replacement.
+     =========================================================== -->
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({
+      pageLanguage: 'en',
+      includedLanguages: 'hi,mr,gu',
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+      autoDisplay: false
+    }, 'google_translate_element');
+  }
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="js/digit-convert.js" defer></script>
 
 </body>
 </html>

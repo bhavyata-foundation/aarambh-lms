@@ -9,8 +9,24 @@
 <body>
 
 <div class="topbar">
-  <div><button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button><span class="brand">Bhavyata portal</span><span class="tag">Supervisor</span></div>
-  <button onclick="location.href='index.html'">Log out</button>
+  <div class="topbar-left">
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span>
+    <span class="page-label" id="pageLabel">Visit Checklist</span>
+  </div>
+  <div class="user-menu" id="userMenu">
+    <button class="user-menu-trigger" onclick="toggleUserMenu()">
+      <span class="user-avatar">KM</span>
+      <span class="user-name-block">
+        <span class="user-name">Mr. Kulin Maniar</span>
+        <span class="tag">Supervisor</span>
+      </span>
+      <span class="user-caret">▾</span>
+    </button>
+    <div class="user-dropdown hidden" id="userDropdown">
+      <button onclick="fetch('backend/logout.php').finally(() => location.href='index.html')">Log out</button>
+    </div>
+  </div>
 </div>
 
 <div class="layout">
@@ -19,6 +35,8 @@
     <div class="sidebar-nav">
       <button class="sidebar-nav-btn active" id="navVisits" onclick="switchSection('visits')">📋 Visit Checklist</button>
       <button class="sidebar-nav-btn" id="navHistory" onclick="switchSection('history')">🕓 Visit History</button>
+      <button class="sidebar-nav-btn" id="navSchools" onclick="switchSection('schools')">🏫 My Schools</button>
+      <button class="sidebar-nav-btn" id="navEvents" onclick="switchSection('events')">📌 Events</button>
     </div>
     <div class="sidebar-label">Teachers · This week</div>
     <div id="teacher-list"></div>
@@ -67,6 +85,14 @@
     <div id="section-history" class="hidden">
       <h1 style="font-size:16px;">Recent visits</h1>
       <div class="visit-history" id="history-list"></div>
+    </div>
+
+    <div id="section-schools" class="hidden">
+      <div id="my-schools-body"></div>
+    </div>
+
+    <div id="section-events" class="hidden">
+      <div id="events-admin-body"></div>
     </div>
   </div>
 </div>

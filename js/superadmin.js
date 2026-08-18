@@ -1,34 +1,156 @@
 /* =========================================================
-   SUPER ADMIN — mock data
-   (same shape as the future DB tables: schools, supervisor_assignments,
-   supervisor_visits, worksheet_completion, proficiency_ratings)
+   SESSION GUARD — checks with the server that someone is actually
+   logged in as a superadmin before showing anything on this page.
+
+   Forwards this page's own query string (e.g. ?dev_role=superadmin)
+   to the session check — without this, a dev-mode role selected on
+   the login page never actually reaches session_check.php, since a
+   query param on THIS page's URL isn't automatically attached to a
+   separate fetch() call.
+   ========================================================= */
+fetch('backend/session_check.php' + window.location.search)
+  .then(r => r.json())
+  .then(data => {
+    if(data.status !== 'logged_in' || data.role !== 'superadmin'){
+      window.location.href = 'index.html';
+    }
+  })
+  .catch(() => { window.location.href = 'index.html'; });
+
+/* =========================================================
+   SUPER ADMIN — data
    ========================================================= */
 
-const SCHOOL_AREAS = [
-  'Sector 12','Sector 8','Rampur','Shivajinagar','Ambernath','Kalyan East','Dombivli',
-  'Thane West','Vashi','Nerul','Kharghar','Panvel','Uran','Taloja','Kamothe',
-  'Belapur','Airoli','Ghansoli','Kopar Khairane','Sanpada','Turbhe','Mankhurd',
-  'Govandi','Chembur','Wadala'
+// -----------------------------------------------------------------
+// DATABASE POCKET — this function is the one thing to swap out once
+// a real backend exists. Right now it returns the hardcoded list
+// below; later it becomes something like:
+//
+//   async function loadSchools(){
+//     const res = await fetch('/api/schools');
+//     return await res.json();
+//   }
+//
+// The shape below matches seed_schools.sql exactly — same schools,
+// same wards, same Jr KG / Sr KG teacher names — so swapping this
+// one function for a real fetch() later requires no other changes
+// anywhere else in this file.
+// -----------------------------------------------------------------
+function loadSchools(){
+  return SCHOOLS_SEED;
+}
+
+// Real data, from 26-27 MPS Data school.xlsx ("August - 2026" sheet).
+// 23 confirmed schools across 7 BMC wards. `teacher: null` means no
+// named teacher is assigned yet for that class (shown as "Unassigned").
+const SCHOOLS_SEED = [
+  {id:'s1', name:'Triveni Sangam Municipal School', ward:'F/S', address:'Currey Rd Bridge, east, Mumbai, Maharashtra 400012', classes:[
+    {name:'Jr KG', teacher:'Reena Chinchankar'},
+    {name:'Sr KG', teacher:null}
+  ]},
+  {id:'s2', name:'South Sewri MPS', ward:'F/S', address:'Khimji Vishram Building .T j.road Ashok garden building near by swan mill bus stop, Shivare 400015', classes:[
+    {name:'Jr KG', teacher:'Shifa Shaikh'},
+    {name:'Sr KG', teacher:'Sumiya'}
+  ]},
+  {id:'s3', name:'Shastri Nagar MPS', ward:'H/E', address:'Church Rd, Kolivery Village, Kunchi Kurve Nagar, Kalina, Santacruz East, Mumbai, Maharashtra 400029', classes:[
+    {name:'Jr KG', teacher:'Sarika Mothiya'},
+    {name:'Sr KG', teacher:'Hanumati Bhandari'}
+  ]},
+  {id:'s4', name:'Khernagar MPS', ward:'H/E', address:'Unit 2, khernagar road no 4, kherwadi bandra east mumbai 400051', classes:[
+    {name:'Jr KG', teacher:'BMC teacher'},
+    {name:'Sr KG', teacher:'BMC teacher'}
+  ]},
+  {id:'s5', name:'Juhu Gandhigram MPS', ward:'K/W', address:'Azad Ln, New Sarvottam Society, Azad Nagar, Vile Parle West, Mumbai, Maharashtra 400058', classes:[
+    {name:'Jr KG', teacher:'Ankita singh'},
+    {name:'Sr KG', teacher:'Shakuntala Rajbhar'}
+  ]},
+  {id:'s6', name:'Jogeshwari MPS', ward:'K/W', address:'Hemu Meadows Opposite Amboli police station patel estate road, Nr. Pushtikar society, Jogeshwari West, BMC garden is there 400102', classes:[
+    {name:'Jr KG', teacher:'Shaheen Shaikh'},
+    {name:'Sr KG', teacher:null}
+  ]},
+  {id:'s7', name:'Andheri MPS', ward:'K/W', address:'Dawood Baug Rd, J. P. Road, Dawood Baug, Fish Market Area, Navneeth Colony, Andheri West, Mumbai, Maharashtra 400058', classes:[
+    {name:'Jr KG', teacher:'Rubina Mola Baksh'},
+    {name:'Sr KG', teacher:'Shaista Shaikh'}
+  ]},
+  {id:'s8', name:'Nehru Nagar MPS', ward:'L', address:'Shiv Shrusti School, 16, Shiv Shrusti Rd, G.T.B.Nagar, Nehru Nagar, Kurla, Mumbai, Maharashtra 400024', classes:[
+    {name:'Jr KG', teacher:'Rukhsar Shaikh'},
+    {name:'Sr KG', teacher:'Rashida Khatoon'}
+  ]},
+  {id:'s9', name:'Mohili Village MPS', ward:'L', address:'Opp. APEX HOSPITAL, Pereira Wadi, Saki Naka, Mumbai, Maharashtra 400072', classes:[
+    {name:'Jr KG', teacher:'Deepika Dubey'},
+    {name:'Sr KG', teacher:'Yasmeen Shaikh'}
+  ]},
+  {id:'s10', name:'Kajupada MPS', ward:'L', address:'Shivaji Vidhayala, Indira Nagar, Kajupada, Mumbai, Maharashtra 400072', classes:[
+    {name:'Jr KG', teacher:'Sancheti Gole'},
+    {name:'Sr KG', teacher:'Leenatha (BMC Teacher)'}
+  ]},
+  {id:'s11', name:'S.G Barve Marg MPS', ward:'L', address:'Brahmanwadi, opp. Kurla Station Kurla West, Mumbai, Maharashtra 400070', classes:[
+    {name:'Jr KG', teacher:'Khushboo Mulani'},
+    {name:'Sr KG', teacher:'Sana Ruksar Shaikh'}
+  ]},
+  {id:'s12', name:'Chunabhatti MPS', ward:'L', address:'Darawade Chawl, VN Purav Marg, Samarth Nagar, Chunabhatti, Sion, Mumbai, Maharashtra 400022', classes:[
+    {name:'Jr KG', teacher:'Radha Yadav'},
+    {name:'Sr KG', teacher:'Tasleem Shaikh'}
+  ]},
+  {id:'s13', name:'Vikhroli Park Site MPS', ward:'N', address:'Vikhroli Fire Station, Near L.B.S. Road, Vikhroli Park Site, L.B.S. Marg, BMC Colony, Vikhroli West, Mumbai, Maharashtra 400079', classes:[
+    {name:'Jr KG', teacher:'BMC Teacher'},
+    {name:'Sr KG', teacher:'BMC Teacher'}
+  ]},
+  {id:'s14', name:'Maneklal Mehta Municipal School', ward:'N', address:'New Maneklal Estate, Near Ghatkopar pipeline bus Stop, Ghatkopar West 400086', classes:[
+    {name:'Jr KG', teacher:'Reshamabi  Nadaf'},
+    {name:'Sr KG', teacher:'Anisha Bano Shaikh'}
+  ]},
+  {id:'s15', name:'Barve Nagar Municipal School No 3', ward:'N', address:'RB Kadam Road, Barve Nagar, Near Bhatwadi Ganpati Mandir Ghatkopar West, Mumbai, Maharashtra 400084', classes:[
+    {name:'Jr KG', teacher:'Rajanigandha Pawase'},
+    {name:'Sr KG', teacher:'Divya Ghatkar'}
+  ]},
+  {id:'s16', name:'Sainath nagar MPS', ward:'N', address:'Sainath Nagar Rd, Near by KVK School,Sainath Nagar, Indira Nagar, Ghatkopar West, Mumbai, Maharashtra 400086', classes:[
+    {name:'Jr KG', teacher:'Shahin Shaikh'},
+    {name:'Sr KG', teacher:'Sanabanu Shaikh'}
+  ]},
+  {id:'s17', name:'Rajawadi MPS', ward:'N', address:'RB Mehta Marg, Saibaba Nagar, Pant Nagar, Ghatkopar East, Mumbai, Maharashtra 400077', classes:[
+    {name:'Jr KG', teacher:'Ankita Kadam'},
+    {name:'Sr KG', teacher:'Sandhya khatai'}
+  ]},
+  {id:'s18', name:'Bhandup Tank Road', ward:'S', address:'Ishwar Nagar, Opposite MSEB Office, Bhandup West-400078', classes:[
+    {name:'Jr KG', teacher:null},
+    {name:'Sr KG', teacher:'Usha Daniel'}
+  ]},
+  {id:'s19', name:'Nehru Nagar MPS', ward:'S', address:'Nehrunagar MPS, Next to Nehru Nagar Police Station, Near Ankur Hospital, Kanjurmarg (East). 400042', classes:[
+    {name:'Jr KG', teacher:'Suvarna Kokane'},
+    {name:'Sr KG', teacher:'Jyotsana Patkar'}
+  ]},
+  {id:'s20', name:'Goshala MPS', ward:'T', address:'Sevaram Lalwani Rd, Mulund West, Mumbai, Maharashtra 400080', classes:[
+    {name:'Jr KG', teacher:'Kiran Kamble(BMC teacher)'},
+    {name:'Sr KG', teacher:'Sneha gupta'}
+  ]},
+  {id:'s21', name:'D D Upadhyay MPS', ward:'T', address:'Jagjivan Ram Nagar, Mulund West, Mumbai, Maharashtra 400604', classes:[
+    {name:'Jr KG', teacher:'Geetadevi Yadav'},
+    {name:'Sr KG', teacher:'Hina Kausar Sayed'}
+  ]},
+  {id:'s22', name:'P.K.Road MPS', ward:'T', address:'Shifetd to Keshav pada MPS, Mulund West  Keshavpada ,near Zenith Building, Mulund West 400080', classes:[
+    {name:'Jr KG', teacher:'Nilima Chaudhari'},
+    {name:'Sr KG', teacher:'BMC Teacher'}
+  ]},
+  {id:'s23', name:'Mithagar MPS', ward:'T', address:'Gavanpada Rd, Mahatma Phule Road, Gurupushyamrut Society, Gavanpada, Mahakali Nagar, Mulund East, Mumbai, Maharashtra 400081', classes:[
+    {name:'Jr KG', teacher:'Bhagyashree Tikhute'},
+    {name:'Sr KG', teacher:'Vidya Verma'}
+  ]}
 ];
-const TEACHER_NAMES = ['Mrs. Sharma','Mrs. Iyer','Ms. Kulkarni','Mrs. Nair','Mr. Joshi','Mrs. Deshpande','Ms. Rao','Mrs. Menon','Mr. Patil','Mrs. Reddy'];
-const CLASS_NAMES = ['Jr KG A','Jr KG B','Sr KG A','Sr KG B'];
 
-const SCHOOLS = SCHOOL_AREAS.map((area, i) => ({
-  id: 's' + (i+1),
-  name: 'Bhavyata Balwadi — ' + area,
-  class: CLASS_NAMES[i % CLASS_NAMES.length],
-  teacher: TEACHER_NAMES[i % TEACHER_NAMES.length],
-  address: 'Near ' + area + ' Market Road, ' + area + ', Mumbai, Maharashtra 4000' + (10 + (i % 90)),
-  strength: 24 + (i % 7) * 3
-}));
+const SCHOOLS = loadSchools();
 
+// Supervisor-to-ward assignment is still a PLACEHOLDER — the real
+// spreadsheet had no supervisor data, so this just groups schools by
+// ward as a sensible guess until real assignments exist.
 const SUPERVISORS_LIST = [
-  {id:'sv1', name:'Mr. Deshpande',    schools:['s1','s2','s3','s4','s5']},
-  {id:'sv2', name:'Mrs. Nair',        schools:['s6','s7','s8','s9','s10']},
-  {id:'sv3', name:'Mr. Kulin Maniar', schools:['s11','s12','s13','s14','s15']},
-  {id:'sv4', name:'Mrs. Fernandes',   schools:['s16','s17','s18','s19','s20']},
-  {id:'sv5', name:'Mr. Bhosale',      schools:['s21','s22','s23','s24','s25']}
+  {id:'sv1', name:'Mr. Deshpande',    schools:['s1','s2','s3','s4']},               // F/S, H/E
+  {id:'sv2', name:'Mrs. Nair',        schools:['s5','s6','s7']},                    // K/W
+  {id:'sv3', name:'Mr. Kulin Maniar', schools:['s8','s9','s10','s11','s12']},       // L
+  {id:'sv4', name:'Mrs. Fernandes',   schools:['s13','s14','s15','s16','s17']},     // N
+  {id:'sv5', name:'Mr. Bhosale',      schools:['s18','s19','s20','s21','s22','s23']} // S, T
 ];
+
 
 // Daily supervisor visit log, keyed by week number
 const SUPERVISOR_VISITS = {
@@ -115,28 +237,68 @@ function closeSidebar(){
   document.getElementById('sidebarBackdrop').classList.remove('show');
 }
 
+function toggleUserMenu(){
+  document.getElementById('userDropdown').classList.toggle('hidden');
+}
+function closeUserMenu(){
+  document.getElementById('userDropdown').classList.add('hidden');
+}
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('userMenu');
+  if(menu && !menu.contains(e.target)) closeUserMenu();
+});
+
 /* =========================================================
    Section switching
    ========================================================= */
 
 function switchAdminSection(section){
-  const navMap = {overview:'navOverview', report:'navWeeklyReport', visits:'navVisits', schools:'navSchools'};
+  const navMap = {
+    overview:'navOverview', supervisors:'navSupervisors', performance:'navPerformance',
+    review:'navReview', report:'navWeeklyReport', visits:'navVisits', schools:'navSchools',
+    adduser:'navAddUser', events:'navEvents'
+  };
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById(navMap[section]).classList.add('active');
 
   const subMap = {
-    overview: 'Overview across all schools',
-    report:   'Weekly report generator',
-    visits:   'Supervisor visit log',
-    schools:  'Schools & teachers'
+    overview:    'Overview across all schools',
+    supervisors: 'Supervisor performance — achieved against plan',
+    performance: 'All schools — attendance, learning and readiness',
+    review:      'Quarterly and annual review',
+    report:      'Weekly report generator',
+    visits:      'Supervisor visit log',
+    schools:     'Schools by ward',
+    adduser:     'Create a new login for a teacher, supervisor, or parent',
+    events:      'PTMs, teacher trainings, and other scheduled events — across every school'
+  };
+  const labelMap = {
+    overview:    'Overview',
+    supervisors: 'Supervisor Dashboard',
+    performance: 'School Performance',
+    review:      'Quarterly Review',
+    report:      'Weekly Report',
+    visits:      'Supervisor Visits',
+    schools:     'Schools',
+    adduser:     'Add User',
+    events:      'Events'
   };
   document.getElementById('adminSubheading').textContent = subMap[section];
+  const labelEl = document.getElementById('pageLabel');
+  if(labelEl) labelEl.textContent = labelMap[section];
   document.getElementById('sidebar-schools-section').classList.toggle('hidden', section !== 'schools');
 
   if(section === 'overview') renderAdminOverview();
   else if(section === 'report') renderWeeklyReport(currentReportWeek);
   else if(section === 'visits') renderSupervisorVisitsLog();
   else if(section === 'schools'){ renderSchoolAccordion(); renderSchoolsTeachers(); }
+  else if(section === 'adduser') renderAddUserForm();
+  else if(section === 'events') renderEventsRecord();
+  // The 3 sections below are rendered by js/superadmin-dashboards.js,
+  // loaded after this file — see that file for the render functions.
+  else if(section === 'supervisors') renderSupervisorDashboard();
+  else if(section === 'performance') renderSchoolPerformance();
+  else if(section === 'review') renderQuarterlyReview();
 
   closeSidebar();
 }
@@ -154,6 +316,8 @@ function supervisorName(id){ const s = SUPERVISORS_LIST.find(x => x.id === id); 
 
 function renderAdminOverview(){
   const totalStudents = Object.values(STUDENT_GROWTH).reduce((sum, arr) => sum + arr.length, 0);
+  const assignedTeacherCount = SCHOOLS.reduce((sum, sc) =>
+    sum + sc.classes.filter(c => c.teacher).length, 0);
   const visits = SUPERVISOR_VISITS[1] || [];
   const visitedCount = visits.filter(v => v.visited).length;
   const visitRate = visits.length ? Math.round((visitedCount / visits.length) * 100) : 0;
@@ -164,7 +328,7 @@ function renderAdminOverview(){
   document.getElementById('admin-body').innerHTML = `
     <div class="stat-grid">
       <div class="stat-card"><p class="label">Schools</p><p class="value">${SCHOOLS.length}</p></div>
-      <div class="stat-card"><p class="label">Teachers</p><p class="value">${SCHOOLS.length}</p></div>
+      <div class="stat-card"><p class="label">Teachers assigned</p><p class="value">${assignedTeacherCount}</p></div>
       <div class="stat-card"><p class="label">Supervisors</p><p class="value">${SUPERVISORS_LIST.length}</p></div>
       <div class="stat-card"><p class="label">Students tracked</p><p class="value">${totalStudents}</p></div>
       <div class="stat-card"><p class="label">Supervisor visit rate (Wk 1)</p><p class="value" style="color:${visitRate>=70?'var(--success)':'var(--danger)'}">${visitRate}%</p></div>
@@ -206,7 +370,7 @@ function renderWeeklyReport(weekNum){
       else note = 'Mixed';
     }
     return `<tr>
-      <td>${sc.name}<div style="font-size:11px; color:var(--text-muted);">${sc.class} · ${sc.teacher}</div></td>
+      <td>${sc.name}<div style="font-size:11px; color:var(--text-muted);">Ward ${sc.ward} · ${sc.classes.map(c => c.name + ': ' + (c.teacher || 'Unassigned')).join(', ')}</div></td>
       <td>${pct !== null ? pct + '%' : '—'}</td>
       <td>${visitCount} / ${totalAttempts}</td>
       <td>${note}</td>
@@ -322,6 +486,40 @@ function markReportReviewed(weekNum){
    Supervisor Visits (full history across all weeks)
    ========================================================= */
 
+async function renderEventsRecord(){
+  const container = document.getElementById('admin-body');
+  container.innerHTML = `<p class="sub">Loading events…</p>`;
+
+  try{
+    const res = await fetch('backend/get_events.php');
+    const data = await res.json();
+
+    if(data.status !== 'success' || !data.events.length){
+      container.innerHTML = `<p class="sub">No events recorded yet — supervisors add these from their own dashboard.</p>`;
+      return;
+    }
+
+    const rows = data.events.map(e => `
+      <tr>
+        <td>${e.event_date}${e.event_time ? ' · ' + e.event_time.slice(0,5) : ''}</td>
+        <td>${e.event_type}</td>
+        <td>${e.school_name}</td>
+        <td>${e.class_name || 'Whole school'}</td>
+        <td>${e.title}</td>
+        <td>${e.created_by_name}</td>
+      </tr>`).join('');
+
+    container.innerHTML = `
+      <div class="report-table-wrap"><table class="report-table">
+        <thead><tr><th>Date</th><th>Type</th><th>School</th><th>Scope</th><th>Title</th><th>Created by</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    `;
+  }catch(err){
+    container.innerHTML = `<p class="sub">Could not reach the server.</p>`;
+  }
+}
+
 function renderSupervisorVisitsLog(){
   const allVisits = [];
   Object.keys(SUPERVISOR_VISITS).forEach(w => {
@@ -346,31 +544,64 @@ function renderSupervisorVisitsLog(){
 }
 
 /* =========================================================
-   Schools & Teachers — cards in the main dash
+   Schools — classified by ward first, teachers live inside
+   each school's card (no separate Teachers list anymore)
    ========================================================= */
 
+let selectedWard = null;
+
+function getWards(){
+  return [...new Set(SCHOOLS.map(s => s.ward))].sort();
+}
+
 function renderSchoolsTeachers(){
-  document.getElementById('admin-body').innerHTML = `<div class="schools-grid" id="schoolsGrid"></div>`;
+  selectedWard = null;
+  document.getElementById('admin-body').innerHTML = `<div class="ward-grid" id="wardGrid"></div>`;
+  renderWardCards();
+}
+
+function renderWardCards(){
+  const container = document.getElementById('wardGrid');
+  container.innerHTML = getWards().map(w => {
+    const count = SCHOOLS.filter(s => s.ward === w).length;
+    return `<div class="ward-card" onclick="selectWard('${w}')">
+      <div class="ward-card-code">${w}</div>
+      <div class="ward-card-count">${count} school${count===1?'':'s'}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectWard(ward){
+  selectedWard = ward;
+  expandedSchoolCard = null;
+  const count = SCHOOLS.filter(s => s.ward === ward).length;
+  document.getElementById('admin-body').innerHTML = `
+    <button class="btn-sup-outline" style="margin-bottom:16px;" onclick="renderSchoolsTeachers()">← All wards</button>
+    <h3 class="report-h3">Ward ${ward} — ${count} school${count===1?'':'s'}</h3>
+    <div class="schools-grid" id="schoolsGrid"></div>
+  `;
   renderSchoolCards();
 }
 
 function renderSchoolCards(){
   const container = document.getElementById('schoolsGrid');
-  container.innerHTML = SCHOOLS.map(sc => {
+  const list = selectedWard ? SCHOOLS.filter(s => s.ward === selectedWard) : SCHOOLS;
+  container.innerHTML = list.map(sc => {
     const sv = SUPERVISORS_LIST.find(s => s.schools.includes(sc.id));
     const isOpen = expandedSchoolCard === sc.id;
+    const classSummary = sc.classes.map(c => `${c.name}: ${c.teacher || 'Unassigned'}`).join(' · ');
     return `<div class="school-card" onclick="toggleSchoolCard('${sc.id}')">
       <div class="school-card-head">
         <div>
           <h4>${sc.name}</h4>
-          <div class="meta">${sc.class} · ${sc.teacher}</div>
+          <div class="meta">Ward ${sc.ward} · ${classSummary}</div>
         </div>
         <span class="cat-chevron ${isOpen?'open':''}">▶</span>
       </div>
       ${isOpen ? `<div class="school-card-details" onclick="event.stopPropagation()">
-        <div class="row"><span>📍 Address</span><span>${sc.address}</span></div>
-        <div class="row"><span>👶 Student strength</span><span>${sc.strength}</span></div>
-        <div class="row"><span>👤 Supervisor assigned</span><span>${sv ? sv.name : 'Unassigned'}</span></div>
+        <div class="row"><span>📍 Address</span><span>${sc.address || '—'}</span></div>
+        ${sc.classes.map(c => `<div class="row"><span>👤 ${c.name} teacher</span><span>${c.teacher || 'Unassigned'}</span></div>`).join('')}
+        <div class="row"><span>🧭 Supervisor assigned</span><span>${sv ? sv.name : 'Unassigned'}</span></div>
         <div>
           <span style="font-weight:bold;">🗒 Weekly visit</span>
           <select class="school-week-select" onchange="showSchoolWeekVisit('${sc.id}', this.value)">
@@ -411,21 +642,25 @@ function showSchoolWeekVisit(schoolId, weekNum){
 
 function renderSchoolAccordion(){
   const list = document.getElementById('school-accordion-list');
-  list.innerHTML = SCHOOLS.map(sc => {
-    const sv = SUPERVISORS_LIST.find(s => s.schools.includes(sc.id));
-    const isOpen = expandedSchool === sc.id;
-    return `<div class="school-accordion-item">
-      <div class="school-accordion-head" onclick="toggleSchoolAccordion('${sc.id}')">
-        <span>${sc.name}</span>
-        <span class="cat-chevron ${isOpen?'open':''}">▶</span>
-      </div>
-      ${isOpen ? `<div class="school-accordion-body">
-        <div class="school-supervisor-row">
-          <span>👤 ${sv ? sv.name : 'Unassigned'}</span>
-          <button class="btn-view-report-sm" onclick="event.stopPropagation(); viewSchoolReport('${sc.id}')">View report →</button>
+  list.innerHTML = getWards().map(ward => {
+    const schoolsInWard = SCHOOLS.filter(s => s.ward === ward);
+    const rows = schoolsInWard.map(sc => {
+      const sv = SUPERVISORS_LIST.find(s => s.schools.includes(sc.id));
+      const isOpen = expandedSchool === sc.id;
+      return `<div class="school-accordion-item">
+        <div class="school-accordion-head" onclick="toggleSchoolAccordion('${sc.id}')">
+          <span>${sc.name}</span>
+          <span class="cat-chevron ${isOpen?'open':''}">▶</span>
         </div>
-      </div>` : ''}
-    </div>`;
+        ${isOpen ? `<div class="school-accordion-body">
+          <div class="school-supervisor-row">
+            <span>👤 ${sv ? sv.name : 'Unassigned'}</span>
+            <button class="btn-view-report-sm" onclick="event.stopPropagation(); viewSchoolReport('${sc.id}')">View report →</button>
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div class="ward-group-label">Ward ${ward}</div>${rows}`;
   }).join('');
 }
 
@@ -467,12 +702,114 @@ function renderSchoolVisitReport(schoolId){
       <div class="stat-card"><p class="label">Visit rate</p><p class="value" style="color:${visitRate>=70?'var(--success)':'var(--danger)'}">${visitRate}%</p></div>
       <div class="stat-card"><p class="label">Total visits logged</p><p class="value">${allVisits.length}</p></div>
     </div>
-    <h3 class="report-h3">Visit history — ${sc.class} · ${sc.teacher}</h3>
+    <h3 class="report-h3">Visit history — Ward ${sc.ward} · ${sc.classes.map(c => c.name + ': ' + (c.teacher || 'Unassigned')).join(', ')}</h3>
     <div class="report-table-wrap"><table class="report-table">
       <thead><tr><th>Week</th><th>Date</th><th>Status</th><th>Feedback</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
   `;
+}
+
+/* =========================================================
+   Add User — creates a real login without touching any code.
+   Reads unlinked classes from the server so a teacher can be
+   linked to a real class right at creation time.
+   ========================================================= */
+
+function renderAddUserForm(){
+  document.getElementById('admin-body').innerHTML = `
+    <div class="add-user-card">
+      <div id="addUserResult"></div>
+      <form id="addUserForm" onsubmit="return submitAddUser(event)">
+        <label class="field-label-admin">Full name</label>
+        <input type="text" id="auName" required />
+
+        <label class="field-label-admin">Email address</label>
+        <input type="email" id="auEmail" required />
+
+        <label class="field-label-admin">Role</label>
+        <select id="auRole" onchange="toggleAddUserClassField()">
+          <option value="teacher">Teacher</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="superadmin">Super Admin</option>
+          <option value="parent">Parent</option>
+        </select>
+
+        <div id="auClassWrap">
+          <label class="field-label-admin">Assign to class (optional)</label>
+          <select id="auClass">
+            <option value="">— Loading classes… —</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">
+          Create account
+        </button>
+      </form>
+    </div>
+  `;
+  loadUnlinkedClassesIntoDropdown();
+}
+
+function toggleAddUserClassField(){
+  const role = document.getElementById('auRole').value;
+  document.getElementById('auClassWrap').style.display = (role === 'teacher') ? 'block' : 'none';
+}
+
+async function loadUnlinkedClassesIntoDropdown(){
+  const select = document.getElementById('auClass');
+  try{
+    const res = await fetch('backend/get_unlinked_classes.php');
+    const data = await res.json();
+    if(data.status !== 'success' || !data.classes.length){
+      select.innerHTML = '<option value="">No unlinked classes available</option>';
+      return;
+    }
+    select.innerHTML = '<option value="">— None —</option>' +
+      data.classes.map(c =>
+        `<option value="${c.id}">${c.school_name} — ${c.name}</option>`
+      ).join('');
+  }catch(err){
+    select.innerHTML = '<option value="">Could not load classes</option>';
+  }
+}
+
+async function submitAddUser(event){
+  event.preventDefault();
+  const name = document.getElementById('auName').value.trim();
+  const email = document.getElementById('auEmail').value.trim();
+  const role = document.getElementById('auRole').value;
+  const classId = document.getElementById('auClass').value;
+  const resultEl = document.getElementById('addUserResult');
+
+  resultEl.innerHTML = '';
+
+  try{
+    const res = await fetch('backend/add_user.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, email, role, class_id: classId || null })
+    });
+    const data = await res.json();
+
+    if(data.status !== 'success'){
+      resultEl.innerHTML = `<div class="au-error">${data.message}</div>`;
+      return false;
+    }
+
+    resultEl.innerHTML = `
+      <div class="au-success">
+        <strong>Account created.</strong> Copy this password now — it can't be shown again.<br>
+        Email: <b>${data.email}</b><br>
+        Temporary password: <b style="font-family:monospace;">${data.temp_password}</b>
+      </div>`;
+    document.getElementById('addUserForm').reset();
+    toggleAddUserClassField();
+    loadUnlinkedClassesIntoDropdown();
+  }catch(err){
+    resultEl.innerHTML = `<div class="au-error">Could not reach the server. Check your connection and try again.</div>`;
+  }
+  return false;
 }
 
 /* =========================================================

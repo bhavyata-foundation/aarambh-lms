@@ -2,66 +2,127 @@ let selectedRole = 'teacher';
   let currentWeekNum = 1;
   let currentDay = 'mon';
 
-  const weeksWithContent = [1];
-
-  const WEEKS = [
-    {w:1, theme:'My Classroom', dates:'15–19 Jun 2026'},
-    {w:2, theme:'My Body', dates:'22–26 Jun 2026'},
-    {w:3, theme:'Vegetables', dates:'29 Jun–3 Jul 2026'},
-    {w:4, theme:'Fruits', dates:'6–10 Jul 2026'},
-    {w:5, theme:'Nature Patterns', dates:'13–17 Jul 2026'},
-    {w:6, theme:'Beads & Jewellery', dates:'20–24 Jul 2026'},
-    {w:7, theme:'Animals Around Us', dates:'27–31 Jul 2026'},
-    {w:8, theme:'Number, Sound & Movement', dates:'3–7 Aug 2026'},
-    {w:9, theme:'My Body Counts', dates:'10–14 Aug 2026'},
-    {w:10, theme:'Counting Classroom Items', dates:'17–21 Aug 2026'},
-    {w:11, theme:'Food and Snacks Counting', dates:'24–28 Aug 2026'},
-    {w:12, theme:'Counting with Sticks', dates:'31 Aug–4 Sep 2026'},
-    {w:13, theme:'Number Line Walk', dates:'7–11 Sep 2026'},
-    {w:14, theme:'Group Counting', dates:'14–18 Sep 2026'}
-  ];
-
+  // weeksWithContent, WEEKS, WEEKLY_PLAN and ACTIVITY_COMPETENCIES now
+  // live in js/data/curriculum-base.js and js/data/week-NN.js — those
+  // files must load before this one. See curriculum-base.js for the
+  // load-order explanation.
 
   const DAYS = [
-    {key:'mon', label:'Monday', value:'Feel safe and happy in classroom', link:'First week of school'},
-    {key:'tue', label:'Tuesday', value:'Keep bag, books, bottle clean and dry', link:'Monsoon readiness'},
-    {key:'wed', label:'Wednesday', value:'Share toys and speak kindly', link:'Classroom family value'},
-    {key:'thu', label:'Thursday', value:'Keep things back in proper place', link:'Clean classroom habit'},
-    {key:'fri', label:'Friday', value:'Be brave, careful and responsible', link:'Shivaji Maharaj courage value'}
+    {key:'mon', label:'Monday', value:{en:'Feel safe and happy in classroom', hi:'कक्षा में सुरक्षित और खुश महसूस करें', mr:'वर्गात सुरक्षित आणि आनंदी वाटणे'}, link:{en:'First week of school', hi:'स्कूल का पहला सप्ताह', mr:'शाळेचा पहिला आठवडा'}},
+    {key:'tue', label:'Tuesday', value:{en:'Keep bag, books, bottle clean and dry', hi:'बैग, किताबें, बोतल साफ़ और सूखी रखें', mr:'पिशवी, पुस्तके, बाटली स्वच्छ आणि कोरडी ठेवा'}, link:{en:'Monsoon readiness', hi:'मॉनसून की तैयारी', mr:'मॉन्सूनची तयारी'}},
+    {key:'wed', label:'Wednesday', value:{en:'Share toys and speak kindly', hi:'खिलौने साझा करें और विनम्रता से बोलें', mr:'खेळणी वाटून घ्या आणि प्रेमाने बोला'}, link:{en:'Classroom family value', hi:'कक्षा परिवार मूल्य', mr:'वर्गकुटुंब मूल्य'}},
+    {key:'thu', label:'Thursday', value:{en:'Keep things back in proper place', hi:'चीज़ों को सही जगह पर रखें', mr:'वस्तू योग्य ठिकाणी ठेवा'}, link:{en:'Clean classroom habit', hi:'साफ़ कक्षा की आदत', mr:'स्वच्छ वर्ग सवय'}},
+    {key:'fri', label:'Friday', value:{en:'Be brave, careful and responsible', hi:'वीर, सावधान और ज़िम्मेदार बनें', mr:'शूर, सावध आणि जबाबदार राहा'}, link:{en:'Shivaji Maharaj courage value', hi:'शिवाजी महाराज वीरता मूल्य', mr:'शिवाजी महाराज शौर्य मूल्य'}}
   ];
 
   const DOMAINS = [
-    {key:'welcome',  label:'Welcome & Free Play',   time:'9:00–9:20 AM',   cg:'CG-4',    h5p:true},
-    {key:'story',    label:'Story / Rhyme',          time:'9:20–9:45 AM',   cg:'CG-9',    h5p:true},
-    {key:'numeracy', label:'Numeracy',                time:'9:45–10:15 AM',  cg:'CG-8',    h5p:true},
-    {key:'language', label:'Language',                time:'10:25–10:50 AM', cg:'CG-10',   h5p:true},
-    {key:'create',   label:'Create + Fine Motor',     time:'10:50–11:20 AM', cg:'CG-12',   h5p:true},
-    {key:'outdoor',  label:'Outdoor / Gross Motor',   time:'11:20–11:40 AM', cg:'CG-3',    h5p:true},
-    {key:'tidy',     label:'Tidy & Put Away',          time:'11:40–11:45 AM', cg:'CG-11',   h5p:true},
-    {key:'reflect',  label:'Reflect & Wrap',          time:'11:45 AM–12:00 PM', cg:'CG-9/10', h5p:true}
+    {key:'welcome',  label:{en:'Welcome & Free Play', hi:'स्वागत और मुक्त खेल', mr:'स्वागत आणि मोकळा खेळ', gu:'સ્વાગત અને મુક્ત રમત'},   time:'9:00–9:20 AM',   cg:'CG-4',    h5p:true},
+    {key:'story',    label:{en:'Story / Rhyme', hi:'कहानी / कविता', mr:'गोष्ट / कविता', gu:'વાર્તા / કવિતા'},          time:'9:20–9:45 AM',   cg:'CG-9',    h5p:true},
+    {key:'numeracy', label:{en:'Numeracy', hi:'गणना', mr:'अंकगणित', gu:'ગણતરી'},                time:'9:45–10:15 AM',  cg:'CG-8',    h5p:true},
+    {key:'language', label:{en:'Language', hi:'भाषा', mr:'भाषा', gu:'ભાષા'},                time:'10:25–10:50 AM', cg:'CG-10',   h5p:true},
+    {key:'create',   label:{en:'Create + Fine Motor', hi:'सृजन + सूक्ष्म गतिविधि', mr:'सर्जन + सूक्ष्म हालचाल', gu:'સર્જન + સૂક્ષ્મ ગતિ'},     time:'10:50–11:20 AM', cg:'CG-12',   h5p:true},
+    {key:'outdoor',  label:{en:'Outdoor / Gross Motor', hi:'बाहरी / सकल गतिविधि', mr:'बाह्य / स्थूल हालचाल', gu:'બાહ્ય / સ્થૂળ ગતિ'},   time:'11:20–11:40 AM', cg:'CG-3',    h5p:true},
+    {key:'tidy',     label:{en:'Tidy & Put Away', hi:'सफ़ाई और व्यवस्थित करना', mr:'स्वच्छता आणि आवरणे', gu:'સ્વચ્છતા અને ગોઠવણી'},          time:'11:40–11:45 AM', cg:'CG-11',   h5p:true},
+    {key:'reflect',  label:{en:'Reflect & Wrap', hi:'चिंतन और समापन', mr:'चिंतन आणि सांगता', gu:'ચિંતન અને સમાપન'},          time:'11:45 AM–12:00 PM', cg:'CG-9/10', h5p:true}
   ];
 
-  // Real content from the Week 1 daily lesson plan you uploaded.
-  // Same tasks apply Mon-Fri in this workbook; only the day's Value/Link changes.
-  const WEEKLY_PLAN = {
-    wk1: {
-      welcome:  {mon:'Welcome song, explore classroom', tue:'Free play with classroom toys', wed:'Attendance & classroom talk', thu:'Free play with puzzles', fri:'Free play with blocks'},
-      story:    {mon:'Story: My First Day in Class', tue:'Rhyme: Good Morning Teacher', wed:'Story: My Classroom Family', thu:'Rhyme: Keep Things Clean', fri:'Story: Shivaji Maharaj & Courage'},
-      numeracy: {mon:'Identify classroom objects', tue:'Sort objects by colour', wed:'Sort objects by size', thu:'Sort objects by use', fri:'Sort objects independently'},
-      language: {mon:'Name: bag, book, pencil, bottle', tue:'Colour words: red, blue, yellow', wed:'Big / small words', thu:'Use words: write, drink, eat, read', fri:'Speak: "This is my ___."'},
-      create:   {mon:'Draw my school bag', tue:'Colour classroom objects', wed:'Big-small pasting', thu:'Bag item collage', fri:'Classroom object worksheet'},
-      outdoor:  {mon:'Free outdoor play', tue:'Ball play', wed:'Balance walk', thu:'Ring play', fri:'Running game'},
-      tidy:     {mon:'Put bag on hook, book on shelf', tue:'Return toys to the toy bin', wed:'Put pencil and crayon back in the box', thu:'"Keep things back in proper place"', fri:'Tidy the whole classroom before going home'},
-      reflect:  {mon:'Name one classroom object', tue:'Name one colour', wed:'Show one big object', thu:'What do we use pencil for?', fri:'Recap & plant-care promise'}
-    }
+  // -----------------------------------------------------------------
+  // DATABASE POCKET — this small lookup is genuinely tiny (a few
+  // dozen short text rows even at full scale), so storage size was
+  // never the deciding factor for where it lives. It's kept here as
+  // hardcoded frontend data for now since we're doing frontend-only
+  // work right now — but this maps 1:1 onto the `curricular_goals`
+  // table already designed in the schema, and should move there once
+  // the backend for this page gets built, so it can be edited/
+  // translated without redeploying code.
+  //   Real call would look like:
+  //     fetch('backend/get_curricular_goals.php')
+  // -----------------------------------------------------------------
+  const CG_LABELS = {
+    'CG-3':    'Physical & Motor — builds strength, balance and coordination',
+    'CG-4':    'Physical & Motor — builds habits that keep them healthy and safe',
+    'CG-8':    'Cognitive — builds mathematical understanding using quantities and shapes',
+    'CG-9':    'Socio-Emotional — builds emotional intelligence and social awareness',
+    'CG-10':   'Language — builds effective communication in two languages',
+    'CG-11':   'Life Skills — builds responsibility and care for shared spaces',
+    'CG-12':   'Creative & Aesthetic — expresses emotions through visual and performing arts',
+    'CG-9/10': 'Socio-Emotional & Language — reflects on the day and communicates learning'
   };
+
+  function broadCompetencyFallback(domainKey){
+    const dom = DOMAINS.find(d => d.key === domainKey);
+    if(!dom || !dom.cg) return 'Not mapped yet';
+    return CG_LABELS[dom.cg] || 'Not mapped yet';
+  }
+
+  // -----------------------------------------------------------------
+  // DATABASE POCKET — same reasoning as CG_LABELS above: this is small
+  // text data, hardcoded here only because we're doing frontend-only
+  // work right now. Maps onto the `competencies` table already
+  // designed in the schema (linked to curricular_goals), once this
+  // page gets a real backend.
+  //
+  // Unlike CG_LABELS (fixed per domain slot, same every day), this is
+  // specific to what's ACTUALLY being done that day — matching the
+  // real Week 1 activity content in WEEKLY_PLAN above, one to one.
+  // -----------------------------------------------------------------
+
+  // -----------------------------------------------------------------
+  // Reads the current UI language from i18n.js's global `currentLang`
+  // (loaded before this file — see index.html). A day's value can be
+  // either a plain string (older/untranslated content — shown as-is
+  // regardless of selected language) or an {en, hi, mr} object (fully
+  // translated content — returns whichever language is selected,
+  // falling back to English if that specific language is missing).
+  // -----------------------------------------------------------------
+  function pickLang(value){
+    // Defensive: falls back to English if i18n.js hasn't loaded (e.g.
+    // its file is missing on the server) rather than throwing and
+    // breaking the whole dashboard over a language-switcher problem.
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
+    if(typeof value === 'string') return value;
+    if(value && typeof value === 'object'){
+      return value[lang] || value.en || Object.values(value)[0] || 'Not available';
+    }
+    return 'Not available';
+  }
+
+  // The language switcher ONLY affects the interactive H5P activities —
+  // nothing else. "Planned activity" and "Covers" text always stays
+  // English, regardless of which language tab is selected.
+  function alwaysEnglish(value){
+    if(typeof value === 'string') return value;
+    if(value && typeof value === 'object') return value.en || Object.values(value)[0] || 'Not available';
+    return 'Not available';
+  }
+
+  function competencyFor(domainKey){
+    const wk = ACTIVITY_COMPETENCIES[currentWeekKey()];
+    if(wk && wk[domainKey] && wk[domainKey][currentDay] !== undefined){
+      return pickLang(wk[domainKey][currentDay]);
+    }
+    // No activity-specific competency authored for this week yet —
+    // fall back to the broad domain-level label rather than showing nothing.
+    return broadCompetencyFallback(domainKey);
+  }
+
 
   function currentWeekKey(){ return 'wk' + currentWeekNum; }
 
   function todaysActivity(domainKey){
     const wk = WEEKLY_PLAN[currentWeekKey()];
-    if(!wk || !wk[domainKey]) return 'Not planned yet';
-    return wk[domainKey][currentDay] || 'Not planned yet';
+    if(!wk || !wk[domainKey] || wk[domainKey][currentDay] === undefined) return 'Not planned yet';
+    return pickLang(wk[domainKey][currentDay]);
+  }
+
+  // Called by i18n.js's applyTranslations() whenever the language
+  // switches, so activity text on-screen updates immediately instead
+  // of only changing after the next click/re-render.
+  function onLanguageChanged(){
+    if(typeof renderSidebar === 'function') renderSidebar();
+    if(typeof renderWeekBody === 'function' && document.getElementById('week-body') && !document.getElementById('week-body').classList.contains('hidden')){
+      renderWeekBody();
+    }
   }
 
   const SAMPLE_STUDENTS = ['Aarav Sharma','Priya Patil','Rohan Desai','Ananya Joshi','Kabir Mehta'];
@@ -73,25 +134,383 @@ let selectedRole = 'teacher';
     el.classList.add('active');
   }
 
-  function markAttendance(){
+  /* =========================================================
+     TEACHER'S OWN ATTENDANCE — gated at HER class's actual start
+     time, not a fixed clock time for everyone. A teacher whose
+     class runs 9:30–12:30 gets gated at 9:30; one whose class
+     runs 1:00–4:00 gets gated at 1:00.
+
+     If a teacher owns two classes (e.g. Jr KG + Sr KG) with
+     different start times, the gate uses the EARLIER of the two
+     — she should have marked her own attendance by the time her
+     first session of the day begins.
+
+     DATABASE POCKET — until the real backend call exists, this
+     falls back to a placeholder. Once connected, replace with:
+       const res = await fetch('backend/get_my_classes.php');
+       const classes = await res.json();
+       const startTimes = classes.map(c => c.start_time); // "09:30:00" etc.
+       gateHour/gateMinute = the earliest one, parsed
+     ========================================================= */
+
+  let ATTENDANCE_GATE_HOUR = 9;    // PLACEHOLDER — replace with the teacher's real class start time
+  let ATTENDANCE_GATE_MINUTE = 30; // PLACEHOLDER — same
+
+  function setGateFromClassStartTimes(startTimesList){
+    // startTimesList: array of "HH:MM:SS" strings, one per class this teacher owns
+    if(!startTimesList || !startTimesList.length) return;
+    const parsed = startTimesList.map(t => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    });
+    const earliestMinutes = Math.min(...parsed);
+    ATTENDANCE_GATE_HOUR = Math.floor(earliestMinutes / 60);
+    ATTENDANCE_GATE_MINUTE = earliestMinutes % 60;
+  }
+
+  function todayDateKey(){ return new Date().toISOString().slice(0,10); }
+
+  function getGateTimeToday(){
+    const d = new Date();
+    d.setHours(ATTENDANCE_GATE_HOUR, ATTENDANCE_GATE_MINUTE, 0, 0);
+    return d;
+  }
+
+  function isPastGateTime(){
+    return new Date() >= getGateTimeToday();
+  }
+
+  // ---------------------------------------------------------
+  // DATABASE POCKET — this is the one function to swap out
+  // once a real backend exists.
+  //   Table: teacher_attendance
+  //   Columns: id, teacher_id, date, status ('present'|'absent'), marked_at
+  //   Constraint: UNIQUE (teacher_id, date) — one record per teacher per day
+  //   Real call would look like:
+  //     fetch('/api/teacher-attendance', {
+  //       method: 'POST',
+  //       headers: {'Content-Type':'application/json'},
+  //       body: JSON.stringify(record)
+  //     });
+  // For now it's saved to localStorage so the gate persists
+  // correctly across refreshes/logins on the same day.
+  // ---------------------------------------------------------
+  function saveTeacherAttendanceRecord(record){
+    try{ localStorage.setItem('teacherAttendance_' + record.date, JSON.stringify(record)); }
+    catch(e){ /* localStorage unavailable — record still applies for this session */ }
+  }
+
+  function getTodayAttendanceRecord(){
+    try{
+      const raw = localStorage.getItem('teacherAttendance_' + todayDateKey());
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  // ---------------------------------------------------------
+  // DATABASE POCKET — same swap-out note as above. Once a real
+  // backend exists, this becomes:
+  //   fetch(`/api/teacher-attendance?month=${year}-${month+1}`)
+  // For now it scans localStorage for every saved day in the
+  // given month.
+  // ---------------------------------------------------------
+  function getMonthAttendanceRecords(year, month){
+    const records = {};
+    const prefix = 'teacherAttendance_' + year + '-' + String(month + 1).padStart(2, '0');
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i);
+      if(key && key.indexOf(prefix) === 0){
+        try{
+          const rec = JSON.parse(localStorage.getItem(key));
+          const dateStr = key.replace('teacherAttendance_', '');
+          records[dateStr] = rec; // full record: {status, markedAt, ...}
+        }catch(e){ /* skip malformed entry */ }
+      }
+    }
+    return records;
+  }
+
+  let calendarYear = new Date().getFullYear();
+  let calendarMonth = new Date().getMonth();
+
+  function renderAttendanceCalendar(year, month){
+    const firstDay = new Date(year, month, 1);
+    const startWeekday = firstDay.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthName = firstDay.toLocaleDateString([], {month:'long', year:'numeric'});
+    const todayStr = todayDateKey();
+    const records = getMonthAttendanceRecords(year, month);
+
+    let present = 0, absent = 0, marked = 0;
+    let cellsHtml = '';
+
+    for(let i = 0; i < startWeekday; i++) cellsHtml += '<div></div>';
+
+    for(let d = 1; d <= daysInMonth; d++){
+      const dateObj = new Date(year, month, d);
+      const dayOfWeek = dateObj.getDay();
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const record = records[dateStr];
+      const status = record ? record.status : undefined;
+      const isToday = dateStr === todayStr;
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      let cellClass = 'cal-day';
+      if(status === 'present'){ cellClass += ' cal-present'; present++; marked++; }
+      else if(status === 'absent'){ cellClass += ' cal-absent'; absent++; marked++; }
+      else if(isWeekend){ cellClass += ' cal-noschool'; }
+      if(isToday) cellClass += ' cal-today';
+
+      cellsHtml += `<div class="${cellClass}" onclick="showAttendanceDayDetail('${dateStr}')">${d}</div>`;
+    }
+
+    const rate = marked > 0 ? Math.round((present / marked) * 100) : 0;
+
+    document.getElementById('calendar-body').innerHTML = `
+      <div class="cal-header">
+        <div>
+          <h1>My attendance</h1>
+          <p class="sub">${monthName}</p>
+        </div>
+        <div class="cal-nav">
+          <button onclick="shiftCalendarMonth(-1)">‹</button>
+          <button onclick="shiftCalendarMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="cal-summary">
+        <div class="stat-card"><p class="label">Present</p><p class="value" style="color:var(--primary-dark)">${present}</p></div>
+        <div class="stat-card"><p class="label">Absent</p><p class="value" style="color:#d9534f">${absent}</p></div>
+        <div class="stat-card"><p class="label">Attendance rate</p><p class="value">${rate}%</p></div>
+      </div>
+      <div class="cal-weekdays">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+      <div class="cal-grid">${cellsHtml}</div>
+      <div id="cal-day-detail"></div>
+      <div class="cal-legend">
+        <span><i class="dot present"></i>Present</span>
+        <span><i class="dot absent"></i>Absent</span>
+        <span><i class="dot today"></i>Today</span>
+        <span><i class="dot noschool"></i>No school</span>
+      </div>
+    `;
+  }
+
+  function showAttendanceDayDetail(dateStr){
+    const [y, m] = dateStr.split('-').map(Number);
+    const records = getMonthAttendanceRecords(y, m - 1);
+    const record = records[dateStr];
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+    const niceDate = dateObj.toLocaleDateString([], {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+    let message;
+    if(record){
+      const time = new Date(record.markedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      message = record.status === 'present'
+        ? `✓ Marked present at ${time}`
+        : `Marked absent / on leave, at ${time}`;
+    } else if(isWeekend){
+      message = 'No school on this day';
+    } else {
+      message = 'Not marked yet';
+    }
+
+    document.getElementById('cal-day-detail').innerHTML =
+      `<div class="cal-day-detail-box"><strong>${niceDate}</strong><br>${message}</div>`;
+  }
+
+  function shiftCalendarMonth(delta){
+    calendarMonth += delta;
+    if(calendarMonth > 11){ calendarMonth = 0; calendarYear++; }
+    if(calendarMonth < 0){ calendarMonth = 11; calendarYear--; }
+    renderAttendanceCalendar(calendarYear, calendarMonth);
+  }
+
+  let gateTimerId = null;
+
+  function scheduleAttendanceGate(){
+    if(gateTimerId) clearTimeout(gateTimerId);
+    const msUntilGate = getGateTimeToday() - new Date();
+    if(msUntilGate <= 0) return; // already past 12:30 — handled at entry instead
+    gateTimerId = setTimeout(function(){
+      if(!getTodayAttendanceRecord()){
+        document.getElementById('view-dashboard').classList.add('hidden');
+        document.getElementById('view-attendance').classList.remove('hidden');
+      }
+    }, msUntilGate);
+  }
+
+  function updateAttendanceBannerPending(){
+    const bannerEl = document.querySelector('.banner-success');
+    const bannerTextEl = document.querySelector('.banner-success span:first-child');
+    const timeEl = document.getElementById('attend-time');
+    if(bannerEl) bannerEl.classList.add('pending');
+    if(bannerTextEl) bannerTextEl.textContent = '🕐 Attendance opens at 12:30 PM — you can use the dashboard until then';
+    if(timeEl) timeEl.textContent = '';
+  }
+
+  function enterTeacherFlow(){
+    const existing = getTodayAttendanceRecord();
+    if(existing){
+      showDashboardAfterAttendance(existing);
+      return;
+    }
+    if(isPastGateTime()){
+      document.getElementById('view-attendance').classList.remove('hidden');
+    } else {
+      document.getElementById('view-dashboard').classList.remove('hidden');
+      updateAttendanceBannerPending();
+      renderSidebar();
+      openWeek(currentWeekNum);
+      scheduleAttendanceGate();
+    }
+  }
+
+  function markAttendance(status){
+    const record = {
+      teacherId: 'mrs-sharma', // placeholder until real login/auth exists
+      date: todayDateKey(),
+      status: status,
+      markedAt: new Date().toISOString()
+    };
+    saveTeacherAttendanceRecord(record);
+    showDashboardAfterAttendance(record);
+  }
+
+  function showDashboardAfterAttendance(record){
     document.getElementById('view-attendance').classList.add('hidden');
     document.getElementById('view-dashboard').classList.remove('hidden');
-    const now = new Date();
-    document.getElementById('attend-time').textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    const markedTime = new Date(record.markedAt);
+    document.getElementById('attend-time').textContent =
+      markedTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    const bannerEl = document.querySelector('.banner-success');
+    const bannerTextEl = document.querySelector('.banner-success span:first-child');
+    if(bannerEl) bannerEl.classList.remove('pending');
+    if(bannerTextEl){
+      bannerTextEl.textContent = record.status === 'present'
+        ? '✓ Attendance marked for today — Present'
+        : '✓ Attendance marked for today — Absent';
+    }
+
     renderSidebar();
     openWeek(currentWeekNum);
   }
 
-function login(){
+async function login(){
+  const emailEl = document.getElementById('loginEmail');
+  const passwordEl = document.getElementById('loginPassword');
+  const errorEl = document.getElementById('loginError');
+  const btnEl = document.getElementById('loginBtn');
+
+  const email = emailEl.value.trim();
+  const password = passwordEl.value;
+
+  errorEl.classList.add('hidden');
+  errorEl.textContent = '';
+
+  if(!email || !password){
+    errorEl.textContent = 'Please enter both email and password.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Signing in…';
+
+  try{
+    const res = await fetch('backend/login.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+
+    if(data.status !== 'success'){
+      errorEl.textContent = data.message || 'Login failed. Please try again.';
+      errorEl.classList.remove('hidden');
+      btnEl.disabled = false;
+      btnEl.textContent = 'Sign in';
+      return;
+    }
+
+    // The role that actually matters is whatever the SERVER says this
+    // account is — not whichever role button was clicked. This is what
+    // stops someone from clicking "Super Admin" and getting in on a
+    // teacher's credentials.
+    selectedRole = data.role;
+
+    if(selectedRole === 'teacher'){
+      document.getElementById('view-login').classList.add('hidden');
+      enterTeacherFlow();
+    } else if(selectedRole === 'supervisor'){
+      window.location.href = 'supervisor.html';
+    } else if(selectedRole === 'superadmin'){
+      window.location.href = 'superadmin.html';
+    } else if(selectedRole === 'parent'){
+      window.location.href = 'parent.html';
+    } else {
+      errorEl.textContent = 'This role is not wired up yet in this prototype.';
+      errorEl.classList.remove('hidden');
+      btnEl.disabled = false;
+      btnEl.textContent = 'Sign in';
+    }
+  } catch(err){
+    errorEl.textContent = 'Could not reach the server. Check your connection and try again.';
+    errorEl.classList.remove('hidden');
+    btnEl.disabled = false;
+    btnEl.textContent = 'Sign in';
+  }
+}
+
+function logout(){
+  // Cancel any pending 12:30 gate timer — it shouldn't fire while logged out,
+  // and a fresh login re-checks the gate correctly anyway.
+  if(gateTimerId){ clearTimeout(gateTimerId); gateTimerId = null; }
+
+  fetch('backend/logout.php').catch(() => {}); // best-effort — proceed regardless
+
+  document.getElementById('view-attendance').classList.add('hidden');
+  document.getElementById('view-dashboard').classList.add('hidden');
+  document.getElementById('view-login').classList.remove('hidden');
+  // Deliberately NOT clearing today's saved attendance record here —
+  // logging back in the same day should still recognise it's already marked.
+}
+
+/* =========================================================
+   DEV MODE — skip login entirely while iterating on the frontend.
+
+   NOTE: the actual auto-run trigger for this now lives at the very
+   END of this file, not here — it has to run AFTER every other
+   variable in this file is declared (expandedWeek, attendanceRecords,
+   etc.), otherwise it fires too early and hits a "cannot access
+   before initialization" error. See the bottom of the file.
+
+   On localhost, this runs AUTOMATICALLY on every page load — no
+   click needed, so a reload during frontend work drops you straight
+   onto the dashboard instead of back at the login screen.
+
+   Defaults to the teacher dashboard. To test a different role:
+     index.html?dev_role=supervisor
+     index.html?dev_role=superadmin
+     index.html?dev_role=parent
+   To see the REAL login screen on localhost, add ?no_dev=1 to the
+   URL — that one flag turns the auto-bypass off for that page load.
+   ========================================================= */
+
+function devSkipLogin(){
+  // Respects whichever role tab is currently selected on the login card.
+  document.getElementById('view-login').classList.add('hidden');
   if(selectedRole === 'teacher'){
-    document.getElementById('view-login').classList.add('hidden');
-    document.getElementById('view-attendance').classList.remove('hidden');
+    enterTeacherFlow();
   } else if(selectedRole === 'supervisor'){
-    window.location.href = 'supervisor.html';
+    window.location.href = 'supervisor.html?dev_role=supervisor';
   } else if(selectedRole === 'superadmin'){
-    window.location.href = 'superadmin.html';
-  } else {
-    alert('Parent flow not wired up yet in this prototype.');
+    window.location.href = 'superadmin.html?dev_role=superadmin';
+  } else if(selectedRole === 'parent'){
+    window.location.href = 'parent.html?dev_role=parent';
   }
 }
 
@@ -105,6 +524,17 @@ function login(){
     document.getElementById('sidebarBackdrop').classList.remove('show');
   }
 
+  function toggleUserMenu(){
+    document.getElementById('userDropdown').classList.toggle('hidden');
+  }
+  function closeUserMenu(){
+    document.getElementById('userDropdown').classList.add('hidden');
+  }
+  document.addEventListener('click', function(e){
+    const menu = document.getElementById('userMenu');
+    if(menu && !menu.contains(e.target)) closeUserMenu();
+  });
+
   const attendanceRecords = {}; // key: date -> {studentName: 'present'|'absent'}
   let attendanceSaved = false;
   let attendanceSearchTerm = '';
@@ -114,20 +544,95 @@ function login(){
   function switchSidebarSection(section){
     document.getElementById('navWorkbook').classList.toggle('active', section === 'workbook');
     document.getElementById('navAttendance').classList.toggle('active', section === 'attendance');
+    document.getElementById('navCalendar').classList.toggle('active', section === 'calendar');
+    document.getElementById('navEvents').classList.toggle('active', section === 'events');
     document.getElementById('sidebar-workbook-section').classList.toggle('hidden', section !== 'workbook');
 
+    const labelEl = document.getElementById('pageLabel');
+    if(labelEl){
+      labelEl.textContent = section === 'attendance' ? 'Attendance'
+        : section === 'calendar' ? 'My Attendance'
+        : section === 'events' ? 'School Events'
+        : 'Weekly Activities';
+    }
+
+    document.getElementById('week-body').classList.add('hidden');
+    document.getElementById('attendance-body').classList.add('hidden');
+    document.getElementById('calendar-body').classList.add('hidden');
+    document.getElementById('events-body').classList.add('hidden');
+
     if(section === 'attendance'){
-      document.getElementById('week-body').classList.add('hidden');
       document.getElementById('attendance-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent =
         'Attendance · ' + new Date().toLocaleDateString([], {weekday:'long', day:'numeric', month:'short', year:'numeric'});
       renderAttendanceBody();
+    } else if(section === 'calendar'){
+      document.getElementById('calendar-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'My Attendance';
+      renderAttendanceCalendar(calendarYear, calendarMonth);
+    } else if(section === 'events'){
+      document.getElementById('events-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'PTMs, trainings, and other school events';
+      renderSchoolEvents();
     } else {
-      document.getElementById('attendance-body').classList.add('hidden');
       document.getElementById('week-body').classList.remove('hidden');
       openWeek(currentWeekNum);
     }
     closeSidebar();
+  }
+
+  const EVENT_TYPE_COLORS = {
+    'PTM': 'var(--primary)',
+    'Teacher Training': '#8b5cf6',
+    'Other': 'var(--text-muted)'
+  };
+
+  async function renderSchoolEvents(){
+    const container = document.getElementById('events-body');
+    container.innerHTML = `<p class="sub">Loading events…</p>`;
+
+    try{
+      const res = await fetch('backend/get_events.php' + window.location.search);
+      const data = await res.json();
+
+      if(data.status !== 'success'){
+        container.innerHTML = `<p class="sub">Could not load events right now.</p>`;
+        return;
+      }
+
+      if(!data.events.length){
+        container.innerHTML = `<p class="sub">No PTMs or trainings scheduled yet — your supervisor will add them here.</p>`;
+        return;
+      }
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const upcoming = data.events.filter(e => new Date(e.event_date) >= today);
+      const past = data.events.filter(e => new Date(e.event_date) < today);
+
+      function eventRow(e){
+        const dateObj = new Date(e.event_date + 'T00:00:00');
+        const niceDate = dateObj.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+        const timeStr = e.event_time ? ' · ' + e.event_time.slice(0,5) : '';
+        const color = EVENT_TYPE_COLORS[e.event_type] || 'var(--text-muted)';
+        return `
+          <div class="event-card" style="border-left:4px solid ${color};">
+            <div class="event-card-head">
+              <span class="event-type-tag" style="background:${color};">${e.event_type}</span>
+              <span class="event-date">${niceDate}${timeStr}</span>
+            </div>
+            <div class="event-title">${e.title}</div>
+            ${e.class_name ? `<div class="event-scope">Just for: ${e.class_name}</div>` : `<div class="event-scope">Whole school</div>`}
+            ${e.notes ? `<div class="event-notes">${e.notes}</div>` : ''}
+          </div>`;
+      }
+
+      container.innerHTML = `
+        ${upcoming.length ? `<h3 class="events-h3">Upcoming</h3>${upcoming.map(eventRow).join('')}` : `<p class="sub">No upcoming events.</p>`}
+        ${past.length ? `<h3 class="events-h3" style="margin-top:24px;">Past</h3>${past.map(eventRow).join('')}` : ''}
+      `;
+    }catch(err){
+      container.innerHTML = `<p class="sub">Could not reach the server. Check your connection and try again.</p>`;
+    }
   }
 
   function renderAttendanceBody(){
@@ -222,7 +727,7 @@ function login(){
           const activeClass = (w.w===currentWeekNum && d.key===currentDay) ? 'active-day' : '';
           return `<div class="day-topic-row ${activeClass}">
             <input type="checkbox" ${checked} onchange="toggleDayTopic(${w.w}, '${d.key}', this)" />
-            <span class="dt-label ${doneClass}" onclick="event.stopPropagation(); selectWeekDay(${w.w}, '${d.key}')">${d.label} — ${d.value}</span>
+            <span class="dt-label ${doneClass}" onclick="event.stopPropagation(); selectWeekDay(${w.w}, '${d.key}')">${d.label} — ${alwaysEnglish(d.value)}</span>
           </div>`;
         }).join('') + `</div>`;
       } else if(isExpanded){
@@ -289,7 +794,7 @@ function login(){
 
   function renderDailyView(){
     const day = DAYS.find(d => d.key === currentDay);
-    document.getElementById('value-banner').innerHTML = `<strong>Value:</strong> ${day.value} &nbsp;·&nbsp; <strong>Link:</strong> ${day.link}`;
+    document.getElementById('value-banner').innerHTML = `<strong>Value:</strong> ${alwaysEnglish(day.value)} &nbsp;·&nbsp; <strong>Link:</strong> ${alwaysEnglish(day.link)}`;
 
     let doneCount = 0;
     let cardsHtml = '';
@@ -304,10 +809,11 @@ function login(){
         // Plain checklist item, no game, no proficiency rating
         cardsHtml += `<div class="stage-card ${done?'done':''}">
           <div class="stage-head">
-            <span class="name">${dom.label} <span class="stage-time">${dom.time}</span></span>
+            <span class="name">${pickLang(dom.label)} <span class="stage-time">${dom.time}</span></span>
             <span class="stage-tag ${done?'done':''}">${done ? 'Done' : 'Not done'}</span>
           </div>
           <div class="materials-line">Planned activity: ${activity}</div>
+          <div class="competency-tag">Covers: ${competencyFor(dom.key)}</div>
           <div class="stage-foot">
             <label class="mark-taught">
               <input type="checkbox" ${done?'checked':''} onchange="toggleDomainDone('${dom.key}', this)" />
@@ -320,10 +826,11 @@ function login(){
 
       cardsHtml += `<div class="stage-card ${done?'done':''}">
         <div class="stage-head">
-          <span class="name">${dom.label} <span class="stage-time">${dom.time}</span></span>
+          <span class="name">${pickLang(dom.label)} <span class="stage-time">${dom.time}</span></span>
           <span class="stage-tag ${done?'done':''}">${done ? 'Done today' : 'Pending'}</span>
         </div>
         <div class="materials-line">Planned activity: ${activity}</div>
+        <div class="competency-tag">Covers: ${competencyFor(dom.key)}</div>
         <div class="h5p-block">
           <div class="h5p-frame" id="${mountId(key)}">${done ? '<div class="h5p-done-msg">✓ Practised — nice work!</div>' : ''}</div>
         </div>
@@ -362,7 +869,7 @@ function login(){
       const done = !!domainDone[currentDay + '-' + dom.key];
       return `<div class="overview-row ${done ? 'done' : ''}">
         <span class="overview-time">${dom.time}</span>
-        <span class="overview-domain">${dom.label}</span>
+        <span class="overview-domain">${pickLang(dom.label)}</span>
         <span class="overview-activity">${activity}</span>
         <span class="overview-status">${done ? '✓' : '•'}</span>
       </div>`;
@@ -386,12 +893,29 @@ function login(){
   const ACTIVITY_RENDERERS = (function(){
 
     const OBJECTS = {
-      bag:    {emoji:'🎒', label:'Bag'},
-      book:   {emoji:'📖', label:'Book'},
-      pencil: {emoji:'✏️', label:'Pencil'},
-      bottle: {emoji:'🧴', label:'Bottle'},
-      crayon: {emoji:'🖍️', label:'Crayon'},
-      block:  {emoji:'🧱', label:'Block'}
+      bag:    {emoji:'🎒', label:{en:'Bag', hi:'बैग', mr:'पिशवी', gu:'બેગ'}},
+      book:   {emoji:'📖', label:{en:'Book', hi:'किताब', mr:'पुस्तक', gu:'પુસ્તક'}},
+      pencil: {emoji:'✏️', label:{en:'Pencil', hi:'पेंसिल', mr:'पेन्सिल', gu:'પેન્સિલ'}},
+      bottle: {emoji:'🧴', label:{en:'Bottle', hi:'बोतल', mr:'बाटली', gu:'બોટલ'}},
+      crayon: {emoji:'🖍️', label:{en:'Crayon', hi:'क्रेयॉन', mr:'क्रेयॉन', gu:'ક્રેયોન'}},
+      block:  {emoji:'🧱', label:{en:'Block', hi:'ब्लॉक', mr:'ठोकळा', gu:'બ્લોક'}}
+    };
+
+    // -----------------------------------------------------------------
+    // H5P UI phrases — only the Language game is fully translated for
+    // now, as the proof of concept. The other 7 interactive activities
+    // (numeracy sort, social scenarios, physical game, creative art,
+    // life skills, reflect, welcome explore) remain English-only —
+    // translating each is its own separate follow-up.
+    // -----------------------------------------------------------------
+    const H5P_PHRASES = {
+      what_is_this: {en:'What is this?', hi:'यह क्या है?', mr:'हे काय आहे?', gu:'આ શું છે?'},
+      it_is_a:      {en:'It is a...', hi:'यह एक', mr:'हे एक', gu:'આ એક છે'},
+      prev:         {en:'◀ Prev', hi:'◀ पिछला', mr:'◀ मागील', gu:'◀ પાછળ'},
+      reveal:       {en:'Reveal', hi:'दिखाएं', mr:'दाखवा', gu:'બતાવો'},
+      next:         {en:'Next ▶', hi:'आगे ▶', mr:'पुढे ▶', gu:'આગળ ▶'},
+      of:           {en:'of', hi:'में से', mr:'पैकी', gu:'માંથી'},
+      this_is_my:   {en:'This is my', hi:'यह मेरा है', mr:'हे माझे आहे', gu:'આ મારું છે'}
     };
 
     function enableDrag(item, dropzones, onSuccess, onFail){
@@ -459,13 +983,13 @@ function login(){
       container.innerHTML =
         '<div class="g-lang-card">' +
           '<span class="g-lang-emoji" id="gle">❓</span>' +
-          '<div class="g-lang-q" id="glq">What is this?</div>' +
+          '<div class="g-lang-q" id="glq">' + pickLang(H5P_PHRASES.what_is_this) + '</div>' +
           '<div class="g-lang-ans" id="gla"></div>' +
           '<div class="g-lang-sent" id="gls"></div>' +
           '<div class="g-lang-controls">' +
-            '<button class="g-btn secondary" id="glp">◀ Prev</button>' +
-            '<button class="g-btn" id="glr" style="background:var(--lang)">Reveal</button>' +
-            '<button class="g-btn secondary" id="gln">Next ▶</button>' +
+            '<button class="g-btn secondary" id="glp">' + pickLang(H5P_PHRASES.prev) + '</button>' +
+            '<button class="g-btn" id="glr" style="background:var(--lang)">' + pickLang(H5P_PHRASES.reveal) + '</button>' +
+            '<button class="g-btn secondary" id="gln">' + pickLang(H5P_PHRASES.next) + '</button>' +
           '</div>' +
           '<div class="g-lang-prog" id="glg"></div>' +
         '</div>';
@@ -473,15 +997,16 @@ function login(){
           ansEl = container.querySelector('#gla'), sentEl = container.querySelector('#gls'),
           progEl = container.querySelector('#glg');
       function render(){
-        progEl.textContent = (i+1) + ' of ' + order.length;
-        emojiEl.textContent = '❓'; qEl.textContent = 'What is this?';
+        progEl.textContent = (i+1) + ' ' + pickLang(H5P_PHRASES.of) + ' ' + order.length;
+        emojiEl.textContent = '❓'; qEl.textContent = pickLang(H5P_PHRASES.what_is_this);
         ansEl.textContent = ''; sentEl.textContent = '';
       }
       container.querySelector('#glr').addEventListener('click', function(){
         var key = order[i], obj = OBJECTS[key];
-        emojiEl.textContent = obj.emoji; qEl.textContent = 'It is a...';
-        ansEl.textContent = obj.label + '!';
-        sentEl.textContent = '“This is my ' + obj.label.toLowerCase() + '.”';
+        var objLabel = pickLang(obj.label);
+        emojiEl.textContent = obj.emoji; qEl.textContent = pickLang(H5P_PHRASES.it_is_a);
+        ansEl.textContent = objLabel + '!';
+        sentEl.textContent = '“' + pickLang(H5P_PHRASES.this_is_my) + ' ' + (currentLang === 'en' ? objLabel.toLowerCase() : objLabel) + '.”';
         revealed[key] = true;
         if(Object.keys(revealed).length >= order.length) onComplete();
       });
@@ -492,21 +1017,25 @@ function login(){
 
     function renderNumeracyGame(container, onComplete){
       var groups = {
-        writing:  {label:'Writing', icon:'✏️', items:['pencil','crayon']},
-        reading:  {label:'Reading', icon:'📖', items:['book']},
-        drinking: {label:'Drinking', icon:'🥤', items:['bottle']},
-        playing:  {label:'Playing', icon:'🧱', items:['block']}
+        writing:  {label:{en:'Writing', hi:'लिखना', mr:'लिहणे', gu:'લખવું'}, icon:'✏️', items:['pencil','crayon']},
+        reading:  {label:{en:'Reading', hi:'पढ़ना', mr:'वाचणे', gu:'વાંચવું'}, icon:'📖', items:['book']},
+        drinking: {label:{en:'Drinking', hi:'पीना', mr:'पिणे', gu:'પીવું'}, icon:'🥤', items:['bottle']},
+        playing:  {label:{en:'Playing', hi:'खेलना', mr:'खेळणे', gu:'રમવું'}, icon:'🧱', items:['block']}
+      };
+      var T = {
+        dragInstruction: {en:'Drag each item into its group', hi:'हर वस्तु को उसके समूह में खींचें', mr:'प्रत्येक वस्तू तिच्या गटात ओढा', gu:'દરેક વસ્તુને તેના જૂથમાં ખેંચો'},
+        allSorted: {en:'🎉 All sorted!', hi:'🎉 सब सही जगह पर!', mr:'🎉 सर्व नीट लावले!', gu:'🎉 બધું ગોઠવાઈ ગયું!'}
       };
       var allItems = [];
       Object.keys(groups).forEach(function(g){ groups[g].items.forEach(function(k){ allItems.push(k); }); });
       var total = allItems.length, placed = 0;
       var zonesHtml = Object.keys(groups).map(function(g){
         var grp = groups[g];
-        return '<div class="g-zone" data-accepts="' + grp.items.join(',') + '"><h5>' + grp.icon + ' ' + grp.label + '</h5></div>';
+        return '<div class="g-zone" data-accepts="' + grp.items.join(',') + '"><h5>' + grp.icon + ' ' + pickLang(grp.label) + '</h5></div>';
       }).join('');
       var trayHtml = allItems.map(function(key){ return '<div class="g-chip" data-key="' + key + '">' + OBJECTS[key].emoji + '</div>'; }).join('');
       container.innerHTML =
-        '<div class="g-sort-status" id="gss">Drag each item into its group (0 / ' + total + ')</div>' +
+        '<div class="g-sort-status" id="gss">' + pickLang(T.dragInstruction) + ' (0 / ' + total + ')</div>' +
         '<div class="g-sort-tray">' + trayHtml + '</div>' +
         '<div class="g-zones">' + zonesHtml + '</div>';
       var statusEl = container.querySelector('#gss');
@@ -515,43 +1044,44 @@ function login(){
       chips.forEach(function(chip){
         enableDrag(chip, zones, function(){
           placed++;
-          if(placed >= total){ statusEl.textContent = '🎉 All sorted!'; onComplete(); }
-          else statusEl.textContent = 'Drag each item into its group (' + placed + ' / ' + total + ')';
+          if(placed >= total){ statusEl.textContent = pickLang(T.allSorted); onComplete(); }
+          else statusEl.textContent = pickLang(T.dragInstruction) + ' (' + placed + ' / ' + total + ')';
         });
       });
     }
 
     function renderSocialGame(container, onComplete){
       var scenarios = [
-        {text:'Your friend forgot their crayon. What do you do?', options:[
-          {text:'Share your crayon with your friend', correct:true, feedback:'Sharing makes friends happy! 🤝'},
-          {text:'Keep both crayons for yourself', correct:false, feedback:'That makes your friend feel left out.'}]},
-        {text:'Everyone wants to talk at once. What should we do?', options:[
-          {text:'Shout louder than everyone else', correct:false, feedback:'That makes it hard for anyone to be heard.'},
-          {text:'Wait for your turn to speak', correct:true, feedback:'Waiting your turn shows kindness. ✅'}]},
-        {text:'Your friend falls down while playing. What do you say?', options:[
-          {text:'"Are you okay? Let me help you!"', correct:true, feedback:'A kind and caring response. 💛'},
-          {text:'Laugh and walk away', correct:false, feedback:'That would make your friend feel sad.'}]}
+        {text:{en:'Your friend forgot their crayon. What do you do?', hi:'आपके दोस्त की क्रेयॉन खो गई है। आप क्या करेंगे?', mr:'तुझ्या मित्राचा क्रेयॉन विसरला. तू काय करशील?', gu:'તારા મિત્રનું ક્રેયોન ખોવાઈ ગયું. તું શું કરીશ?'}, options:[
+          {text:{en:'Share your crayon with your friend', hi:'अपनी क्रेयॉन दोस्त के साथ साझा करें', mr:'तुझा क्रेयॉन मित्राबरोबर वाटून घे', gu:'તારું ક્રેયોન મિત્ર સાથે વહેંચ'}, correct:true, feedback:{en:'Sharing makes friends happy! 🤝', hi:'साझा करना दोस्तों को खुश करता है! 🤝', mr:'वाटून घेतल्याने मित्र आनंदी होतात! 🤝', gu:'વહેંચવાથી મિત્રો ખુશ થાય છે! 🤝'}},
+          {text:{en:'Keep both crayons for yourself', hi:'दोनों क्रेयॉन अपने पास रखें', mr:'दोन्ही क्रेयॉन स्वतःकडे ठेव', gu:'બંને ક્રેયોન તારી પાસે રાખ'}, correct:false, feedback:{en:'That makes your friend feel left out.', hi:'इससे आपका दोस्त अकेला महसूस करेगा।', mr:'यामुळे तुझा मित्र दुर्लक्षित वाटेल.', gu:'આનાથી તારો મિત્ર છોડાયેલો અનુભવશે.'}}]},
+        {text:{en:'Everyone wants to talk at once. What should we do?', hi:'सब एक साथ बोलना चाहते हैं। हमें क्या करना चाहिए?', mr:'सगळे एकदमच बोलू इच्छितात. आपण काय करावे?', gu:'બધા એકસાથે બોલવા માંગે છે. આપણે શું કરવું જોઈએ?'}, options:[
+          {text:{en:'Shout louder than everyone else', hi:'सबसे तेज़ आवाज़ में चिल्लाएं', mr:'सर्वांपेक्षा जोरात ओरडा', gu:'બધા કરતાં વધુ જોરથી બૂમો પાડ'}, correct:false, feedback:{en:'That makes it hard for anyone to be heard.', hi:'इससे किसी की भी बात सुनना मुश्किल हो जाता है।', mr:'यामुळे कोणाचेही बोलणे ऐकणे कठीण होते.', gu:'આનાથી કોઈને સાંભળવું મુશ્કેલ બને છે.'}},
+          {text:{en:'Wait for your turn to speak', hi:'बोलने के लिए अपनी बारी का इंतज़ार करें', mr:'बोलण्यासाठी तुझी पाळी येईपर्यंत थांब', gu:'બોલવાનો તારો વારો રાહ જુઓ'}, correct:true, feedback:{en:'Waiting your turn shows kindness. ✅', hi:'बारी का इंतज़ार करना दयालुता दिखाता है। ✅', mr:'पाळीची वाट पाहणे दयाळूपणा दाखवते. ✅', gu:'વારાની રાહ જોવી એ દયા દર્શાવે છે. ✅'}}]},
+        {text:{en:'Your friend falls down while playing. What do you say?', hi:'खेलते समय आपका दोस्त गिर जाता है। आप क्या कहेंगे?', mr:'खेळताना तुझा मित्र पडतो. तू काय म्हणशील?', gu:'રમતી વખતે તારો મિત્ર પડી જાય છે. તું શું કહીશ?'}, options:[
+          {text:{en:'"Are you okay? Let me help you!"', hi:'"क्या तुम ठीक हो? मैं तुम्हारी मदद करता हूँ!"', mr:'"तू ठीक आहेस का? मी तुला मदत करतो!"', gu:'"તું બરાબર છે? હું તને મદદ કરું!"'}, correct:true, feedback:{en:'A kind and caring response. 💛', hi:'एक दयालु और परवाह करने वाला जवाब। 💛', mr:'एक दयाळू आणि काळजी घेणारे उत्तर. 💛', gu:'એક દયાળુ અને કાળજી રાખતો જવાબ. 💛'}},
+          {text:{en:'Laugh and walk away', hi:'हंसें और चले जाएं', mr:'हस आणि निघून जा', gu:'હસીને ચાલ્યો જા'}, correct:false, feedback:{en:'That would make your friend feel sad.', hi:'इससे आपका दोस्त दुखी हो जाएगा।', mr:'यामुळे तुझा मित्र दुःखी होईल.', gu:'આનાથી તારો મિત્ર દુઃખી થશે.'}}]}
       ];
+      var nextBtnText = {en:'Next scenario ▶', hi:'आगे की स्थिति ▶', mr:'पुढील परिस्थिती ▶', gu:'આગળનું દ્રશ્ય ▶'};
       var i = 0, answered = {};
       container.innerHTML =
         '<div class="g-scenario">' +
           '<div class="g-scenario-text" id="gst"></div>' +
           '<div class="g-scenario-opts" id="gso"></div>' +
           '<div class="g-feedback" id="gsf"></div>' +
-          '<div class="g-scenario-controls"><button class="g-btn" id="gsn" style="background:var(--soc)">Next scenario ▶</button></div>' +
+          '<div class="g-scenario-controls"><button class="g-btn" id="gsn" style="background:var(--soc)">' + pickLang(nextBtnText) + '</button></div>' +
         '</div>';
       var textEl = container.querySelector('#gst'), optsEl = container.querySelector('#gso'), fbEl = container.querySelector('#gsf');
       function render(){
         var s = scenarios[i], sIndex = i;
-        textEl.textContent = s.text; fbEl.textContent = ''; optsEl.innerHTML = '';
+        textEl.textContent = pickLang(s.text); fbEl.textContent = ''; optsEl.innerHTML = '';
         s.options.forEach(function(opt){
           var btn = document.createElement('button');
-          btn.className = 'g-opt-btn'; btn.textContent = opt.text;
+          btn.className = 'g-opt-btn'; btn.textContent = pickLang(opt.text);
           btn.addEventListener('click', function(){
             Array.prototype.slice.call(optsEl.children).forEach(function(b){ b.disabled = true; });
             btn.classList.add(opt.correct ? 'correct' : 'incorrect');
-            fbEl.textContent = opt.feedback;
+            fbEl.textContent = pickLang(opt.feedback);
             answered[sIndex] = true;
             if(Object.keys(answered).length >= scenarios.length) onComplete();
           });
@@ -651,20 +1181,24 @@ function login(){
 
     function renderLifeGame(container, onComplete){
       var zones = [
-        {icon:'🪝', label:'Hook',       accepts:['bag']},
-        {icon:'📚', label:'Book Shelf', accepts:['book']},
-        {icon:'👜', label:'Side Pocket',accepts:['bottle']},
-        {icon:'✏️', label:'Pencil Box', accepts:['pencil','crayon']},
-        {icon:'🗑️', label:'Toy Bin',    accepts:['block']}
+        {icon:'🪝', label:{en:'Hook', hi:'हुक', mr:'हूक', gu:'હૂક'},       accepts:['bag']},
+        {icon:'📚', label:{en:'Book Shelf', hi:'किताब शेल्फ', mr:'पुस्तक कपाट', gu:'પુસ્તક કબાટ'}, accepts:['book']},
+        {icon:'👜', label:{en:'Side Pocket', hi:'साइड पॉकेट', mr:'साइड पॉकेट', gu:'સાઇડ પોકેટ'},accepts:['bottle']},
+        {icon:'✏️', label:{en:'Pencil Box', hi:'पेंसिल बॉक्स', mr:'पेन्सिल बॉक्स', gu:'પેન્સિલ બોક્સ'}, accepts:['pencil','crayon']},
+        {icon:'🗑️', label:{en:'Toy Bin', hi:'खिलौना बिन', mr:'खेळणी बिन', gu:'રમકડાં ડબ્બો'},    accepts:['block']}
       ];
+      var T = {
+        putAway: {en:'Put each item away', hi:'हर वस्तु को उसकी जगह पर रखें', mr:'प्रत्येक वस्तू तिच्या जागी ठेवा', gu:'દરેક વસ્તુ તેની જગ્યાએ મૂકો'},
+        allPlaced: {en:'🎉 Everything is in its place!', hi:'🎉 सब कुछ अपनी जगह पर है!', mr:'🎉 सर्व काही जागच्या जागी आहे!', gu:'🎉 બધું તેની જગ્યાએ છે!'}
+      };
       var items = ['bag','book','bottle','pencil','crayon','block'];
       var total = items.length, placed = 0;
       var zonesHtml = zones.map(function(z){
-        return '<div class="g-life-zone" data-accepts="' + z.accepts.join(',') + '"><h5>' + z.icon + ' ' + z.label + '</h5></div>';
+        return '<div class="g-life-zone" data-accepts="' + z.accepts.join(',') + '"><h5>' + z.icon + ' ' + pickLang(z.label) + '</h5></div>';
       }).join('');
       var trayHtml = items.map(function(key){ return '<div class="g-chip" data-key="' + key + '">' + OBJECTS[key].emoji + '</div>'; }).join('');
       container.innerHTML =
-        '<div class="g-life-status" id="gls2">Put each item away (0 / ' + total + ')</div>' +
+        '<div class="g-life-status" id="gls2">' + pickLang(T.putAway) + ' (0 / ' + total + ')</div>' +
         '<div class="g-life-tray">' + trayHtml + '</div>' +
         '<div class="g-life-zones">' + zonesHtml + '</div>';
       var statusEl = container.querySelector('#gls2');
@@ -673,21 +1207,23 @@ function login(){
       chips.forEach(function(chip){
         enableDrag(chip, zoneEls, function(){
           placed++;
-          if(placed >= total){ statusEl.textContent = '🎉 Everything is in its place!'; onComplete(); }
-          else statusEl.textContent = 'Put each item away (' + placed + ' / ' + total + ')';
+          if(placed >= total){ statusEl.textContent = pickLang(T.allPlaced); onComplete(); }
+          else statusEl.textContent = pickLang(T.putAway) + ' (' + placed + ' / ' + total + ')';
         });
       });
     }
 
     function renderReflectGame(container, onComplete){
       const prompts = [
-        "I can name it!",
-        "I remember most of it",
-        "I'll ask my teacher to explain again"
+        {en:"I can name it!", hi:'मैं इसे नाम दे सकता हूँ!', mr:'मी हे नाव सांगू शकतो!', gu:'હું તેનું નામ આપી શકું!'},
+        {en:"I remember most of it", hi:'मुझे इसका ज़्यादातर हिस्सा याद है', mr:'मला याचा बराचसा भाग आठवतो', gu:'મને તેનો મોટાભાગનો ભાગ યાદ છે'},
+        {en:"I'll ask my teacher to explain again", hi:'मैं अपने शिक्षक से फिर से समझाने के लिए कहूँगा', mr:'मी माझ्या शिक्षकांना पुन्हा समजावण्यास सांगेन', gu:'હું મારા શિક્ષકને ફરી સમજાવવા કહીશ'}
       ];
+      const quickCheck = {en:'Quick check — how did today go?', hi:'त्वरित जांच — आज का दिन कैसा रहा?', mr:'त्वरित तपासणी — आज कसा गेला?', gu:'ઝડપી ચકાસણી — આજનો દિવસ કેવો ગયો?'};
+      const wrappedUp = {en:'🎉 Nicely wrapped up!', hi:'🎉 अच्छी तरह से समाप्त!', mr:'🎉 छान समारोप!', gu:'🎉 સરસ સમાપન!'};
       container.innerHTML =
         '<div class="g-scenario">' +
-          '<div class="g-scenario-text">Quick check — how did today go?</div>' +
+          '<div class="g-scenario-text">' + pickLang(quickCheck) + '</div>' +
           '<div class="g-scenario-opts" id="grOpts"></div>' +
           '<div class="g-feedback" id="grFeedback"></div>' +
         '</div>';
@@ -695,11 +1231,11 @@ function login(){
       prompts.forEach(text => {
         const btn = document.createElement('button');
         btn.className = 'g-opt-btn';
-        btn.textContent = text;
+        btn.textContent = pickLang(text);
         btn.addEventListener('click', () => {
           Array.from(optsEl.children).forEach(b => b.disabled = true);
           btn.classList.add('correct');
-          container.querySelector('#grFeedback').textContent = '🎉 Nicely wrapped up!';
+          container.querySelector('#grFeedback').textContent = pickLang(wrappedUp);
           onComplete();
         });
         optsEl.appendChild(btn);
@@ -708,22 +1244,29 @@ function login(){
 
     function renderWelcomeExplore(container, onComplete){
       const hotspots = [
-        {id:'board',  x:20,  y:14, w:70, h:40, emoji:'📝', label:'Whiteboard — where we learn together'},
-        {id:'shelf',  x:150, y:18, w:38, h:60, emoji:'📚', label:'Book shelf — our story friends live here'},
-        {id:'window', x:14,  y:96, w:42, h:38, emoji:'🪟', label:'Window — sunshine says hello!'},
-        {id:'desk',   x:74,  y:100,w:56, h:36, emoji:'🪑', label:'Your desk — your very own spot'},
-        {id:'plant',  x:150, y:100,w:32, h:32, emoji:'🌱', label:'Class plant — we take turns watering it'}
+        {id:'board',  x:20,  y:14, w:70, h:40, emoji:'📝', label:{en:'Whiteboard — where we learn together', hi:'श्यामपट — जहाँ हम सब मिलकर सीखते हैं', mr:'फळा — जिथे आपण सगळे एकत्र शिकतो', gu:'વ્હાઇટબોર્ડ — જ્યાં આપણે સાથે શીખીએ છીએ'}},
+        {id:'shelf',  x:150, y:18, w:38, h:60, emoji:'📚', label:{en:'Book shelf — our story friends live here', hi:'किताबों की अलमारी — यहाँ हमारी कहानी वाले दोस्त रहते हैं', mr:'पुस्तकांचे कपाट — इथे आपले गोष्टीतले मित्र राहतात', gu:'પુસ્તકોનું કબાટ — અહીં આપણા વાર્તા મિત્રો રહે છે'}},
+        {id:'window', x:14,  y:96, w:42, h:38, emoji:'🪟', label:{en:'Window — sunshine says hello!', hi:'खिड़की — सूरज नमस्ते कहता है!', mr:'खिडकी — सूर्य नमस्कार करतो!', gu:'બારી — સૂરજ નમસ્તે કહે છે!'}},
+        {id:'desk',   x:74,  y:100,w:56, h:36, emoji:'🪑', label:{en:'Your desk — your very own spot', hi:'तुम्हारी डेस्क — तुम्हारी अपनी जगह', mr:'तुझे डेस्क — तुझी स्वतःची जागा', gu:'તારું ડેસ્ક — તારી પોતાની જગ્યા'}},
+        {id:'plant',  x:150, y:100,w:32, h:32, emoji:'🌱', label:{en:'Class plant — we take turns watering it', hi:'कक्षा का पौधा — हम बारी-बारी से पानी देते हैं', mr:'वर्गातील रोप — आपण आळीपाळीने पाणी घालतो', gu:'વર્ગનો છોડ — આપણે વારાફરતી પાણી આપીએ છીએ'}}
       ];
       const found = {};
+      const T = {
+        lyric: {en:'"Good morning, Friends!, we\'re happy today!<br>Welcome to our classroom, come on in and play!"', hi:'"सुप्रभात दोस्तों! आज हम खुश हैं!<br>हमारी कक्षा में आपका स्वागत है, आओ और खेलो!"', mr:'"सुप्रभात मित्रांनो! आज आम्ही आनंदी आहोत!<br>आमच्या वर्गात तुमचे स्वागत आहे, या आणि खेळा!"', gu:'"સુપ્રભાત મિત્રો! આજે આપણે ખુશ છીએ!<br>આપણા વર્ગમાં તમારું સ્વાગત છે, આવો અને રમો!"'},
+        playBtn: {en:'▶ Play welcome song', hi:'▶ स्वागत गीत बजाएं', mr:'▶ स्वागत गीत वाजवा', gu:'▶ સ્વાગત ગીત વગાડો'},
+        nextBtn: {en:"We sang it! Let's explore →", hi:'हमने गाया! अब चलो देखें →', mr:'आम्ही गायलं! चला शोधूया →', gu:'અમે ગાયું! ચાલો શોધીએ →'},
+        tapToExplore: {en:'Tap around the room to explore', hi:'कमरे में खोजने के लिए टैप करें', mr:'खोलीत शोधण्यासाठी टॅप करा', gu:'રૂમમાં શોધવા માટે ટેપ કરો'},
+        allFound: {en:'🎉 You explored the whole classroom!', hi:'🎉 आपने पूरी कक्षा का अन्वेषण कर लिया!', mr:'🎉 तुम्ही संपूर्ण वर्गाचा शोध घेतला!', gu:'🎉 તમે સમગ્ર વર્ગની શોધ કરી!'}
+      };
 
       function renderStepOne(){
         container.innerHTML =
           '<div class="g-welcome-song">' +
             '<div class="g-welcome-note" id="gwNote">🎵</div>' +
-            '<p class="g-welcome-lyric">"Good morning, Friends!, we\'re happy today!<br>Welcome to our classroom, come on in and play!"</p>' +
+            '<p class="g-welcome-lyric">' + pickLang(T.lyric) + '</p>' +
             '<div class="g-welcome-actions">' +
-              '<button class="g-btn welcome-play-btn"  style="background:var(--primary)" id="gwPlay">▶ Play welcome song</button>' +
-              '<button class="g-btn" id="gwNext" style="background:var(--primary)">We sang it! Let\'s explore →</button>' +
+              '<button class="g-btn welcome-play-btn"  style="background:var(--primary)" id="gwPlay">' + pickLang(T.playBtn) + '</button>' +
+              '<button class="g-btn" id="gwNext" style="background:var(--primary)">' + pickLang(T.nextBtn) + '</button>' +
             '</div>' +
           '</div>';
 
@@ -770,7 +1313,7 @@ function login(){
         ).join('');
 
         container.innerHTML =
-          `<div class="g-welcome-status" id="gwStatus">Tap around the room to explore (0 / ${hotspots.length})</div>
+          `<div class="g-welcome-status" id="gwStatus">${pickLang(T.tapToExplore)} (0 / ${hotspots.length})</div>
            <div class="g-welcome-room">${hotspotsHtml}</div>`;
 
         const statusEl = container.querySelector('#gwStatus');
@@ -783,7 +1326,7 @@ function login(){
             el.textContent = h.emoji;
             el.classList.add('found');
             const count = Object.keys(found).length;
-            statusEl.textContent = count < hotspots.length ? h.label : '🎉 You explored the whole classroom!';
+            statusEl.textContent = count < hotspots.length ? pickLang(h.label) : pickLang(T.allFound);
             if(count >= hotspots.length) onComplete();
           });
         });
@@ -858,3 +1401,24 @@ function login(){
   function closeRatingPanel(){
     document.getElementById('rating-panel-container').innerHTML = '';
   }
+
+/* =========================================================
+   DEV MODE — the actual trigger (moved here deliberately).
+   Runs last, after every let/const in this file is initialized —
+   see the note near devSkipLogin() above for why this had to move.
+   ========================================================= */
+(function autoDevBypassOnLoad(){
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const params = new URLSearchParams(window.location.search);
+
+  if(isLocal){
+    const wrap = document.getElementById('devSkipLoginWrap');
+    if(wrap) wrap.classList.remove('hidden');
+  }
+
+  if(!isLocal || params.has('no_dev')) return;
+
+  const role = params.get('dev_role') || 'teacher';
+  selectedRole = role;
+  devSkipLogin();
+})();

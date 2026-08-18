@@ -1,3 +1,21 @@
+// =========================================================================
+// SESSION GUARD — checks with the server that someone is actually logged
+// in as a supervisor before showing anything on this page. Without this,
+// anyone could reach supervisor.html just by typing the URL directly.
+//
+// Forwards this page's own query string (e.g. ?dev_role=supervisor) to
+// the session check — without this, a dev-mode role selected on the
+// login page never actually reaches session_check.php.
+// =========================================================================
+fetch('backend/session_check.php' + window.location.search)
+  .then(r => r.json())
+  .then(data => {
+    if(data.status !== 'logged_in' || data.role !== 'supervisor'){
+      window.location.href = 'index.html';
+    }
+  })
+  .catch(() => { window.location.href = 'index.html'; });
+
 const CATEGORIES = [
   {key:'A', label:'CLASS FUNCTIONING', items:[
     'Shift started on time, teacher present',
@@ -71,12 +89,34 @@ function closeSidebar(){
   document.getElementById('sidebarBackdrop').classList.remove('show');
 }
 
+function toggleUserMenu(){
+  document.getElementById('userDropdown').classList.toggle('hidden');
+}
+function closeUserMenu(){
+  document.getElementById('userDropdown').classList.add('hidden');
+}
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('userMenu');
+  if(menu && !menu.contains(e.target)) closeUserMenu();
+});
+
 function switchSection(section){
   document.getElementById('navVisits').classList.toggle('active', section === 'visits');
   document.getElementById('navHistory').classList.toggle('active', section === 'history');
+  document.getElementById('navSchools').classList.toggle('active', section === 'schools');
+  document.getElementById('navEvents').classList.toggle('active', section === 'events');
   document.getElementById('section-visits').classList.toggle('hidden', section !== 'visits');
   document.getElementById('section-history').classList.toggle('hidden', section !== 'history');
+  document.getElementById('section-schools').classList.toggle('hidden', section !== 'schools');
+  document.getElementById('section-events').classList.toggle('hidden', section !== 'events');
+
+  const labelMap = {visits:'Visit Checklist', history:'Visit History', schools:'My Schools', events:'Events'};
+  const labelEl = document.getElementById('pageLabel');
+  if(labelEl) labelEl.textContent = labelMap[section];
+
   if(section === 'history') renderHistory();
+  else if(section === 'schools') renderMySchools();
+  else if(section === 'events') renderEventsSection();
   closeSidebar();
 }
 
@@ -215,6 +255,253 @@ function renderHistory(){
       <span></span>
     </div>
   `).join('');
+}
+
+/* =========================================================
+   MY SCHOOLS — same ward-classification pattern as Super Admin,
+   but scoped to only the schools assigned to this supervisor.
+   ========================================================= */
+
+// Real data for Mr. Kulin Maniar's assigned schools (ward L),
+// same shape as SCHOOLS_SEED in js/superadmin.js — once a backend
+// exists, both pages would fetch this from the same /api/schools
+// endpoint, filtered server-side to this supervisor's assignment.
+const MY_SCHOOLS = [
+  {id:'s8', name:'Nehru Nagar MPS', ward:'L', address:'Shiv Shrusti School, 16, Shiv Shrusti Rd, G.T.B.Nagar, Nehru Nagar, Kurla, Mumbai, Maharashtra 400024', classes:[
+    {name:'Jr KG', teacher:'Rukhsar Shaikh'},
+    {name:'Sr KG', teacher:'Rashida Khatoon'}
+  ]},
+  {id:'s9', name:'Mohili Village MPS', ward:'L', address:'Opp. APEX HOSPITAL, Pereira Wadi, Saki Naka, Mumbai, Maharashtra 400072', classes:[
+    {name:'Jr KG', teacher:'Deepika Dubey'},
+    {name:'Sr KG', teacher:'Yasmeen Shaikh'}
+  ]},
+  {id:'s10', name:'Kajupada MPS', ward:'L', address:'Shivaji Vidhayala, Indira Nagar, Kajupada, Mumbai, Maharashtra 400072', classes:[
+    {name:'Jr KG', teacher:'Sancheti Gole'},
+    {name:'Sr KG', teacher:'Leenatha (BMC Teacher)'}
+  ]},
+  {id:'s11', name:'S.G Barve Marg MPS', ward:'L', address:'Brahmanwadi, opp. Kurla Station Kurla West, Mumbai, Maharashtra 400070', classes:[
+    {name:'Jr KG', teacher:'Khushboo Mulani'},
+    {name:'Sr KG', teacher:'Sana Ruksar Shaikh'}
+  ]},
+  {id:'s12', name:'Chunabhatti MPS', ward:'L', address:'Darawade Chawl, VN Purav Marg, Samarth Nagar, Chunabhatti, Sion, Mumbai, Maharashtra 400022', classes:[
+    {name:'Jr KG', teacher:'Radha Yadav'},
+    {name:'Sr KG', teacher:'Tasleem Shaikh'}
+  ]}
+];
+
+let mySelectedWard = null;
+let myExpandedSchoolCard = null;
+
+function getMyWards(){
+  return [...new Set(MY_SCHOOLS.map(s => s.ward))].sort();
+}
+
+function renderMySchools(){
+  mySelectedWard = null;
+  document.getElementById('my-schools-body').innerHTML = `<div class="ward-grid" id="myWardGrid"></div>`;
+  renderMyWardCards();
+}
+
+function renderMyWardCards(){
+  const container = document.getElementById('myWardGrid');
+  container.innerHTML = getMyWards().map(w => {
+    const count = MY_SCHOOLS.filter(s => s.ward === w).length;
+    return `<div class="ward-card" onclick="selectMyWard('${w}')">
+      <div class="ward-card-code">${w}</div>
+      <div class="ward-card-count">${count} school${count===1?'':'s'}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectMyWard(ward){
+  mySelectedWard = ward;
+  myExpandedSchoolCard = null;
+  const count = MY_SCHOOLS.filter(s => s.ward === ward).length;
+  document.getElementById('my-schools-body').innerHTML = `
+    <button class="btn-sup-outline" style="margin-bottom:16px;" onclick="renderMySchools()">← All wards</button>
+    <h3 class="report-h3">Ward ${ward} — ${count} school${count===1?'':'s'}</h3>
+    <div class="schools-grid" id="mySchoolsGrid"></div>
+  `;
+  renderMySchoolCards();
+}
+
+function renderMySchoolCards(){
+  const container = document.getElementById('mySchoolsGrid');
+  const list = mySelectedWard ? MY_SCHOOLS.filter(s => s.ward === mySelectedWard) : MY_SCHOOLS;
+  container.innerHTML = list.map(sc => {
+    const isOpen = myExpandedSchoolCard === sc.id;
+    const classSummary = sc.classes.map(c => `${c.name}: ${c.teacher || 'Unassigned'}`).join(' · ');
+    return `<div class="school-card" onclick="toggleMySchoolCard('${sc.id}')">
+      <div class="school-card-head">
+        <div>
+          <h4>${sc.name}</h4>
+          <div class="meta">Ward ${sc.ward} · ${classSummary}</div>
+        </div>
+        <span class="cat-chevron ${isOpen?'open':''}">▶</span>
+      </div>
+      ${isOpen ? `<div class="school-card-details" onclick="event.stopPropagation()">
+        <div class="row"><span>📍 Address</span><span>${sc.address || '—'}</span></div>
+        ${sc.classes.map(c => `<div class="row"><span>👤 ${c.name} teacher</span><span>${c.teacher || 'Unassigned'}</span></div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleMySchoolCard(schoolId){
+  myExpandedSchoolCard = (myExpandedSchoolCard === schoolId) ? null : schoolId;
+  renderMySchoolCards();
+}
+
+/* =========================================================
+   EVENTS — PTMs, teacher trainings, and other scheduled events.
+   Real backend-backed feature: creates go to add_event.php,
+   listing comes from get_events.php, school/class dropdowns
+   come from get_schools_list.php / get_classes_for_school.php.
+
+   KNOWN LIMITATION: the school dropdown shows every real school,
+   not just this supervisor's assigned ones — that assignment
+   link doesn't exist in the database yet. Once it does, swap
+   get_schools_list.php for a version filtered to this supervisor.
+   ========================================================= */
+
+async function renderEventsSection(){
+  const container = document.getElementById('events-admin-body');
+  container.innerHTML = `<p class="sub">Loading…</p>`;
+
+  try{
+    const res = await fetch('backend/get_schools_list.php' + window.location.search);
+    const data = await res.json();
+    if(data.status !== 'success'){
+      container.innerHTML = `<p class="sub">Could not load schools right now.</p>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="visit-banner">
+        <div><strong>Add a new event</strong><br/>PTM, teacher training, or anything else worth flagging</div>
+      </div>
+
+      <form id="addEventForm" onsubmit="return submitNewEvent(event)" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:480px; margin-bottom:24px;">
+        <label class="field-label-admin">School</label>
+        <select id="evSchool" onchange="loadClassesForSelectedSchool()" required>
+          <option value="">— Select a school —</option>
+          ${data.schools.map(s => `<option value="${s.id}">${s.name} (Ward ${s.ward})</option>`).join('')}
+        </select>
+
+        <label class="field-label-admin">Class (optional — leave blank for whole school)</label>
+        <select id="evClass"><option value="">— Whole school —</option></select>
+
+        <label class="field-label-admin">Event type</label>
+        <select id="evType">
+          <option value="PTM">PTM</option>
+          <option value="Teacher Training">Teacher Training</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <label class="field-label-admin">Date</label>
+        <input type="date" id="evDate" required />
+
+        <label class="field-label-admin">Time (optional)</label>
+        <input type="time" id="evTime" />
+
+        <label class="field-label-admin">Title</label>
+        <input type="text" id="evTitle" placeholder="e.g. First Term PTM" required />
+
+        <label class="field-label-admin">Notes (optional)</label>
+        <textarea id="evNotes" rows="2" style="width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:13px;"></textarea>
+
+        <div id="addEventResult" style="margin-top:10px;"></div>
+        <button type="submit" class="btn-sup" style="margin-top:10px;">Add event</button>
+      </form>
+
+      <h3 class="report-h3">All scheduled events</h3>
+      <div id="eventsListBody"><p class="sub">Loading events…</p></div>
+    `;
+
+    loadEventsList();
+  }catch(err){
+    container.innerHTML = `<p class="sub">Could not reach the server.</p>`;
+  }
+}
+
+async function loadClassesForSelectedSchool(){
+  const schoolId = document.getElementById('evSchool').value;
+  const classSelect = document.getElementById('evClass');
+  classSelect.innerHTML = `<option value="">— Whole school —</option>`;
+  if(!schoolId) return;
+
+  try{
+    const res = await fetch('backend/get_classes_for_school.php?school_id=' + schoolId + '&' + window.location.search.replace('?',''));
+    const data = await res.json();
+    if(data.status === 'success'){
+      data.classes.forEach(c => {
+        classSelect.innerHTML += `<option value="${c.id}">${c.name} — ${c.teacher_name}</option>`;
+      });
+    }
+  }catch(err){ /* leave as whole-school only if this fails */ }
+}
+
+async function submitNewEvent(event){
+  event.preventDefault();
+  const resultEl = document.getElementById('addEventResult');
+  resultEl.innerHTML = '';
+
+  const payload = {
+    school_id: document.getElementById('evSchool').value,
+    class_id: document.getElementById('evClass').value || null,
+    event_type: document.getElementById('evType').value,
+    event_date: document.getElementById('evDate').value,
+    event_time: document.getElementById('evTime').value || null,
+    title: document.getElementById('evTitle').value.trim(),
+    notes: document.getElementById('evNotes').value.trim()
+  };
+
+  try{
+    const res = await fetch('backend/add_event.php' + window.location.search, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if(data.status !== 'success'){
+      resultEl.innerHTML = `<div class="au-error">${data.message}</div>`;
+      return false;
+    }
+
+    resultEl.innerHTML = `<div class="au-success">Event added.</div>`;
+    document.getElementById('addEventForm').reset();
+    document.getElementById('evClass').innerHTML = `<option value="">— Whole school —</option>`;
+    loadEventsList();
+  }catch(err){
+    resultEl.innerHTML = `<div class="au-error">Could not reach the server.</div>`;
+  }
+  return false;
+}
+
+async function loadEventsList(){
+  const listEl = document.getElementById('eventsListBody');
+  try{
+    const res = await fetch('backend/get_events.php' + window.location.search);
+    const data = await res.json();
+
+    if(data.status !== 'success' || !data.events.length){
+      listEl.innerHTML = `<p class="sub">No events scheduled yet.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = data.events.map(e => `
+      <div class="vh-row">
+        <span class="vh-date">${e.event_date}${e.event_time ? ' · ' + e.event_time.slice(0,5) : ''}</span>
+        <span class="vh-teacher">${e.title} — ${e.school_name}${e.class_name ? ' (' + e.class_name + ')' : ' (whole school)'}</span>
+        <span class="vh-score good">${e.event_type}</span>
+        <span></span>
+        <span></span>
+      </div>
+    `).join('');
+  }catch(err){
+    listEl.innerHTML = `<p class="sub">Could not load events.</p>`;
+  }
 }
 
 renderTeacherList();

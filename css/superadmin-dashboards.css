@@ -1,0 +1,405 @@
+/* =========================================================
+   SUPER ADMIN DASHBOARDS — add-on stylesheet
+   New Overview/Weekly Report/Visits/Schools styling is untouched —
+   this file only adds what's needed for the 3 new sections:
+   Supervisor Dashboard, School Performance, Quarterly Review.
+
+   Loads AFTER css/style.css.
+   ========================================================= */
+
+/* ---- shared color additions (danger state + darker supervisor accent) ---- */
+:root{
+  --role-supervisor-dark:#3d3690;
+  --danger:#c8433f; --danger-bg:#fbeaea;
+}
+
+/* ---- supporting classes used by the 3 new sections ---- */
+.btn-sup-outline{background:#fff; color:var(--role-supervisor); border:1.5px solid var(--role-supervisor); padding:8px 16px; border-radius:8px; font-size:12.5px; font-weight:bold; cursor:pointer;}
+.review-box{margin-top:22px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;}
+.review-box textarea{width:100%; min-height:60px; font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; resize:vertical;}
+.field-label-admin{display:block; font-size:12px; font-weight:bold; color:var(--text-muted); margin-bottom:6px;}
+
+/* ============================================================
+   SUPER ADMIN DASHBOARDS
+   Chart roles are declared once here and referenced by role below.
+   Categorical slots are the app's own brand hues, validated with the
+   data-viz palette validator against the #ffffff card surface:
+   worst adjacent CVD deltaE 24.3, normal-vision 28.5, both >= 3:1 contrast.
+   No dark mode: the rest of this app is light-only, so a dark chart
+   surface here would be inconsistent. See handover note.
+   ============================================================ */
+
+.dash{
+  --adm-series-1:#1d9e75;        /* categorical slot 1 — brand teal */
+  --adm-series-2:#534ab7;        /* categorical slot 2 — supervisor purple */
+  --adm-track-1:#e1f5ee;         /* lighter step of slot 1's own ramp */
+  --adm-grid:#e6f1ec;            /* hairline, one step off surface */
+  --adm-ink-muted:#5f7a70;
+}
+
+/* ---- filter row: one row above everything it scopes ---- */
+.adm-filter-row{display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:18px;}
+.adm-seg{display:flex; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+.adm-seg-btn{background:var(--card); border:none; padding:9px 16px; font-size:12.5px; font-weight:bold; color:var(--text-muted); cursor:pointer;}
+.adm-seg-btn + .adm-seg-btn{border-left:1px solid var(--border);}
+.adm-seg-btn:hover{background:var(--bg);}
+.adm-seg-btn.active{background:var(--primary); color:#fff;}
+.adm-sel{font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);}
+.adm-sel select{display:block; margin-top:5px; padding:9px 10px; border:1px solid var(--border); border-radius:7px; font-size:13px; background:#fff; color:var(--text); font-family:inherit; min-width:210px;}
+.adm-sel select:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light);}
+.adm-period-tag{font-size:11.5px; color:var(--text-muted); margin-left:auto; padding-bottom:9px;}
+
+/* ---- hero figure: exactly one per view ---- */
+.adm-hero{display:flex; align-items:center; justify-content:space-between; gap:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:18px; flex-wrap:wrap;}
+.adm-hero-label{margin:0 0 4px; font-size:12px; color:var(--text-muted);}
+/* proportional figures on the hero — never tabular-nums at display size */
+.adm-hero-value{margin:0; font-size:52px; line-height:1; font-weight:bold; color:var(--primary-dark); font-family:inherit;}
+.adm-hero-unit{font-size:19px; font-weight:normal; color:var(--text-muted); margin-left:3px;}
+.adm-hero-sub{margin:8px 0 0; font-size:12px; color:var(--text-muted);}
+.adm-hero-trend{text-align:right;}
+.adm-hero-trendlabel{margin:2px 0 0; font-size:10.5px; color:var(--text-muted);}
+.adm-spark{display:block;}
+
+/* ---- stat tiles ---- */
+.adm-tiles .stat-card{display:flex; flex-direction:column; gap:7px;}
+.adm-of{font-size:13px; font-weight:normal; color:var(--text-muted);}
+.adm-tile-foot{margin:0; font-size:11px; color:var(--text-muted);}
+
+/* ---- meter: fill carries severity, track is a lighter step of the ramp ---- */
+.adm-meter{display:block; height:7px; border-radius:4px; background:var(--adm-track-1); overflow:hidden; min-width:52px;}
+.adm-meter i{display:block; height:100%; border-radius:0 4px 4px 0; background:var(--adm-series-1);}
+.adm-meter.warn{background:var(--warning-bg);}
+.adm-meter.warn i{background:var(--warning);}
+.adm-meter.bad{background:var(--danger-bg);}
+.adm-meter.bad i{background:var(--danger);}
+.adm-cellmeter{display:flex; align-items:center; gap:8px;}
+.adm-cellmeter .adm-meter{width:54px; flex-shrink:0;}
+.adm-cellmeter b{font-variant-numeric:tabular-nums;}
+
+/* ---- percentage cell: colour plus a word, never colour alone ---- */
+.adm-pct{font-weight:bold; font-variant-numeric:tabular-nums;}
+.adm-pct.ok{color:var(--success);}
+.adm-pct.warn{color:var(--warning);}
+.adm-pct.bad{color:var(--danger);}
+.adm-status{font-size:11.5px; font-weight:bold; white-space:nowrap;}
+.adm-status.ok{color:var(--success);}
+.adm-status.warn{color:var(--warning);}
+.adm-status.bad{color:var(--danger);}
+
+/* ---- delta ---- */
+.adm-delta{font-size:10.5px; font-weight:bold; white-space:nowrap;}
+.adm-delta.up{color:var(--success);}
+.adm-delta.down{color:var(--danger);}
+.adm-delta.same{color:var(--text-muted); font-weight:normal;}
+
+/* ---- ratio deviation bar: position around a 1.00 baseline ---- */
+.adm-ratiobar{position:relative; display:inline-block; width:74px; height:16px; background:var(--bg); border:1px solid var(--adm-grid); border-radius:3px; vertical-align:middle;}
+.adm-ratiobar .bar{position:absolute; top:3px; bottom:3px; border-radius:2px; background:var(--adm-series-1);}
+.adm-ratiobar.below .bar{background:var(--danger);}
+.adm-ratiobar .mid{position:absolute; top:0; bottom:0; width:1px; background:var(--text-muted);}
+.adm-ratio-cell{white-space:nowrap;}
+.adm-ratio-cell b{margin-left:7px; font-variant-numeric:tabular-nums;}
+.adm-ratio-word{display:block; font-size:10px; color:var(--text-muted); margin-top:2px;}
+
+/* ---- per-supervisor cards ---- */
+.adm-sup-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:14px; margin-bottom:24px;}
+.adm-sup-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+.adm-sup-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:11px; border-bottom:1px solid var(--border); margin-bottom:11px;}
+.adm-sup-head strong{font-size:14px;}
+.adm-sup-meta{display:block; font-size:11px; color:var(--text-muted); margin-top:2px;}
+.adm-sup-spark{text-align:right;}
+.adm-sup-sparklabel{font-size:9.5px; color:var(--text-muted);}
+.adm-sup-rows{display:flex; flex-direction:column; gap:9px;}
+.adm-sup-row{display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px;}
+.adm-sup-rowlabel{font-size:11.5px; color:var(--text-muted);}
+.adm-sup-rowval{font-size:11.5px; text-align:right; white-space:nowrap;}
+.adm-sup-rowval b{font-variant-numeric:tabular-nums;}
+.adm-sup-rowval.muted{color:var(--text-muted);}
+.adm-sup-foot{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:12px; padding-top:11px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text-muted);}
+.adm-sup-foot b{color:var(--text); font-variant-numeric:tabular-nums;}
+
+/* ---- tables ---- */
+.adm-table{font-size:12.5px;}
+.adm-table td, .adm-table th{vertical-align:top;}
+.adm-table tbody td{font-variant-numeric:tabular-nums;}
+.adm-table .adm-brief, .adm-table .adm-sub{font-variant-numeric:normal;}
+.adm-th{cursor:pointer; user-select:none; white-space:nowrap;}
+.adm-th:hover{text-decoration:underline;}
+.adm-th.sorted{color:var(--primary-dark);}
+.adm-sub{font-size:10.5px; color:var(--text-muted); font-weight:normal; margin-top:2px;}
+.adm-brief{color:var(--text-muted); font-size:11.5px; min-width:190px; line-height:1.5;}
+.adm-perf-table{min-width:1080px;}
+.adm-table-toolbar{display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;}
+.adm-search{flex:1; min-width:240px; padding:9px 11px; margin:0; border:1px solid var(--border); border-radius:7px; font-size:13px;}
+.adm-search:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light);}
+.adm-note-inline{font-size:11px; color:var(--text-muted);}
+
+/* ---- quarterly column chart: one measure, one axis ---- */
+.adm-chart-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;}
+.adm-legend{display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; font-size:11.5px; color:var(--text-muted);}
+.adm-key{display:flex; align-items:center; gap:6px;}
+.adm-key .sw{width:11px; height:11px; border-radius:3px; display:inline-block;}
+.adm-key .sw.s1{background:var(--adm-series-1);}
+.adm-key .sw.s2{background:var(--adm-series-2);}
+.adm-key .sw.partial{background:var(--adm-track-1); border:1px solid var(--adm-series-1);}
+.adm-qbars{display:flex; align-items:flex-end; gap:2px; height:170px;}
+.adm-qbar-col{flex:1; display:flex; flex-direction:column; align-items:center; height:100%;}
+.adm-qbar-track{flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; border-bottom:1px solid var(--adm-grid);}
+/* <=24px thick, 4px rounded data-end, square at the baseline */
+.adm-qbar{width:100%; max-width:24px; background:var(--adm-series-1); border-radius:4px 4px 0 0; min-height:3px;}
+.adm-qbar.partial{background:var(--adm-track-1); border:1px solid var(--adm-series-1); border-bottom:none;}
+.adm-qbar.sel{background:var(--adm-series-2); border:none;}
+/* both states at once: keep the hollow "in progress" fill, take the selected hue */
+.adm-qbar.sel.partial{background:var(--role-supervisor-light); border:1px solid var(--adm-series-2); border-bottom:none;}
+.adm-qbar-val{font-size:12px; font-weight:bold; margin-top:6px; font-variant-numeric:tabular-nums;}
+.adm-qbar-label{font-size:10px; color:var(--text-muted); text-align:center; margin-top:2px;}
+
+/* ---- standouts ---- */
+.adm-standout-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
+.adm-standout{background:var(--card); border:1px solid var(--border); border-left:3px solid var(--adm-series-1); border-radius:10px; padding:13px 15px;}
+.adm-standout.bad{border-left-color:var(--danger);}
+.adm-standout-label{display:block; font-size:10px; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:4px;}
+.adm-standout strong{font-size:14px;}
+.adm-standout p{margin:4px 0 0; font-size:11.5px; color:var(--text-muted);}
+.adm-h4{font-size:13px; margin:20px 0 8px;}
+
+/* ---- notes, callouts, sign-off ---- */
+.adm-note{font-size:11px; color:var(--text-muted); margin:8px 0 14px; line-height:1.6;}
+.adm-callout{background:var(--primary-light); color:var(--primary-dark); border-radius:9px; padding:11px 15px; font-size:12.5px; margin-bottom:16px; line-height:1.6;}
+.adm-signed{background:var(--success-bg); color:var(--success); border-radius:9px; padding:11px 15px; font-size:12.5px; margin-bottom:16px;}
+.adm-signed-note{color:var(--text); margin-top:5px; font-size:12px; font-style:italic;}
+.adm-footnote{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-top:22px; font-size:11.5px; color:var(--text-muted); line-height:1.65;}
+.adm-footnote strong{color:var(--text); font-size:12px;}
+.adm-footnote ul{margin:7px 0 0; padding-left:18px;}
+.adm-footnote b{color:var(--text);}
+.adm-footnote-warn{margin:10px 0 0; padding-top:9px; border-top:1px solid var(--border); color:var(--warning); font-weight:bold;}
+
+.dash-wide{max-width:1280px;}
+
+@media (max-width:760px){
+  .adm-filter-row{flex-direction:column; align-items:stretch;}
+  .adm-period-tag{margin-left:0; padding-bottom:0;}
+  .adm-sel select{min-width:0; width:100%;}
+  .adm-hero{flex-direction:column; align-items:flex-start;}
+  .adm-hero-value{font-size:44px;}
+  .adm-hero-trend{text-align:left;}
+  .adm-sup-row{grid-template-columns:96px 1fr; row-gap:3px;}
+  .adm-sup-rowval{grid-column:2; text-align:left;}
+  .adm-qbars{height:140px;}
+}
+
+@media print{
+  .adm-filter-row, .adm-table-toolbar{display:none !important;}
+  .adm-hero, .adm-sup-card, .adm-chart-card, .adm-footnote, .adm-standout{border:1px solid #999; page-break-inside:avoid;}
+  .adm-perf-table{min-width:0; font-size:9.5px;}
+  .adm-qbar{background:#666 !important;}
+  .adm-qbar.sel{background:#333 !important;}
+  .adm-meter i{background:#555 !important;}
+  .adm-table tr{page-break-inside:avoid;}
+}
+
+
+/* =========================================================
+   SUPER ADMIN DASHBOARDS — add-on stylesheet
+   New Overview/Weekly Report/Visits/Schools styling is untouched —
+   this file only adds what's needed for the 3 new sections:
+   Supervisor Dashboard, School Performance, Quarterly Review.
+
+   Loads AFTER css/style.css.
+   ========================================================= */
+
+/* ---- shared color additions (danger state + darker supervisor accent) ---- */
+:root{
+  --role-supervisor-dark:#3d3690;
+  --danger:#c8433f; --danger-bg:#fbeaea;
+}
+
+/* ---- supporting classes used by the 3 new sections ---- */
+.btn-sup-outline{background:#fff; color:var(--role-supervisor); border:1.5px solid var(--role-supervisor); padding:8px 16px; border-radius:8px; font-size:12.5px; font-weight:bold; cursor:pointer;}
+.review-box{margin-top:22px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;}
+.review-box textarea{width:100%; min-height:60px; font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; resize:vertical;}
+.field-label-admin{display:block; font-size:12px; font-weight:bold; color:var(--text-muted); margin-bottom:6px;}
+
+/* ============================================================
+   SUPER ADMIN DASHBOARDS
+   Chart roles are declared once here and referenced by role below.
+   Categorical slots are the app's own brand hues, validated with the
+   data-viz palette validator against the #ffffff card surface:
+   worst adjacent CVD deltaE 24.3, normal-vision 28.5, both >= 3:1 contrast.
+   No dark mode: the rest of this app is light-only, so a dark chart
+   surface here would be inconsistent. See handover note.
+   ============================================================ */
+
+.dash{
+  --adm-series-1:#1d9e75;        /* categorical slot 1 — brand teal */
+  --adm-series-2:#534ab7;        /* categorical slot 2 — supervisor purple */
+  --adm-track-1:#e1f5ee;         /* lighter step of slot 1's own ramp */
+  --adm-grid:#e6f1ec;            /* hairline, one step off surface */
+  --adm-ink-muted:#5f7a70;
+}
+
+/* ---- filter row: one row above everything it scopes ---- */
+.adm-filter-row{display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:18px;}
+.adm-seg{display:flex; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+.adm-seg-btn{background:var(--card); border:none; padding:9px 16px; font-size:12.5px; font-weight:bold; color:var(--text-muted); cursor:pointer;}
+.adm-seg-btn + .adm-seg-btn{border-left:1px solid var(--border);}
+.adm-seg-btn:hover{background:var(--bg);}
+.adm-seg-btn.active{background:var(--primary); color:#fff;}
+.adm-sel{font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);}
+.adm-sel select{display:block; margin-top:5px; padding:9px 10px; border:1px solid var(--border); border-radius:7px; font-size:13px; background:#fff; color:var(--text); font-family:inherit; min-width:210px;}
+.adm-sel select:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light);}
+.adm-period-tag{font-size:11.5px; color:var(--text-muted); margin-left:auto; padding-bottom:9px;}
+
+/* ---- hero figure: exactly one per view ---- */
+.adm-hero{display:flex; align-items:center; justify-content:space-between; gap:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:18px; flex-wrap:wrap;}
+.adm-hero-label{margin:0 0 4px; font-size:12px; color:var(--text-muted);}
+/* proportional figures on the hero — never tabular-nums at display size */
+.adm-hero-value{margin:0; font-size:52px; line-height:1; font-weight:bold; color:var(--primary-dark); font-family:inherit;}
+.adm-hero-unit{font-size:19px; font-weight:normal; color:var(--text-muted); margin-left:3px;}
+.adm-hero-sub{margin:8px 0 0; font-size:12px; color:var(--text-muted);}
+.adm-hero-trend{text-align:right;}
+.adm-hero-trendlabel{margin:2px 0 0; font-size:10.5px; color:var(--text-muted);}
+.adm-spark{display:block;}
+
+/* ---- stat tiles ---- */
+.adm-tiles .stat-card{display:flex; flex-direction:column; gap:7px;}
+.adm-of{font-size:13px; font-weight:normal; color:var(--text-muted);}
+.adm-tile-foot{margin:0; font-size:11px; color:var(--text-muted);}
+
+/* ---- meter: fill carries severity, track is a lighter step of the ramp ---- */
+.adm-meter{display:block; height:7px; border-radius:4px; background:var(--adm-track-1); overflow:hidden; min-width:52px;}
+.adm-meter i{display:block; height:100%; border-radius:0 4px 4px 0; background:var(--adm-series-1);}
+.adm-meter.warn{background:var(--warning-bg);}
+.adm-meter.warn i{background:var(--warning);}
+.adm-meter.bad{background:var(--danger-bg);}
+.adm-meter.bad i{background:var(--danger);}
+.adm-cellmeter{display:flex; align-items:center; gap:8px;}
+.adm-cellmeter .adm-meter{width:54px; flex-shrink:0;}
+.adm-cellmeter b{font-variant-numeric:tabular-nums;}
+
+/* ---- percentage cell: colour plus a word, never colour alone ---- */
+.adm-pct{font-weight:bold; font-variant-numeric:tabular-nums;}
+.adm-pct.ok{color:var(--success);}
+.adm-pct.warn{color:var(--warning);}
+.adm-pct.bad{color:var(--danger);}
+.adm-status{font-size:11.5px; font-weight:bold; white-space:nowrap;}
+.adm-status.ok{color:var(--success);}
+.adm-status.warn{color:var(--warning);}
+.adm-status.bad{color:var(--danger);}
+
+/* ---- delta ---- */
+.adm-delta{font-size:10.5px; font-weight:bold; white-space:nowrap;}
+.adm-delta.up{color:var(--success);}
+.adm-delta.down{color:var(--danger);}
+.adm-delta.same{color:var(--text-muted); font-weight:normal;}
+
+/* ---- ratio deviation bar: position around a 1.00 baseline ---- */
+.adm-ratiobar{position:relative; display:inline-block; width:74px; height:16px; background:var(--bg); border:1px solid var(--adm-grid); border-radius:3px; vertical-align:middle;}
+.adm-ratiobar .bar{position:absolute; top:3px; bottom:3px; border-radius:2px; background:var(--adm-series-1);}
+.adm-ratiobar.below .bar{background:var(--danger);}
+.adm-ratiobar .mid{position:absolute; top:0; bottom:0; width:1px; background:var(--text-muted);}
+.adm-ratio-cell{white-space:nowrap;}
+.adm-ratio-cell b{margin-left:7px; font-variant-numeric:tabular-nums;}
+.adm-ratio-word{display:block; font-size:10px; color:var(--text-muted); margin-top:2px;}
+
+/* ---- per-supervisor cards ---- */
+.adm-sup-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:14px; margin-bottom:24px;}
+.adm-sup-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+.adm-sup-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:11px; border-bottom:1px solid var(--border); margin-bottom:11px;}
+.adm-sup-head strong{font-size:14px;}
+.adm-sup-meta{display:block; font-size:11px; color:var(--text-muted); margin-top:2px;}
+.adm-sup-spark{text-align:right;}
+.adm-sup-sparklabel{font-size:9.5px; color:var(--text-muted);}
+.adm-sup-rows{display:flex; flex-direction:column; gap:9px;}
+.adm-sup-row{display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px;}
+.adm-sup-rowlabel{font-size:11.5px; color:var(--text-muted);}
+.adm-sup-rowval{font-size:11.5px; text-align:right; white-space:nowrap;}
+.adm-sup-rowval b{font-variant-numeric:tabular-nums;}
+.adm-sup-rowval.muted{color:var(--text-muted);}
+.adm-sup-foot{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:12px; padding-top:11px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text-muted);}
+.adm-sup-foot b{color:var(--text); font-variant-numeric:tabular-nums;}
+
+/* ---- tables ---- */
+.adm-table{font-size:12.5px;}
+.adm-table td, .adm-table th{vertical-align:top;}
+.adm-table tbody td{font-variant-numeric:tabular-nums;}
+.adm-table .adm-brief, .adm-table .adm-sub{font-variant-numeric:normal;}
+.adm-th{cursor:pointer; user-select:none; white-space:nowrap;}
+.adm-th:hover{text-decoration:underline;}
+.adm-th.sorted{color:var(--primary-dark);}
+.adm-sub{font-size:10.5px; color:var(--text-muted); font-weight:normal; margin-top:2px;}
+.adm-brief{color:var(--text-muted); font-size:11.5px; min-width:190px; line-height:1.5;}
+.adm-perf-table{min-width:1080px;}
+.adm-table-toolbar{display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;}
+.adm-search{flex:1; min-width:240px; padding:9px 11px; margin:0; border:1px solid var(--border); border-radius:7px; font-size:13px;}
+.adm-search:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light);}
+.adm-note-inline{font-size:11px; color:var(--text-muted);}
+
+/* ---- quarterly column chart: one measure, one axis ---- */
+.adm-chart-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;}
+.adm-legend{display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; font-size:11.5px; color:var(--text-muted);}
+.adm-key{display:flex; align-items:center; gap:6px;}
+.adm-key .sw{width:11px; height:11px; border-radius:3px; display:inline-block;}
+.adm-key .sw.s1{background:var(--adm-series-1);}
+.adm-key .sw.s2{background:var(--adm-series-2);}
+.adm-key .sw.partial{background:var(--adm-track-1); border:1px solid var(--adm-series-1);}
+.adm-qbars{display:flex; align-items:flex-end; gap:2px; height:170px;}
+.adm-qbar-col{flex:1; display:flex; flex-direction:column; align-items:center; height:100%;}
+.adm-qbar-track{flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; border-bottom:1px solid var(--adm-grid);}
+/* <=24px thick, 4px rounded data-end, square at the baseline */
+.adm-qbar{width:100%; max-width:24px; background:var(--adm-series-1); border-radius:4px 4px 0 0; min-height:3px;}
+.adm-qbar.partial{background:var(--adm-track-1); border:1px solid var(--adm-series-1); border-bottom:none;}
+.adm-qbar.sel{background:var(--adm-series-2); border:none;}
+/* both states at once: keep the hollow "in progress" fill, take the selected hue */
+.adm-qbar.sel.partial{background:var(--role-supervisor-light); border:1px solid var(--adm-series-2); border-bottom:none;}
+.adm-qbar-val{font-size:12px; font-weight:bold; margin-top:6px; font-variant-numeric:tabular-nums;}
+.adm-qbar-label{font-size:10px; color:var(--text-muted); text-align:center; margin-top:2px;}
+
+/* ---- standouts ---- */
+.adm-standout-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
+.adm-standout{background:var(--card); border:1px solid var(--border); border-left:3px solid var(--adm-series-1); border-radius:10px; padding:13px 15px;}
+.adm-standout.bad{border-left-color:var(--danger);}
+.adm-standout-label{display:block; font-size:10px; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:4px;}
+.adm-standout strong{font-size:14px;}
+.adm-standout p{margin:4px 0 0; font-size:11.5px; color:var(--text-muted);}
+.adm-h4{font-size:13px; margin:20px 0 8px;}
+
+/* ---- notes, callouts, sign-off ---- */
+.adm-note{font-size:11px; color:var(--text-muted); margin:8px 0 14px; line-height:1.6;}
+.adm-callout{background:var(--primary-light); color:var(--primary-dark); border-radius:9px; padding:11px 15px; font-size:12.5px; margin-bottom:16px; line-height:1.6;}
+.adm-signed{background:var(--success-bg); color:var(--success); border-radius:9px; padding:11px 15px; font-size:12.5px; margin-bottom:16px;}
+.adm-signed-note{color:var(--text); margin-top:5px; font-size:12px; font-style:italic;}
+.adm-footnote{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-top:22px; font-size:11.5px; color:var(--text-muted); line-height:1.65;}
+.adm-footnote strong{color:var(--text); font-size:12px;}
+.adm-footnote ul{margin:7px 0 0; padding-left:18px;}
+.adm-footnote b{color:var(--text);}
+.adm-footnote-warn{margin:10px 0 0; padding-top:9px; border-top:1px solid var(--border); color:var(--warning); font-weight:bold;}
+
+.dash-wide{max-width:1280px;}
+
+@media (max-width:760px){
+  .adm-filter-row{flex-direction:column; align-items:stretch;}
+  .adm-period-tag{margin-left:0; padding-bottom:0;}
+  .adm-sel select{min-width:0; width:100%;}
+  .adm-hero{flex-direction:column; align-items:flex-start;}
+  .adm-hero-value{font-size:44px;}
+  .adm-hero-trend{text-align:left;}
+  .adm-sup-row{grid-template-columns:96px 1fr; row-gap:3px;}
+  .adm-sup-rowval{grid-column:2; text-align:left;}
+  .adm-qbars{height:140px;}
+}
+
+@media print{
+  .adm-filter-row, .adm-table-toolbar{display:none !important;}
+  .adm-hero, .adm-sup-card, .adm-chart-card, .adm-footnote, .adm-standout{border:1px solid #999; page-break-inside:avoid;}
+  .adm-perf-table{min-width:0; font-size:9.5px;}
+  .adm-qbar{background:#666 !important;}
+  .adm-qbar.sel{background:#333 !important;}
+  .adm-meter i{background:#555 !important;}
+  .adm-table tr{page-break-inside:avoid;}
+}
+
+.add-user-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; max-width:420px;}
+.add-user-card select{width:100%; padding:9px 10px; margin:4px 0 14px; border:1px solid var(--border); border-radius:7px; font-size:13px; font-family:inherit; background:#fff;}
+.au-success{background:var(--success-bg); color:var(--success); border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.6;}
+.au-error{background:var(--danger-bg); color:var(--danger); border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:13px;}

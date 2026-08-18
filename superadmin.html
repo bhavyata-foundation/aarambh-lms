@@ -5,12 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bhavyata Portal — Super Admin</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/superadmin-dashboards.css" />
 </head>
 <body>
 
 <div class="topbar">
-  <div><button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button><span class="brand">Bhavyata portal</span><span class="tag">Super Admin</span></div>
-  <button onclick="location.href='index.html'">Log out</button>
+  <div class="topbar-left">
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span>
+    <span class="page-label" id="pageLabel">Overview</span>
+  </div>
+  <div class="user-menu" id="userMenu">
+    <button class="user-menu-trigger" onclick="toggleUserMenu()">
+      <span class="user-avatar">SA</span>
+      <span class="user-name-block">
+        <span class="user-name">Super Admin</span>
+        <span class="tag">Admin</span>
+      </span>
+      <span class="user-caret">▾</span>
+    </button>
+    <div class="user-dropdown hidden" id="userDropdown">
+      <button onclick="location.href='index.html'">Log out</button>
+    </div>
+  </div>
 </div>
 
 <div class="layout">
@@ -18,17 +35,22 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-nav">
       <button class="sidebar-nav-btn active" id="navOverview" onclick="switchAdminSection('overview')">📊 Overview</button>
+      <button class="sidebar-nav-btn" id="navSupervisors" onclick="switchAdminSection('supervisors')">📈 Supervisor Dashboard</button>
+      <button class="sidebar-nav-btn" id="navPerformance" onclick="switchAdminSection('performance')">🎯 School Performance</button>
+      <button class="sidebar-nav-btn" id="navReview" onclick="switchAdminSection('review')">📅 Quarterly Review</button>
       <button class="sidebar-nav-btn" id="navWeeklyReport" onclick="switchAdminSection('report')">🗒️ Weekly Report</button>
       <button class="sidebar-nav-btn" id="navVisits" onclick="switchAdminSection('visits')">🚗 Supervisor Visits</button>
       <button class="sidebar-nav-btn" id="navSchools" onclick="switchAdminSection('schools')">🏫 Schools & Teachers</button>
+      <button class="sidebar-nav-btn" id="navAddUser" onclick="switchAdminSection('adduser')">➕ Add User</button>
+      <button class="sidebar-nav-btn" id="navEvents" onclick="switchAdminSection('events')">📌 Events</button>
     </div>
     <div id="sidebar-schools-section" class="hidden">
-      <div class="sidebar-label">All Schools (25)</div>
+      <div class="sidebar-label">All Schools (23)</div>
       <div id="school-accordion-list"></div>
     </div>
   </div>
 
-  <div class="dash">
+  <div class="dash dash-wide">
     <h1>Super Admin</h1>
     <p class="sub" id="adminSubheading">Overview across all schools</p>
     <div id="admin-body"></div>
@@ -36,5 +58,6 @@
 </div>
 
 <script src="js/superadmin.js" defer></script>
+<script src="js/superadmin-dashboards.js" defer></script>
 </body>
 </html>
