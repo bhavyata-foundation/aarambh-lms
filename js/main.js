@@ -1406,9 +1406,20 @@ function devSkipLogin(){
    DEV MODE — the actual trigger (moved here deliberately).
    Runs last, after every let/const in this file is initialized —
    see the note near devSkipLogin() above for why this had to move.
+
+   Also activates on the GitHub Pages demo URL
+   (bhavyata-foundation.github.io) — deliberately, for showing
+   officials the frontend without needing real credentials.
+   This is SAFE specifically because GitHub Pages serves static
+   files only (no PHP, no database) — there is no real student
+   or teacher data behind this URL for a bypass to expose. This
+   check must NEVER be widened to include the real live domain
+   (bhavyatafoundation.com), since that one IS connected to a
+   real database.
    ========================================================= */
 (function autoDevBypassOnLoad(){
-  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const DEMO_HOSTNAMES = ['localhost', '127.0.0.1', 'bhavyata-foundation.github.io'];
+  const isLocal = DEMO_HOSTNAMES.includes(window.location.hostname);
   const params = new URLSearchParams(window.location.search);
 
   if(isLocal){
