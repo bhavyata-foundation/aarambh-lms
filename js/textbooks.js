@@ -1,14 +1,14 @@
 // ===== Textbook data =====
 const TEXTBOOKS = {
   'jrkg': [
-    { id:'vaani-jr-alphabets',   title:'Vaani — Alphabets',        subject:'Language', color:'#1d9e75', file:'https://bhavyatafoundation.com/workbooks/vaani-jr-alphabets.pdf' },
-    { id:'vaani-jr-phonics',   title:'Vaani — Phonics & Alphabets',        subject:'Language', color:'#2C8FC4', file:'https://bhavyatafoundation.com/workbooks/vaani-jr-phonics.pdf' },
-    { id:'khelika-jrkg', title:'Khelika Activity Book', subject:'Activity', color:'#EE8F35', file:'https://bhavyatafoundation.com/workbooks/khelika-activity-jrkg.pdf' }
+    { id:'vaani-jr-alphabets',   title:'Vaani — Alphabets',        subject:'Language', color:'#1d9e75', file:'assets/textbooks/vaani-jr-alphabets.pdf' },
+    { id:'vaani-jr-phonics',   title:'Vaani — Phonics & Alphabets',        subject:'Language', color:'#2C8FC4', file:'assets/textbooks/vaani-jr-phonics.pdf' },
+    { id:'khelika-jrkg', title:'Khelika Activity Book', subject:'Activity', color:'#EE8F35', file:'assets/textbooks/khelika-activity-jrkg.pdf' }
   ],
   'srkg': [
-    { id:'sopanika-srkg',       title:'Sopanika — All Activity', subject:'Activity', color:'#1d9e75', file:'https://bhavyatafoundation.com/workbooks/sopanika-activity-srkg.pdf' },
-    { id:'uvach-alphabets-srkg', title:'Uvach — Alphabets',      subject:'Language', color:'#EE8F35', file:'https://bhavyatafoundation.com/workbooks/uvach-alphabets-srkg.pdf' },
-    { id:'uvach-phonics-srkg',   title:'Uvach — Phonics',        subject:'Language', color:'#2C8FC4', file:'https://bhavyatafoundation.com/workbooks/uvach-phonics-srkg.pdf' }
+    { id:'sopanika-srkg',       title:'Sopanika — All Activity', subject:'Activity', color:'#1d9e75', file:'assets/textbooks/sopanika-activity-srkg.pdf' },
+    { id:'uvach-alphabets-srkg', title:'Uvach — Alphabets',      subject:'Language', color:'#EE8F35', file:'assets/textbooks/uvach-alphabets-srkg.pdf' },
+    { id:'uvach-phonics-srkg',   title:'Uvach — Phonics',        subject:'Language', color:'#2C8FC4', file:'assets/textbooks/uvach-phonics-srkg.pdf' }
   ]
 };
 
@@ -18,6 +18,7 @@ let currentBook = null;
 let currentPageIdx = 0;
 let currentNumPages = 1;
 let isFlipping = false;
+let completedPagesForCurrentBook = [];
 
 const pdfCache = {};
 const pageImageCache = {};
@@ -175,12 +176,33 @@ function findBook(id){
   return null;
 }
 
+// ===== Progress tracking — localStorage for now, not the database.
+// Same reasoning as "My Attendance": this is personal to the teacher
+// using this specific browser, not something another role needs to
+// see yet. Keyed per book, so each book tracks its own bookmark and
+// completed pages independently. =====
+function getBookProgress(bookId){
+  try{
+    const raw = localStorage.getItem('textbookProgress_' + bookId);
+    return raw ? JSON.parse(raw) : { lastViewedPage: 1, completedPages: [] };
+  }catch(e){
+    return { lastViewedPage: 1, completedPages: [] };
+  }
+}
+
+function saveBookProgress(bookId, progress){
+  try{
+    localStorage.setItem('textbookProgress_' + bookId, JSON.stringify(progress));
+  }catch(e){ /* localStorage unavailable — progress just won't persist this session */ }
+}
+
 // ===== Reader overlay =====
 async function openBookReader(bookId){
   currentBook = findBook(bookId);
   if(!currentBook) return;
   currentPageIdx = 0;
   document.getElementById('book-reader-overlay').classList.remove('hidden');
+  document.getElementById('page-complete-toggle').classList.remove('hidden');
   document.getElementById('reader-title').textContent = currentBook.title;
   document.getElementById('reader-page-count').textContent = 'Loading…';
   showStatus('Loading book…');
@@ -188,13 +210,23 @@ async function openBookReader(bookId){
   try{
     const pdf = await loadPdf(bookId);
     currentNumPages = pdf.numPages;
-    const url = await renderPageToImage(bookId, 1);
+
+    // Resume from wherever this teacher last left off, rather than
+    // always starting at page 1 — the same behaviour as a phone's
+    // reading apps.
+    const progress = getBookProgress(bookId);
+    const resumePage = Math.min(Math.max(progress.lastViewedPage || 1, 1), currentNumPages);
+    completedPagesForCurrentBook = progress.completedPages || [];
+
+    currentPageIdx = resumePage - 1;
+    const url = await renderPageToImage(bookId, resumePage);
     hideStatus();
     document.getElementById('page-base-img').src = url;
     document.getElementById('page-leaf-img').src = url;
     resetLeaf();
     updateReaderChrome();
-    prefetchNeighbours(bookId, 0, currentNumPages);
+    prefetchNeighbours(bookId, currentPageIdx, currentNumPages);
+    saveBookProgress(bookId, { lastViewedPage: resumePage, completedPages: completedPagesForCurrentBook });
   } catch(err){
     showStatus(`Couldn't load this PDF. Check that <code>${currentBook.file}</code> exists in your assets folder.`);
     document.getElementById('reader-page-count').textContent = '';
@@ -204,6 +236,7 @@ async function openBookReader(bookId){
 function closeBookReader(){
   if(document.fullscreenElement) document.exitFullscreen();
   document.getElementById('book-reader-overlay').classList.add('hidden');
+  document.getElementById('page-complete-toggle').classList.add('hidden');
   currentBook = null;
 }
 
@@ -223,9 +256,37 @@ function resetLeaf(){
 }
 
 function updateReaderChrome(){
-  document.getElementById('reader-page-count').textContent = `Page ${currentPageIdx+1} of ${currentNumPages}`;
+  const pageNum = currentPageIdx + 1;
+  const isDone = completedPagesForCurrentBook.includes(pageNum);
+  document.getElementById('reader-page-count').innerHTML =
+    `Page ${pageNum} of ${currentNumPages} · ${completedPagesForCurrentBook.length} page${completedPagesForCurrentBook.length===1?'':'s'} completed`;
   document.getElementById('reader-prev').disabled = currentPageIdx === 0;
   document.getElementById('reader-next').disabled = currentPageIdx === currentNumPages - 1;
+
+  const toggleEl = document.getElementById('page-complete-toggle');
+  if(toggleEl){
+    toggleEl.classList.toggle('is-done', isDone);
+    toggleEl.querySelector('.pct-label').textContent = isDone ? 'Marked as completed' : 'Mark this page as completed';
+  }
+}
+
+function saveProgress(payload){
+  if(!currentBook) return;
+  const progress = getBookProgress(currentBook.id);
+  if(payload.last_viewed_page !== undefined) progress.lastViewedPage = payload.last_viewed_page;
+  progress.completedPages = completedPagesForCurrentBook;
+  saveBookProgress(currentBook.id, progress);
+}
+
+function toggleCurrentPageComplete(){
+  const pageNum = currentPageIdx + 1;
+  if(completedPagesForCurrentBook.includes(pageNum)){
+    completedPagesForCurrentBook = completedPagesForCurrentBook.filter(p => p !== pageNum);
+  } else {
+    completedPagesForCurrentBook.push(pageNum);
+  }
+  updateReaderChrome();
+  saveProgress({});
 }
 
 // ===== The actual page-turn: leaf (current page) rotates away on top of the
@@ -263,6 +324,7 @@ async function flipPage(direction){
     resetLeaf();
     updateReaderChrome();
     prefetchNeighbours(currentBook.id, currentPageIdx, currentNumPages);
+    saveProgress({ last_viewed_page: currentPageIdx + 1 });
     isFlipping = false;
   }, 620);
 }

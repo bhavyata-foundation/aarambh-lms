@@ -1,4 +1,22 @@
 <?php
+// Converts ANY uncaught PHP error into a real JSON error message instead
+// of raw error text — without this, a single unexpected failure breaks
+// the frontend's JSON parsing entirely and just shows a generic
+// "could not reach the server" message that hides the real cause.
+set_exception_handler(function($e){
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'message' => 'Server error: ' . $e->getMessage()]);
+    exit;
+});
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+// display_errors is turned off deliberately — a stray PHP warning or
+// deprecation notice printed as plain text would corrupt the JSON
+// response just enough to break the frontend, even if the actual
+// database operation succeeded. Real errors still surface through
+// the exception handler above, which returns clean JSON.
+ini_set('display_errors', '0');
+
 // =========================================================================
 // ADD EVENT — creates a PTM, teacher training, or other scheduled event.
 // Only a supervisor or superadmin can create one — server-side check,
@@ -11,7 +29,7 @@ header('Content-Type: application/json');
 $isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80', '127.0.0.1:80']);
 $devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
 $effectiveRole = $_SESSION['role'] ?? $devRole;
-$effectiveUserId = $_SESSION['user_id'] ?? 1; // dev fallback: attribute to user id 1 when testing without a real login
+$effectiveUserId = $_SESSION['user_id'] ?? null; // resolved properly below, once a real database connection exists
 
 if (!in_array($effectiveRole, ['supervisor', 'superadmin'], true)) {
     http_response_code(401);
@@ -43,6 +61,21 @@ if (!in_array($eventType, ['PTM', 'Teacher Training', 'Other'], true)) {
 }
 
 $conn = get_db_connection();
+
+// Dev-mode fallback (no real login session): rather than guessing a
+// hardcoded user id that may not actually exist — which is exactly
+// what caused the earlier foreign key error — look up any real
+// supervisor/superadmin account to attribute the event to instead.
+if (!isset($_SESSION['user_id'])) {
+    $lookup = $conn->query("SELECT id FROM users WHERE role IN ('supervisor','superadmin') ORDER BY id LIMIT 1");
+    $row = $lookup ? $lookup->fetch_assoc() : null;
+    if (!$row) {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'No supervisor or superadmin account exists yet to attribute this event to.']);
+        exit;
+    }
+    $effectiveUserId = $row['id'];
+}
 
 $stmt = $conn->prepare("
     INSERT INTO events (school_id, class_id, event_type, event_date, event_time, title, notes, created_by)

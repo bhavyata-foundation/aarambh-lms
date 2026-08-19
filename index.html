@@ -88,6 +88,8 @@
       <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ <span>Attendance</span></button>
       <button class="sidebar-nav-btn" id="navCalendar" onclick="switchSidebarSection('calendar')">📅 <span>My Attendance</span></button>
       <button class="sidebar-nav-btn" id="navEvents" onclick="switchSidebarSection('events')">📌 <span>School Events</span></button>
+      <button class="sidebar-nav-btn" id="navUploadPhoto" onclick="switchSidebarSection('uploadphoto')">📷 <span>Upload Activity Photo</span></button>
+      <button class="sidebar-nav-btn" id="navMaterials" onclick="switchSidebarSection('materials')">📦 <span>Materials</span></button>
       <button class="sidebar-nav-btn" onclick="location.href='textbooks.html'">📚 <span>Textbooks</span></button>
     </div>
     <div id="sidebar-workbook-section">
@@ -118,12 +120,15 @@
     <div id="attendance-body" class="hidden"></div>
     <div id="calendar-body" class="hidden"></div>
     <div id="events-body" class="hidden"></div>
+    <div id="upload-photo-body" class="hidden"></div>
+    <div id="materials-body" class="hidden"></div>
   </div>
   </div>
 </div>
 
 <script src="js/i18n.js" defer></script>
 <script src="js/weeks/all-weeks.js" defer></script>
+<script src="js/events-calendar.js" defer></script>
 <script src="js/main.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){

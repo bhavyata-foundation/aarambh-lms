@@ -11,6 +11,307 @@ const WEEKLY_PLAN = {};
 const ACTIVITY_COMPETENCIES = {};
 const weeksWithContent = [];
 
+// Per-week sidebar day topics — this is separate from WEEKLY_PLAN
+// (which holds each domain's activity text). WEEK_DAY_TOPICS is
+// specifically the short "value" and "link" shown in the sidebar's
+// day checklist. Every authored week needs its own entry here —
+// this was previously a single hardcoded list in main.js that never
+// varied by week, showing Week 1's topics under every other week.
+const WEEK_DAY_TOPICS = {};
+
+WEEK_DAY_TOPICS.wk1 = {
+  mon:{value:'Feel safe and happy in classroom', link:'First week of school'},
+  tue:{value:'Keep bag, books, bottle clean and dry', link:'Monsoon readiness'},
+  wed:{value:'Share toys and speak kindly', link:'Classroom family value'},
+  thu:{value:'Keep things back in proper place', link:'Clean classroom habit'},
+  fri:{value:'Be brave, careful and responsible', link:'Shivaji Maharaj courage value'}
+};
+
+WEEK_DAY_TOPICS.wk2 = {
+  mon:{value:'Explore how our eyes help us see', link:'Sense of sight'},
+  tue:{value:'Listen carefully with our ears', link:'Sense of hearing'},
+  wed:{value:'Smell things safely with our nose', link:'Sense of smell'},
+  thu:{value:'Taste sweet and salty foods carefully', link:'Sense of taste'},
+  fri:{value:'Feel different textures with our skin', link:'Sense of touch'}
+};
+
+WEEK_DAY_TOPICS.wk3 = {
+  mon:{value:'Learn the names of common vegetables', link:'Identifying vegetables'},
+  tue:{value:'Sort vegetables by their colour', link:'Colours in nature'},
+  wed:{value:'Sort vegetables by their shape', link:'Shapes in nature'},
+  thu:{value:'Count vegetables up to five', link:'Early counting'},
+  fri:{value:'Talk about why vegetables are healthy', link:'Healthy eating'}
+};
+
+// -----------------------------------------------------------------
+// INTERACTIVE ACTIVITIES — the actual content behind the vibrant
+// generic game renderers in main.js (renderMatchPairsActivity,
+// renderCompleteSentenceActivity). main.js contains NO week-specific
+// data at all — it only knows how to render whatever "type" of
+// activity is defined here, for whichever week is currently active.
+// A week with nothing defined here simply falls back to main.js's
+// original built-in generic games for that domain.
+// -----------------------------------------------------------------
+const INTERACTIVE_ACTIVITIES = {};
+
+INTERACTIVE_ACTIVITIES.wk2 = {
+  welcome: {
+    type: 'tap-explore',
+    days: {
+      mon: {
+        instruction: 'First sing the welcome song, then tap what you can see.',
+        song: {
+          lyrics: '"Good morning, friends! We\'re happy today! Welcome to our classroom, come on in and play!"',
+          spoken: 'Good morning, friends! We are happy today! Welcome to our classroom, come on in and play!'
+        },
+        hotspots: [
+          {emoji:'📚', label:'A book'},
+          {emoji:'🪟', label:'A window'},
+          {emoji:'🌳', label:'A tree outside'},
+          {emoji:'👦', label:'A friend'}
+        ]
+      },
+      tue: {
+        instruction: 'Tap the puzzle pieces and sound objects you can play with!',
+        hotspots: [
+          {emoji:'🧩', label:'A puzzle piece'},
+          {emoji:'🔔', label:'A bell'},
+          {emoji:'🥁', label:'A drum'},
+          {emoji:'🪗', label:'A shaker'}
+        ]
+      },
+      wed: {
+        instruction: 'Tap what you can see at attendance time!',
+        hotspots: [
+          {emoji:'🌸', label:'A flower'},
+          {emoji:'👃', label:'A nose'},
+          {emoji:'👏', label:'Clapping hands'},
+          {emoji:'📋', label:'The attendance list'}
+        ]
+      },
+      thu: {
+        instruction: 'Tap what helps you stay clean and healthy!',
+        hotspots: [
+          {emoji:'🧼', label:'Soap'},
+          {emoji:'🪥', label:'A toothbrush'},
+          {emoji:'🍎', label:'A fruit'},
+          {emoji:'🍯', label:'Something sweet'}
+        ]
+      },
+      fri: {
+        instruction: 'Tap the weather and the things you can feel!',
+        hotspots: [
+          {emoji:'☀️', label:'Sunny weather'},
+          {emoji:'🌧️', label:'Rainy weather'},
+          {emoji:'🧶', label:'Something soft'},
+          {emoji:'🪨', label:'Something rough'}
+        ]
+      }
+    }
+  },
+  story: {
+    type: 'tap-sequence',
+    days: {
+      mon: {
+        instruction: 'Tap along with the rhyme, in order!',
+        sequence: [
+          {emoji:'🙆', label:'Head'},
+          {emoji:'🙌', label:'Shoulders'},
+          {emoji:'🦵', label:'Knees'},
+          {emoji:'🦶', label:'Toes'}
+        ]
+      },
+      tue: {
+        instruction: 'Listen, listen! Tap each sound in order as you hear it.',
+        sequence: [
+          {emoji:'👂', label:'Listen'},
+          {emoji:'🔔', label:'A bell rings'},
+          {emoji:'👂', label:'Listen again'},
+          {emoji:'🐶', label:'A dog barks'}
+        ]
+      },
+      wed: {
+        instruction: 'Clap your hands, then smell the flower — tap in order!',
+        sequence: [
+          {emoji:'👏', label:'Clap'},
+          {emoji:'👏', label:'Clap again'},
+          {emoji:'👃', label:'Smell'},
+          {emoji:'🌸', label:'A flower!'}
+        ]
+      },
+      thu: {
+        instruction: 'Sit calmly, breathe, then taste — tap in order!',
+        sequence: [
+          {emoji:'🧘', label:'Sit calmly'},
+          {emoji:'😮\u200d💨', label:'Breathe'},
+          {emoji:'👅', label:'Taste'},
+          {emoji:'😋', label:'Yum!'}
+        ]
+      },
+      fri: {
+        instruction: 'Feel each texture in order, from soft to warm!',
+        sequence: [
+          {emoji:'🧶', label:'Soft wool'},
+          {emoji:'🪨', label:'Rough stone'},
+          {emoji:'🧊', label:'Cold ice'},
+          {emoji:'☀️', label:'Warm sun'}
+        ]
+      }
+    }
+  },
+  numeracy: {
+    type: 'match-pairs',
+    days: {
+      mon: {
+        instruction: 'Tap each arrow to match a body part to what it lets us do.',
+        pairs: [
+          {leftEmoji:'👁️', left:'Eyes', right:'Seeing', rightEmoji:'✨'},
+          {leftEmoji:'👂', left:'Ears', right:'Hearing', rightEmoji:'🎵'},
+          {leftEmoji:'🤲', left:'Hands', right:'Touching', rightEmoji:'🌟'}
+        ]
+      },
+      tue: {
+        instruction: 'Guess the sound, then match it to what made it!',
+        pairs: [
+          {leftEmoji:'🐶', left:'Woof woof', right:'Dog', rightEmoji:'🐕'},
+          {leftEmoji:'🚗', left:'Beep beep', right:'Car', rightEmoji:'🚙'},
+          {leftEmoji:'🐦', left:'Tweet tweet', right:'Bird', rightEmoji:'🕊️'}
+        ]
+      },
+      wed: {
+        instruction: 'Match each movement or smell to the right word!',
+        pairs: [
+          {leftEmoji:'🙆', left:'A big jump', right:'Big', rightEmoji:'⬆️'},
+          {leftEmoji:'🤏', left:'A small step', right:'Small', rightEmoji:'⬇️'},
+          {leftEmoji:'🌸', left:'A flower', right:'Sweet smell', rightEmoji:'😊'}
+        ]
+      },
+      thu: {
+        instruction: 'Match each taste to the right word!',
+        pairs: [
+          {leftEmoji:'🍯', left:'Honey', right:'Sweet', rightEmoji:'😊'},
+          {leftEmoji:'🥨', left:'Pretzel', right:'Salty', rightEmoji:'😐'},
+          {leftEmoji:'🍋', left:'Lemon', right:'Sour', rightEmoji:'😖'}
+        ]
+      },
+      fri: {
+        instruction: 'Match each object to how it feels!',
+        pairs: [
+          {leftEmoji:'🧶', left:'Wool', right:'Soft', rightEmoji:'☁️'},
+          {leftEmoji:'🪨', left:'Stone', right:'Hard', rightEmoji:'💪'},
+          {leftEmoji:'🧸', left:'Teddy bear', right:'Soft', rightEmoji:'☁️'}
+        ]
+      }
+    }
+  },
+  language: {
+    type: 'complete-sentence',
+    days: {
+      mon: {prefix:'I see with my', answer:'eyes', wrong:['ears','hands'], emoji:'👁️'},
+      tue: {prefix:'I hear with my', answer:'ears', wrong:['eyes','nose'], emoji:'👂'},
+      wed: {prefix:'I smell with my', answer:'nose', wrong:['ears','tongue'], emoji:'👃'},
+      thu: {prefix:'I taste with my', answer:'tongue', wrong:['nose','skin'], emoji:'👅'},
+      fri: {prefix:'I touch with my', answer:'skin', wrong:['eyes','tongue'], emoji:'🤚'}
+    }
+  },
+  create: {
+    type: 'colour-fill',
+    days: {
+      mon: {
+        instruction: 'Pick a colour, then tap a part of the face to colour it!',
+        palette: ['#F5C4B3','#9FE1CB','#B5D4F4','#FAC775'],
+        regions: [
+          {emoji:'👁️', label:'Eyes'},
+          {emoji:'💇', label:'Hair'},
+          {emoji:'👄', label:'Mouth'},
+          {emoji:'😊', label:'Cheeks'}
+        ]
+      },
+      tue: {
+        instruction: 'Pick a colour, then press each finger to make a handprint!',
+        palette: ['#F5C4B3','#9FE1CB','#B5D4F4','#FAC775','#ED93B1'],
+        regions: [
+          {emoji:'👍', label:'Thumb'},
+          {emoji:'☝️', label:'Pointer'},
+          {emoji:'🖕', label:'Middle'},
+          {emoji:'💍', label:'Ring'},
+          {emoji:'🤙', label:'Pinky'}
+        ]
+      },
+      wed: {
+        instruction: 'Pick a colour, then colour in the parts of the face near your nose!',
+        palette: ['#F5C4B3','#9FE1CB','#B5D4F4'],
+        regions: [
+          {emoji:'👃', label:'Nose'},
+          {emoji:'👀', label:'Around the eyes'},
+          {emoji:'😊', label:'Cheeks'}
+        ]
+      },
+      thu: {
+        instruction: 'Pick a colour, then colour in the parts you taste with!',
+        palette: ['#F5C4B3','#FAC775','#ED93B1'],
+        regions: [
+          {emoji:'👅', label:'Tongue'},
+          {emoji:'👄', label:'Lips'},
+          {emoji:'🦷', label:'Teeth'}
+        ]
+      },
+      fri: {
+        instruction: 'Pick a colour, then colour in the parts you feel with!',
+        palette: ['#F5C4B3','#9FE1CB','#B5D4F4'],
+        regions: [
+          {emoji:'✋', label:'Hand'},
+          {emoji:'🦶', label:'Foot'},
+          {emoji:'😊', label:'Face'}
+        ]
+      }
+    }
+  },
+  outdoor: {
+    days: {
+      mon: {
+        type: 'step-count-find',
+        instruction: 'Take five steps, then find the hidden toy!',
+        targetSteps: 5,
+        findEmoji: '🧸',
+        findLabel: 'teddy bear'
+      },
+      tue: {
+        type: 'jump-direction',
+        instruction: 'Jump five times, then listen for where the sound comes from!',
+        targetJumps: 5,
+        soundEmoji: '🔔',
+        directions: [
+          {arrow:'⬅️', correct:false},
+          {arrow:'➡️', correct:true},
+          {arrow:'⬆️', correct:false}
+        ]
+      },
+      wed: {
+        type: 'step-count-find',
+        instruction: 'Balance and walk five steps, then find something that smells nice!',
+        targetSteps: 5,
+        findEmoji: '🌸',
+        findLabel: 'flower'
+      },
+      thu: {
+        type: 'step-count-find',
+        instruction: 'Do five careful yoga steps, then find something yummy to taste!',
+        targetSteps: 5,
+        findEmoji: '🍯',
+        findLabel: 'honey jar'
+      },
+      fri: {
+        type: 'step-count-find',
+        instruction: 'Clap, jump, sit, and stand five times, then find something fun to touch!',
+        targetSteps: 5,
+        findEmoji: '🧶',
+        findLabel: 'soft wool ball'
+      }
+    }
+  }
+};
+
 const WEEKS = [
   {w:1, theme:'My Classroom', dates:'15–19 Jun 2026'},
   {w:2, theme:'My Body and Senses', dates:'22–26 Jun 2026'},
@@ -35,119 +336,119 @@ const WEEKS = [
 
 WEEKLY_PLAN.wk1 = {
   welcome: {
-    mon:{en:'Welcome song, explore classroom', hi:'स्वागत गीत, कक्षा का अन्वेषण', mr:'स्वागत गीत, वर्गाचा शोध'},
-    tue:{en:'Free play with classroom toys', hi:'कक्षा के खिलौनों के साथ खेल', mr:'वर्गातील खेळण्यांसह मोकळा खेळ'},
-    wed:{en:'Attendance & classroom talk', hi:'उपस्थिति और कक्षा में बातचीत', mr:'हजेरी आणि वर्गात गप्पा'},
-    thu:{en:'Free play with puzzles', hi:'पहेलियों के साथ खेल', mr:'कोडींसह मोकळा खेळ'},
-    fri:{en:'Free play with blocks', hi:'ब्लॉक्स के साथ खेल', mr:'ठोकळ्यांसह मोकळा खेळ'}
+    mon:'Welcome song, explore classroom',
+    tue:'Free play with classroom toys',
+    wed:'Attendance & classroom talk',
+    thu:'Free play with puzzles',
+    fri:'Free play with blocks'
   },
   story: {
-    mon:{en:'Story: My First Day in Class', hi:'कहानी: मेरा पहला दिन कक्षा में', mr:'गोष्ट: वर्गातील माझा पहिला दिवस'},
-    tue:{en:'Rhyme: Good Morning Teacher', hi:'कविता: सुप्रभात शिक्षक', mr:'कविता: सुप्रभात शिक्षक'},
-    wed:{en:'Story: My Classroom Family', hi:'कहानी: मेरा कक्षा परिवार', mr:'गोष्ट: माझे वर्गकुटुंब'},
-    thu:{en:'Rhyme: Keep Things Clean', hi:'कविता: चीज़ें साफ़ रखो', mr:'कविता: वस्तू स्वच्छ ठेवा'},
-    fri:{en:'Story: Shivaji Maharaj & Courage', hi:'कहानी: शिवाजी महाराज और वीरता', mr:'गोष्ट: शिवाजी महाराज आणि शौर्य'}
+    mon:'Story: My First Day in Class',
+    tue:'Rhyme: Good Morning Teacher',
+    wed:'Story: My Classroom Family',
+    thu:'Rhyme: Keep Things Clean',
+    fri:'Story: Shivaji Maharaj & Courage'
   },
   numeracy: {
-    mon:{en:'Identify classroom objects', hi:'कक्षा की वस्तुओं की पहचान', mr:'वर्गातील वस्तू ओळखणे'},
-    tue:{en:'Sort objects by colour', hi:'रंग के अनुसार वस्तुओं को छाँटना', mr:'रंगानुसार वस्तूंची वर्गवारी'},
-    wed:{en:'Sort objects by size', hi:'आकार के अनुसार वस्तुओं को छाँटना', mr:'आकारानुसार वस्तूंची वर्गवारी'},
-    thu:{en:'Sort objects by use', hi:'उपयोग के अनुसार वस्तुओं को छाँटना', mr:'उपयोगानुसार वस्तूंची वर्गवारी'},
-    fri:{en:'Sort objects independently', hi:'स्वयं वस्तुओं को छाँटना', mr:'स्वतः वस्तूंची वर्गवारी करणे'}
+    mon:'Identify classroom objects',
+    tue:'Sort objects by colour',
+    wed:'Sort objects by size',
+    thu:'Sort objects by use',
+    fri:'Sort objects independently'
   },
   language: {
-    mon:{en:'Name: bag, book, pencil, bottle', hi:'नाम: बैग, किताब, पेंसिल, बोतल', mr:'नावे: पिशवी, पुस्तक, पेन्सिल, बाटली'},
-    tue:{en:'Colour words: red, blue, yellow', hi:'रंगों के शब्द: लाल, नीला, पीला', mr:'रंगांचे शब्द: लाल, निळा, पिवळा'},
-    wed:{en:'Big / small words', hi:'बड़ा / छोटा शब्द', mr:'मोठे / लहान शब्द'},
-    thu:{en:'Use words: write, drink, eat, read', hi:'शब्दों का प्रयोग: लिखो, पीयो, खाओ, पढ़ो', mr:'शब्दांचा वापर: लिही, पी, खा, वाच'},
-    fri:{en:'Speak: "This is my ___."', hi:'बोलें: "यह मेरा ___ है।"', mr:'बोला: "हे माझे ___ आहे."'}
+    mon:'Name: bag, book, pencil, bottle',
+    tue:'Colour words: red, blue, yellow',
+    wed:'Big / small words',
+    thu:'Use words: write, drink, eat, read',
+    fri:'Speak: "This is my ___."'
   },
   create: {
-    mon:{en:'Draw my school bag', hi:'मेरा स्कूल बैग बनाना', mr:'माझी शाळेची पिशवी काढणे'},
-    tue:{en:'Colour classroom objects', hi:'कक्षा की वस्तुओं को रंगना', mr:'वर्गातील वस्तू रंगवणे'},
-    wed:{en:'Big-small pasting', hi:'बड़ा-छोटा चिपकाना', mr:'मोठे-लहान चिकटवणे'},
-    thu:{en:'Bag item collage', hi:'बैग की वस्तुओं का कोलाज', mr:'पिशवीतील वस्तूंचा कोलाज'},
-    fri:{en:'Classroom object worksheet', hi:'कक्षा की वस्तु वर्कशीट', mr:'वर्गातील वस्तू कार्यपत्रक'}
+    mon:'Draw my school bag',
+    tue:'Colour classroom objects',
+    wed:'Big-small pasting',
+    thu:'Bag item collage',
+    fri:'Classroom object worksheet'
   },
   outdoor: {
-    mon:{en:'Free outdoor play', hi:'खुले में मुक्त खेल', mr:'मैदानी मोकळा खेळ'},
-    tue:{en:'Ball play', hi:'गेंद खेल', mr:'चेंडू खेळ'},
-    wed:{en:'Balance walk', hi:'संतुलन चलना', mr:'समतोल चालणे'},
-    thu:{en:'Ring play', hi:'रिंग खेल', mr:'रिंग खेळ'},
-    fri:{en:'Running game', hi:'दौड़ खेल', mr:'पळण्याचा खेळ'}
+    mon:'Free outdoor play',
+    tue:'Ball play',
+    wed:'Balance walk',
+    thu:'Ring play',
+    fri:'Running game'
   },
   tidy: {
-    mon:{en:'Put bag on hook, book on shelf', hi:'बैग हुक पर, किताब शेल्फ पर रखना', mr:'पिशवी हुकवर, पुस्तक कपाटात ठेवणे'},
-    tue:{en:'Return toys to the toy bin', hi:'खिलौने टॉय बिन में वापस रखना', mr:'खेळणी टॉय बिनमध्ये परत ठेवणे'},
-    wed:{en:'Put pencil and crayon back in the box', hi:'पेंसिल और क्रेयॉन बॉक्स में वापस रखना', mr:'पेन्सिल आणि क्रेयॉन डब्यात परत ठेवणे'},
-    thu:{en:'"Keep things back in proper place"', hi:'"चीज़ों को सही जगह पर रखो"', mr:'"वस्तू योग्य ठिकाणी ठेवा"'},
-    fri:{en:'Tidy the whole classroom before going home', hi:'घर जाने से पहले पूरी कक्षा साफ़ करना', mr:'घरी जाण्यापूर्वी संपूर्ण वर्ग नीटनेटका करणे'}
+    mon:'Put bag on hook, book on shelf',
+    tue:'Return toys to the toy bin',
+    wed:'Put pencil and crayon back in the box',
+    thu:'"Keep things back in proper place"',
+    fri:'Tidy the whole classroom before going home'
   },
   reflect: {
-    mon:{en:'Name one classroom object', hi:'कक्षा की एक वस्तु का नाम बताएं', mr:'वर्गातील एका वस्तूचे नाव सांगा'},
-    tue:{en:'Name one colour', hi:'एक रंग का नाम बताएं', mr:'एका रंगाचे नाव सांगा'},
-    wed:{en:'Show one big object', hi:'एक बड़ी वस्तु दिखाएं', mr:'एक मोठी वस्तू दाखवा'},
-    thu:{en:'What do we use pencil for?', hi:'हम पेंसिल का उपयोग किसके लिए करते हैं?', mr:'आपण पेन्सिलचा उपयोग कशासाठी करतो?'},
-    fri:{en:'Recap & plant-care promise', hi:'सप्ताह का सारांश और पौधे की देखभाल का वादा', mr:'आठवड्याचा आढावा आणि रोपांची काळजी घेण्याचे वचन'}
+    mon:'Name one classroom object',
+    tue:'Name one colour',
+    wed:'Show one big object',
+    thu:'What do we use pencil for?',
+    fri:'Recap & plant-care promise'
   }
 };
 
 ACTIVITY_COMPETENCIES.wk1 = {
   welcome: {
-    mon:{en:'Settles into classroom routine', hi:'कक्षा की दिनचर्या में बस जाता है', mr:'वर्गाच्या दैनंदिन कार्यक्रमात स्थिरावतो'},
-    tue:{en:'Explores classroom toys independently', hi:'स्वयं कक्षा के खिलौनों का अन्वेषण करता है', mr:'स्वतः वर्गातील खेळण्यांचा शोध घेतो'},
-    wed:{en:'Participates in attendance and group talk', hi:'उपस्थिति और समूह बातचीत में भाग लेता है', mr:'हजेरी आणि गटचर्चेत सहभागी होतो'},
-    thu:{en:'Engages with puzzles cooperatively', hi:'सहयोग से पहेलियों में शामिल होता है', mr:'सहकार्याने कोडींमध्ये सहभागी होतो'},
-    fri:{en:'Plays constructively with blocks', hi:'ब्लॉक्स से रचनात्मक रूप से खेलता है', mr:'ठोकळ्यांसह रचनात्मक खेळतो'}
+    mon:'Settles into classroom routine',
+    tue:'Explores classroom toys independently',
+    wed:'Participates in attendance and group talk',
+    thu:'Engages with puzzles cooperatively',
+    fri:'Plays constructively with blocks'
   },
   story: {
-    mon:{en:'Listens to and follows a simple story', hi:'एक सरल कहानी सुनता और समझता है', mr:'साधी गोष्ट ऐकतो आणि समजून घेतो'},
-    tue:{en:'Joins in a rhyme with actions', hi:'क्रियाओं के साथ कविता में शामिल होता है', mr:'हावभावांसह कवितेत सहभागी होतो'},
-    wed:{en:'Recognises self as part of a classroom family', hi:'स्वयं को कक्षा परिवार का हिस्सा मानता है', mr:'स्वतःला वर्गकुटुंबाचा भाग मानतो'},
-    thu:{en:'Connects a rhyme to a real habit (keeping things clean)', hi:'कविता को एक वास्तविक आदत (सफाई) से जोड़ता है', mr:'कवितेचा संबंध खऱ्या सवयीशी (स्वच्छता) जोडतो'},
-    fri:{en:'Listens to a story about courage and values', hi:'वीरता और मूल्यों की कहानी सुनता है', mr:'शौर्य आणि मूल्यांची गोष्ट ऐकतो'}
+    mon:'Listens to and follows a simple story',
+    tue:'Joins in a rhyme with actions',
+    wed:'Recognises self as part of a classroom family',
+    thu:'Connects a rhyme to a real habit (keeping things clean)',
+    fri:'Listens to a story about courage and values'
   },
   numeracy: {
-    mon:{en:'Names and identifies familiar classroom objects', hi:'परिचित कक्षा की वस्तुओं के नाम बताता और पहचानता है', mr:'ओळखीच्या वर्गातील वस्तूंची नावे सांगतो आणि ओळखतो'},
-    tue:{en:'Sorts objects into groups by colour', hi:'वस्तुओं को रंग के अनुसार समूहों में छाँटता है', mr:'वस्तूंची रंगानुसार गटांमध्ये वर्गवारी करतो'},
-    wed:{en:'Sorts objects into groups by size', hi:'वस्तुओं को आकार के अनुसार समूहों में छाँटता है', mr:'वस्तूंची आकारानुसार गटांमध्ये वर्गवारी करतो'},
-    thu:{en:'Sorts objects into groups by use', hi:'वस्तुओं को उपयोग के अनुसार समूहों में छाँटता है', mr:'वस्तूंची उपयोगानुसार गटांमध्ये वर्गवारी करतो'},
-    fri:{en:'Sorts objects into groups independently', hi:'स्वयं वस्तुओं को समूहों में छाँटता है', mr:'स्वतः वस्तूंची गटांमध्ये वर्गवारी करतो'}
+    mon:'Names and identifies familiar classroom objects',
+    tue:'Sorts objects into groups by colour',
+    wed:'Sorts objects into groups by size',
+    thu:'Sorts objects into groups by use',
+    fri:'Sorts objects into groups independently'
   },
   language: {
-    mon:{en:'Names familiar classroom objects (bag, book, pencil, bottle)', hi:'परिचित कक्षा की वस्तुओं के नाम बताता है (बैग, किताब, पेंसिल, बोतल)', mr:'ओळखीच्या वर्गातील वस्तूंची नावे सांगतो (पिशवी, पुस्तक, पेन्सिल, बाटली)'},
-    tue:{en:'Recognises and names basic colour words', hi:'बुनियादी रंगों के शब्द पहचानता और बोलता है', mr:'मूलभूत रंगांचे शब्द ओळखतो आणि सांगतो'},
-    wed:{en:'Uses opposite words: big / small', hi:'विपरीत शब्दों का उपयोग करता है: बड़ा / छोटा', mr:'विरुद्धार्थी शब्द वापरतो: मोठे / लहान'},
-    thu:{en:'Uses action words in context (write, drink, eat, read)', hi:'संदर्भ में क्रिया शब्दों का उपयोग करता है (लिखो, पीयो, खाओ, पढ़ो)', mr:'संदर्भानुसार क्रियापद वापरतो (लिही, पी, खा, वाच)'},
-    fri:{en:'Speaks a simple sentence: "This is my ___."', hi:'एक सरल वाक्य बोलता है: "यह मेरा ___ है।"', mr:'साधे वाक्य बोलतो: "हे माझे ___ आहे."'}
+    mon:'Names familiar classroom objects (bag, book, pencil, bottle)',
+    tue:'Recognises and names basic colour words',
+    wed:'Uses opposite words: big / small',
+    thu:'Uses action words in context (write, drink, eat, read)',
+    fri:'Speaks a simple sentence: "This is my ___."'
   },
   create: {
-    mon:{en:'Draws a familiar object from memory', hi:'स्मृति से एक परिचित वस्तु बनाता है', mr:'स्मरणातून ओळखीची वस्तू काढतो'},
-    tue:{en:'Colours within a shape using appropriate colours', hi:'उचित रंगों का उपयोग कर आकृति में रंग भरता है', mr:'योग्य रंग वापरून आकारात रंग भरतो'},
-    wed:{en:'Pastes shapes by size (big/small)', hi:'आकार के अनुसार आकृतियाँ चिपकाता है (बड़ा/छोटा)', mr:'आकारानुसार आकृती चिकटवतो (मोठे/लहान)'},
-    thu:{en:'Creates a collage from classroom-object cutouts', hi:'कक्षा की वस्तुओं के कटआउट से कोलाज बनाता है', mr:'वर्गातील वस्तूंच्या कापलेल्या चित्रांपासून कोलाज तयार करतो'},
-    fri:{en:'Completes a classroom-object worksheet independently', hi:'स्वयं कक्षा की वस्तु वर्कशीट पूरी करता है', mr:'स्वतः वर्गातील वस्तू कार्यपत्रक पूर्ण करतो'}
+    mon:'Draws a familiar object from memory',
+    tue:'Colours within a shape using appropriate colours',
+    wed:'Pastes shapes by size (big/small)',
+    thu:'Creates a collage from classroom-object cutouts',
+    fri:'Completes a classroom-object worksheet independently'
   },
   outdoor: {
-    mon:{en:'Engages in free physical play safely', hi:'सुरक्षित रूप से मुक्त शारीरिक खेल में भाग लेता है', mr:'सुरक्षितपणे मोकळ्या शारीरिक खेळात सहभागी होतो'},
-    tue:{en:'Throws and catches a ball with basic control', hi:'बुनियादी नियंत्रण के साथ गेंद फेंकता और पकड़ता है', mr:'मूलभूत नियंत्रणासह चेंडू फेकतो आणि पकडतो'},
-    wed:{en:'Walks along a line maintaining balance', hi:'संतुलन बनाते हुए रेखा पर चलता है', mr:'समतोल राखत रेषेवर चालतो'},
-    thu:{en:'Plays a turn-based ring game', hi:'बारी-बारी से रिंग खेल खेलता है', mr:'वळणावळणाने रिंग खेळ खेळतो'},
-    fri:{en:'Runs safely within a defined space', hi:'निर्धारित स्थान में सुरक्षित रूप से दौड़ता है', mr:'ठरलेल्या जागेत सुरक्षितपणे पळतो'}
+    mon:'Engages in free physical play safely',
+    tue:'Throws and catches a ball with basic control',
+    wed:'Walks along a line maintaining balance',
+    thu:'Plays a turn-based ring game',
+    fri:'Runs safely within a defined space'
   },
   tidy: {
-    mon:{en:'Returns personal items (bag, book) to their place', hi:'व्यक्तिगत वस्तुओं (बैग, किताब) को उनकी जगह पर रखता है', mr:'वैयक्तिक वस्तू (पिशवी, पुस्तक) त्यांच्या जागी ठेवतो'},
-    tue:{en:'Returns shared toys to the toy bin', hi:'साझा खिलौनों को टॉय बिन में वापस रखता है', mr:'सामायिक खेळणी टॉय बिनमध्ये परत ठेवतो'},
-    wed:{en:'Returns stationery to its box', hi:'स्टेशनरी को उसके बॉक्स में वापस रखता है', mr:'लेखनसामग्री तिच्या डब्यात परत ठेवतो'},
-    thu:{en:'Follows the instruction to keep things in their proper place', hi:'चीज़ों को सही जगह पर रखने के निर्देश का पालन करता है', mr:'वस्तू योग्य ठिकाणी ठेवण्याच्या सूचनेचे पालन करतो'},
-    fri:{en:'Helps tidy the whole classroom before leaving', hi:'जाने से पहले पूरी कक्षा साफ़ करने में मदद करता है', mr:'निघण्यापूर्वी संपूर्ण वर्ग नीटनेटका करण्यास मदत करतो'}
+    mon:'Returns personal items (bag, book) to their place',
+    tue:'Returns shared toys to the toy bin',
+    wed:'Returns stationery to its box',
+    thu:'Follows the instruction to keep things in their proper place',
+    fri:'Helps tidy the whole classroom before leaving'
   },
   reflect: {
-    mon:{en:'Recalls and names one classroom object from the day', hi:'दिन की एक कक्षा वस्तु का नाम याद करता और बताता है', mr:'दिवसातील एका वर्गवस्तूचे नाव आठवतो आणि सांगतो'},
-    tue:{en:'Recalls one colour learned during the day', hi:'दिन में सीखे एक रंग को याद करता है', mr:'दिवसात शिकलेला एक रंग आठवतो'},
-    wed:{en:"Identifies one big object from the day's activities", hi:'दिन की गतिविधियों से एक बड़ी वस्तु पहचानता है', mr:'दिवसाच्या उपक्रमांमधून एक मोठी वस्तू ओळखतो'},
-    thu:{en:'Explains the use of a pencil in their own words', hi:'अपने शब्दों में पेंसिल के उपयोग की व्याख्या करता है', mr:'स्वतःच्या शब्दांत पेन्सिलच्या उपयोगाचे स्पष्टीकरण देतो'},
-    fri:{en:'Recaps the week and makes a simple promise (plant care)', hi:'सप्ताह का सारांश देता है और एक सरल वादा करता है (पौधे की देखभाल)', mr:'आठवड्याचा आढावा देतो आणि साधे वचन देतो (रोपांची काळजी)'}
+    mon:'Recalls and names one classroom object from the day',
+    tue:'Recalls one colour learned during the day',
+    wed:"Identifies one big object from the day's activities",
+    thu:'Explains the use of a pencil in their own words',
+    fri:'Recaps the week and makes a simple promise (plant care)'
   }
 };
 

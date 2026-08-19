@@ -1,4 +1,20 @@
 <?php
+// Converts ANY uncaught PHP error into a real JSON error message instead
+// of raw error text, so a failure never silently breaks the frontend.
+set_exception_handler(function($e){
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(["status" => "error", "message" => "Server error: " . $e->getMessage()]);
+    exit;
+});
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+// display_errors is turned off deliberately — a stray PHP warning or
+// deprecation notice printed as plain text would corrupt the JSON
+// response just enough to break the frontend, even if the actual
+// database operation succeeded. Real errors still surface through
+// the exception handler above, which returns clean JSON.
+ini_set('display_errors', '0');
+
 // =========================================================================
 // GET CLASSES FOR SCHOOL — returns the real classes at one school, so
 // the Add Event form can offer "whole school" or a specific class.

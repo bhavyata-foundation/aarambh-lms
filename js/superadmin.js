@@ -486,38 +486,9 @@ function markReportReviewed(weekNum){
    Supervisor Visits (full history across all weeks)
    ========================================================= */
 
-async function renderEventsRecord(){
-  const container = document.getElementById('admin-body');
-  container.innerHTML = `<p class="sub">Loading events…</p>`;
-
-  try{
-    const res = await fetch('backend/get_events.php');
-    const data = await res.json();
-
-    if(data.status !== 'success' || !data.events.length){
-      container.innerHTML = `<p class="sub">No events recorded yet — supervisors add these from their own dashboard.</p>`;
-      return;
-    }
-
-    const rows = data.events.map(e => `
-      <tr>
-        <td>${e.event_date}${e.event_time ? ' · ' + e.event_time.slice(0,5) : ''}</td>
-        <td>${e.event_type}</td>
-        <td>${e.school_name}</td>
-        <td>${e.class_name || 'Whole school'}</td>
-        <td>${e.title}</td>
-        <td>${e.created_by_name}</td>
-      </tr>`).join('');
-
-    container.innerHTML = `
-      <div class="report-table-wrap"><table class="report-table">
-        <thead><tr><th>Date</th><th>Type</th><th>School</th><th>Scope</th><th>Title</th><th>Created by</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
-    `;
-  }catch(err){
-    container.innerHTML = `<p class="sub">Could not reach the server.</p>`;
-  }
+function renderEventsRecord(){
+  document.getElementById('admin-body').innerHTML = `<div id="superadminEventsCalendar"></div>`;
+  initEventsCalendar('superadminEventsCalendar', 'backend/get_events.php' + window.location.search);
 }
 
 function renderSupervisorVisitsLog(){

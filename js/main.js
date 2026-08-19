@@ -8,22 +8,22 @@ let selectedRole = 'teacher';
   // load-order explanation.
 
   const DAYS = [
-    {key:'mon', label:'Monday', value:{en:'Feel safe and happy in classroom', hi:'कक्षा में सुरक्षित और खुश महसूस करें', mr:'वर्गात सुरक्षित आणि आनंदी वाटणे'}, link:{en:'First week of school', hi:'स्कूल का पहला सप्ताह', mr:'शाळेचा पहिला आठवडा'}},
-    {key:'tue', label:'Tuesday', value:{en:'Keep bag, books, bottle clean and dry', hi:'बैग, किताबें, बोतल साफ़ और सूखी रखें', mr:'पिशवी, पुस्तके, बाटली स्वच्छ आणि कोरडी ठेवा'}, link:{en:'Monsoon readiness', hi:'मॉनसून की तैयारी', mr:'मॉन्सूनची तयारी'}},
-    {key:'wed', label:'Wednesday', value:{en:'Share toys and speak kindly', hi:'खिलौने साझा करें और विनम्रता से बोलें', mr:'खेळणी वाटून घ्या आणि प्रेमाने बोला'}, link:{en:'Classroom family value', hi:'कक्षा परिवार मूल्य', mr:'वर्गकुटुंब मूल्य'}},
-    {key:'thu', label:'Thursday', value:{en:'Keep things back in proper place', hi:'चीज़ों को सही जगह पर रखें', mr:'वस्तू योग्य ठिकाणी ठेवा'}, link:{en:'Clean classroom habit', hi:'साफ़ कक्षा की आदत', mr:'स्वच्छ वर्ग सवय'}},
-    {key:'fri', label:'Friday', value:{en:'Be brave, careful and responsible', hi:'वीर, सावधान और ज़िम्मेदार बनें', mr:'शूर, सावध आणि जबाबदार राहा'}, link:{en:'Shivaji Maharaj courage value', hi:'शिवाजी महाराज वीरता मूल्य', mr:'शिवाजी महाराज शौर्य मूल्य'}}
+    {key:'mon', label:'Monday'},
+    {key:'tue', label:'Tuesday'},
+    {key:'wed', label:'Wednesday'},
+    {key:'thu', label:'Thursday'},
+    {key:'fri', label:'Friday'}
   ];
 
   const DOMAINS = [
-    {key:'welcome',  label:{en:'Welcome & Free Play', hi:'स्वागत और मुक्त खेल', mr:'स्वागत आणि मोकळा खेळ', gu:'સ્વાગત અને મુક્ત રમત'},   time:'9:00–9:20 AM',   cg:'CG-4',    h5p:true},
-    {key:'story',    label:{en:'Story / Rhyme', hi:'कहानी / कविता', mr:'गोष्ट / कविता', gu:'વાર્તા / કવિતા'},          time:'9:20–9:45 AM',   cg:'CG-9',    h5p:true},
-    {key:'numeracy', label:{en:'Numeracy', hi:'गणना', mr:'अंकगणित', gu:'ગણતરી'},                time:'9:45–10:15 AM',  cg:'CG-8',    h5p:true},
-    {key:'language', label:{en:'Language', hi:'भाषा', mr:'भाषा', gu:'ભાષા'},                time:'10:25–10:50 AM', cg:'CG-10',   h5p:true},
-    {key:'create',   label:{en:'Create + Fine Motor', hi:'सृजन + सूक्ष्म गतिविधि', mr:'सर्जन + सूक्ष्म हालचाल', gu:'સર્જન + સૂક્ષ્મ ગતિ'},     time:'10:50–11:20 AM', cg:'CG-12',   h5p:true},
-    {key:'outdoor',  label:{en:'Outdoor / Gross Motor', hi:'बाहरी / सकल गतिविधि', mr:'बाह्य / स्थूल हालचाल', gu:'બાહ્ય / સ્થૂળ ગતિ'},   time:'11:20–11:40 AM', cg:'CG-3',    h5p:true},
-    {key:'tidy',     label:{en:'Tidy & Put Away', hi:'सफ़ाई और व्यवस्थित करना', mr:'स्वच्छता आणि आवरणे', gu:'સ્વચ્છતા અને ગોઠવણી'},          time:'11:40–11:45 AM', cg:'CG-11',   h5p:true},
-    {key:'reflect',  label:{en:'Reflect & Wrap', hi:'चिंतन और समापन', mr:'चिंतन आणि सांगता', gu:'ચિંતન અને સમાપન'},          time:'11:45 AM–12:00 PM', cg:'CG-9/10', h5p:true}
+    {key:'welcome',  label:'Welcome & Free Play',   time:'9:00–9:20 AM',   cg:'CG-4',    h5p:true},
+    {key:'story',    label:'Story / Rhyme',          time:'9:20–9:45 AM',   cg:'CG-9',    h5p:true},
+    {key:'numeracy', label:'Numeracy',                time:'9:45–10:15 AM',  cg:'CG-8',    h5p:true},
+    {key:'language', label:'Language',                time:'10:25–10:50 AM', cg:'CG-10',   h5p:true},
+    {key:'create',   label:'Create + Fine Motor',     time:'10:50–11:20 AM', cg:'CG-12',   h5p:true},
+    {key:'outdoor',  label:'Outdoor / Gross Motor',   time:'11:20–11:40 AM', cg:'CG-3',    h5p:true},
+    {key:'tidy',     label:'Tidy & Put Away',          time:'11:40–11:45 AM', cg:'CG-11',   h5p:true},
+    {key:'reflect',  label:'Reflect & Wrap',          time:'11:45 AM–12:00 PM', cg:'CG-9/10', h5p:true}
   ];
 
   // -----------------------------------------------------------------
@@ -546,6 +546,8 @@ function devSkipLogin(){
     document.getElementById('navAttendance').classList.toggle('active', section === 'attendance');
     document.getElementById('navCalendar').classList.toggle('active', section === 'calendar');
     document.getElementById('navEvents').classList.toggle('active', section === 'events');
+    document.getElementById('navUploadPhoto').classList.toggle('active', section === 'uploadphoto');
+    document.getElementById('navMaterials').classList.toggle('active', section === 'materials');
     document.getElementById('sidebar-workbook-section').classList.toggle('hidden', section !== 'workbook');
 
     const labelEl = document.getElementById('pageLabel');
@@ -553,6 +555,8 @@ function devSkipLogin(){
       labelEl.textContent = section === 'attendance' ? 'Attendance'
         : section === 'calendar' ? 'My Attendance'
         : section === 'events' ? 'School Events'
+        : section === 'uploadphoto' ? 'Upload Activity Photo'
+        : section === 'materials' ? 'Materials'
         : 'Weekly Activities';
     }
 
@@ -560,6 +564,8 @@ function devSkipLogin(){
     document.getElementById('attendance-body').classList.add('hidden');
     document.getElementById('calendar-body').classList.add('hidden');
     document.getElementById('events-body').classList.add('hidden');
+    document.getElementById('upload-photo-body').classList.add('hidden');
+    document.getElementById('materials-body').classList.add('hidden');
 
     if(section === 'attendance'){
       document.getElementById('attendance-body').classList.remove('hidden');
@@ -574,6 +580,14 @@ function devSkipLogin(){
       document.getElementById('events-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'PTMs, trainings, and other school events';
       renderSchoolEvents();
+    } else if(section === 'uploadphoto'){
+      document.getElementById('upload-photo-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Photos go straight to your class\'s Google Drive';
+      renderUploadPhotoForm();
+    } else if(section === 'materials'){
+      document.getElementById('materials-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Items received from BMC, and whether they\'ve reached your class';
+      renderMaterials();
     } else {
       document.getElementById('week-body').classList.remove('hidden');
       openWeek(currentWeekNum);
@@ -581,58 +595,182 @@ function devSkipLogin(){
     closeSidebar();
   }
 
-  const EVENT_TYPE_COLORS = {
-    'PTM': 'var(--primary)',
-    'Teacher Training': '#8b5cf6',
-    'Other': 'var(--text-muted)'
-  };
+  // EVENT_TYPE_COLORS now lives in js/events-calendar.js, shared with
+  // the supervisor and superadmin pages so all three stay visually
+  // identical rather than three separate implementations drifting apart.
 
-  async function renderSchoolEvents(){
-    const container = document.getElementById('events-body');
-    container.innerHTML = `<p class="sub">Loading events…</p>`;
+  function renderSchoolEvents(){
+    initEventsCalendar('events-body', 'backend/get_events.php' + window.location.search);
+  }
+
+  function renderUploadPhotoForm(){
+    const container = document.getElementById('upload-photo-body');
+    container.innerHTML = `
+      <div class="visit-banner" style="margin-bottom:20px;">
+        <div><strong>Upload a photo of today's activity</strong><br/>This goes straight to your class's own Google Drive — nothing is kept on this app's servers.</div>
+      </div>
+
+      <form id="uploadPhotoForm" onsubmit="return submitActivityPhoto(event)" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:420px;">
+        <label class="field-label-admin">Photo</label>
+        <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" capture="environment" required />
+
+        <label class="field-label-admin">Note (optional — becomes part of the filename)</label>
+        <input type="text" id="photoNote" placeholder="e.g. Numeracy sorting activity" />
+
+        <div id="uploadPhotoResult" style="margin-top:10px;"></div>
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">Upload photo</button>
+      </form>
+    `;
+  }
+
+  async function submitActivityPhoto(event){
+    event.preventDefault();
+    const fileInput = document.getElementById('photoFile');
+    const resultEl = document.getElementById('uploadPhotoResult');
+    resultEl.innerHTML = '';
+
+    if(!fileInput.files.length){
+      resultEl.innerHTML = `<div class="au-error">Choose a photo first.</div>`;
+      return false;
+    }
+
+    const formData = new FormData();
+    formData.append('photo', fileInput.files[0]);
+    formData.append('note', document.getElementById('photoNote').value.trim());
+
+    resultEl.innerHTML = `<p class="sub">Uploading…</p>`;
 
     try{
-      const res = await fetch('backend/get_events.php' + window.location.search);
+      const res = await fetch('backend/upload_activity_photo.php' + window.location.search, {
+        method: 'POST',
+        body: formData
+      });
       const data = await res.json();
 
       if(data.status !== 'success'){
-        container.innerHTML = `<p class="sub">Could not load events right now.</p>`;
-        return;
+        resultEl.innerHTML = `<div class="au-error">${data.message}</div>`;
+        return false;
       }
 
-      if(!data.events.length){
-        container.innerHTML = `<p class="sub">No PTMs or trainings scheduled yet — your supervisor will add them here.</p>`;
-        return;
-      }
-
-      const today = new Date(); today.setHours(0,0,0,0);
-      const upcoming = data.events.filter(e => new Date(e.event_date) >= today);
-      const past = data.events.filter(e => new Date(e.event_date) < today);
-
-      function eventRow(e){
-        const dateObj = new Date(e.event_date + 'T00:00:00');
-        const niceDate = dateObj.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short', year:'numeric'});
-        const timeStr = e.event_time ? ' · ' + e.event_time.slice(0,5) : '';
-        const color = EVENT_TYPE_COLORS[e.event_type] || 'var(--text-muted)';
-        return `
-          <div class="event-card" style="border-left:4px solid ${color};">
-            <div class="event-card-head">
-              <span class="event-type-tag" style="background:${color};">${e.event_type}</span>
-              <span class="event-date">${niceDate}${timeStr}</span>
-            </div>
-            <div class="event-title">${e.title}</div>
-            ${e.class_name ? `<div class="event-scope">Just for: ${e.class_name}</div>` : `<div class="event-scope">Whole school</div>`}
-            ${e.notes ? `<div class="event-notes">${e.notes}</div>` : ''}
-          </div>`;
-      }
-
-      container.innerHTML = `
-        ${upcoming.length ? `<h3 class="events-h3">Upcoming</h3>${upcoming.map(eventRow).join('')}` : `<p class="sub">No upcoming events.</p>`}
-        ${past.length ? `<h3 class="events-h3" style="margin-top:24px;">Past</h3>${past.map(eventRow).join('')}` : ''}
-      `;
+      resultEl.innerHTML = `<div class="au-success">${data.message}</div>`;
+      document.getElementById('uploadPhotoForm').reset();
     }catch(err){
-      container.innerHTML = `<p class="sub">Could not reach the server. Check your connection and try again.</p>`;
+      resultEl.innerHTML = `<div class="au-error">Could not reach the server.</div>`;
     }
+    return false;
+  }
+
+  // ===== Materials — localStorage for now, not the database. Same
+  // reasoning as My Attendance and the textbook-progress bookmark:
+  // personal to this browser for now, easy to move to the real
+  // backend later (the SQL table and 3 PHP endpoints from earlier
+  // are still sitting there, untouched, ready to wire back up
+  // whenever that's actually wanted). =====
+
+  function getMaterialsList(){
+    try{
+      const raw = localStorage.getItem('materialsList');
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveMaterialsList(list){
+    try{
+      localStorage.setItem('materialsList', JSON.stringify(list));
+    }catch(e){ /* localStorage unavailable — list just won't persist this session */ }
+  }
+
+  function materialRowHtml(m){
+    return `
+      <div class="material-row" data-material-id="${m.id}">
+        <div>
+          <div class="material-name">${m.item_name}</div>
+          <div class="material-meta">${m.quantity ? 'Qty ' + m.quantity + ' · ' : ''}received ${new Date(m.received_date + 'T00:00:00').toLocaleDateString([], {day:'numeric', month:'short'})}</div>
+        </div>
+        <button class="material-toggle-btn ${m.distributed ? 'is-distributed' : ''}" onclick="toggleMaterialDistributed('${m.id}')">
+          ${m.distributed ? 'Distributed' : 'Mark distributed'}
+        </button>
+      </div>`;
+  }
+
+  function renderMaterials(){
+    const container = document.getElementById('materials-body');
+    const materials = getMaterialsList().sort((a, b) => b.received_date.localeCompare(a.received_date));
+    const distributedCount = materials.filter(m => m.distributed).length;
+    const rows = materials.map(materialRowHtml).join('');
+
+    container.innerHTML = `
+      <div class="visit-banner" style="margin-bottom:16px;">
+        <div><strong>Materials received from BMC</strong><br/>${materials.length ? distributedCount + ' of ' + materials.length + ' items distributed' : 'Nothing logged yet'}</div>
+        <button class="btn-primary" style="width:auto; padding:9px 16px;" onclick="toggleAddMaterialForm()">+ Add material</button>
+      </div>
+      <div id="addMaterialFormWrap" class="hidden"></div>
+      <div id="materialsList">${rows || '<p class="sub">No materials logged yet — tap "+ Add material" once something arrives.</p>'}</div>
+    `;
+  }
+
+  function toggleAddMaterialForm(){
+    const wrap = document.getElementById('addMaterialFormWrap');
+    const isHidden = wrap.classList.contains('hidden');
+    if(!isHidden){ wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
+
+    wrap.classList.remove('hidden');
+    wrap.innerHTML = `
+      <form onsubmit="return submitNewMaterial(event)" style="background:var(--card); border-radius:10px; padding:16px 18px; margin-bottom:16px;">
+        <label class="field-label-admin">Item name</label>
+        <input type="text" id="matItemName" placeholder="e.g. Workbook set — Jr KG" required />
+
+        <label class="field-label-admin">Quantity (optional)</label>
+        <input type="text" id="matQuantity" placeholder="e.g. 28, or 3 sets" />
+
+        <label class="field-label-admin">Received date</label>
+        <input type="date" id="matReceivedDate" required />
+
+        <div id="addMaterialResult" style="margin-top:8px;"></div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button type="submit" class="btn-primary" style="width:auto; padding:9px 16px;">Add material</button>
+          <button type="button" class="btn-sup-outline" onclick="toggleAddMaterialForm()">Cancel</button>
+        </div>
+      </form>
+    `;
+    document.getElementById('matReceivedDate').value = todayKey();
+  }
+
+  function submitNewMaterial(event){
+    event.preventDefault();
+    const resultEl = document.getElementById('addMaterialResult');
+    resultEl.innerHTML = '';
+
+    const itemName = document.getElementById('matItemName').value.trim();
+    const receivedDate = document.getElementById('matReceivedDate').value;
+
+    if(!itemName || !receivedDate){
+      resultEl.innerHTML = `<div class="au-error">Item name and received date are both required.</div>`;
+      return false;
+    }
+
+    const materials = getMaterialsList();
+    materials.push({
+      id: Date.now(),
+      item_name: itemName,
+      quantity: document.getElementById('matQuantity').value.trim(),
+      received_date: receivedDate,
+      distributed: false
+    });
+    saveMaterialsList(materials);
+    renderMaterials();
+    return false;
+  }
+
+  function toggleMaterialDistributed(materialId){
+    const materials = getMaterialsList();
+    const material = materials.find(m => String(m.id) === String(materialId));
+    if(!material) return;
+    material.distributed = !material.distributed;
+    saveMaterialsList(materials);
+    renderMaterials();
   }
 
   function renderAttendanceBody(){
@@ -719,15 +857,18 @@ function devSkipLogin(){
       const isExpanded = expandedWeek === w.w;
       let dropdownHtml = '';
       if(isExpanded && weeksWithContent.includes(w.w)){
+        const weekTopics = WEEK_DAY_TOPICS['wk' + w.w] || {};
         dropdownHtml = `<div class="day-topic-list">
           <div class="day-topic-heading">Topic: ${w.theme}</div>` + DAYS.map(d => {
           const key = w.w + '-' + d.key;
           const checked = dayTopicDone[key] ? 'checked' : '';
           const doneClass = dayTopicDone[key] ? 'dt-done' : '';
           const activeClass = (w.w===currentWeekNum && d.key===currentDay) ? 'active-day' : '';
+          const topic = weekTopics[d.key];
+          const topicText = topic ? alwaysEnglish(topic.value) : 'Topic not yet added';
           return `<div class="day-topic-row ${activeClass}">
             <input type="checkbox" ${checked} onchange="toggleDayTopic(${w.w}, '${d.key}', this)" />
-            <span class="dt-label ${doneClass}" onclick="event.stopPropagation(); selectWeekDay(${w.w}, '${d.key}')">${d.label} — ${alwaysEnglish(d.value)}</span>
+            <span class="dt-label ${doneClass}" onclick="event.stopPropagation(); selectWeekDay(${w.w}, '${d.key}')">${d.label} — ${topicText}</span>
           </div>`;
         }).join('') + `</div>`;
       } else if(isExpanded){
@@ -799,7 +940,14 @@ function devSkipLogin(){
     let doneCount = 0;
     let cardsHtml = '';
 
-    DOMAINS.forEach(dom => {
+    // Only render a card for domains that actually have content for
+    // this specific week — e.g. Week 2's real plan doesn't include
+    // Tidy & Put Away at all, so it should disappear rather than
+    // show an empty "Not planned yet" placeholder.
+    const weekPlan = WEEKLY_PLAN['wk' + currentWeekNum];
+    const trackedDomains = DOMAINS.filter(dom => weekPlan && weekPlan[dom.key] !== undefined);
+
+    trackedDomains.forEach(dom => {
       const activity = todaysActivity(dom.key);
       const key = currentDay + '-' + dom.key;
       const done = !!domainDone[key];
@@ -846,9 +994,9 @@ function devSkipLogin(){
 
     document.getElementById('domain-grid').innerHTML = cardsHtml;
     document.getElementById('day-summary').innerHTML =
-      `<div class="topic-complete-banner ${doneCount<DOMAINS.length ? 'pending' : ''}">${doneCount===DOMAINS.length?'✓ ':''}${doneCount} of ${DOMAINS.length} domains done for ${day.label}</div>`;
+      `<div class="topic-complete-banner ${doneCount<trackedDomains.length ? 'pending' : ''}">${doneCount===trackedDomains.length?'✓ ':''}${doneCount} of ${trackedDomains.length} domains done for ${day.label}</div>`;
 
-    DOMAINS.forEach(dom => { if(dom.h5p) mountH5pIfNeeded(dom.key); });
+    trackedDomains.forEach(dom => { if(dom.h5p) mountH5pIfNeeded(dom.key); });
     document.getElementById('pending-count').textContent = DOMAINS.length - doneCount;
 
     renderTodayOverview();
@@ -893,12 +1041,12 @@ function devSkipLogin(){
   const ACTIVITY_RENDERERS = (function(){
 
     const OBJECTS = {
-      bag:    {emoji:'🎒', label:{en:'Bag', hi:'बैग', mr:'पिशवी', gu:'બેગ'}},
-      book:   {emoji:'📖', label:{en:'Book', hi:'किताब', mr:'पुस्तक', gu:'પુસ્તક'}},
-      pencil: {emoji:'✏️', label:{en:'Pencil', hi:'पेंसिल', mr:'पेन्सिल', gu:'પેન્સિલ'}},
-      bottle: {emoji:'🧴', label:{en:'Bottle', hi:'बोतल', mr:'बाटली', gu:'બોટલ'}},
-      crayon: {emoji:'🖍️', label:{en:'Crayon', hi:'क्रेयॉन', mr:'क्रेयॉन', gu:'ક્રેયોન'}},
-      block:  {emoji:'🧱', label:{en:'Block', hi:'ब्लॉक', mr:'ठोकळा', gu:'બ્લોક'}}
+      bag:    {emoji:'🎒', label:'Bag'},
+      book:   {emoji:'📖', label:'Book'},
+      pencil: {emoji:'✏️', label:'Pencil'},
+      bottle: {emoji:'🧴', label:'Bottle'},
+      crayon: {emoji:'🖍️', label:'Crayon'},
+      block:  {emoji:'🧱', label:'Block'}
     };
 
     // -----------------------------------------------------------------
@@ -909,13 +1057,13 @@ function devSkipLogin(){
     // translating each is its own separate follow-up.
     // -----------------------------------------------------------------
     const H5P_PHRASES = {
-      what_is_this: {en:'What is this?', hi:'यह क्या है?', mr:'हे काय आहे?', gu:'આ શું છે?'},
-      it_is_a:      {en:'It is a...', hi:'यह एक', mr:'हे एक', gu:'આ એક છે'},
-      prev:         {en:'◀ Prev', hi:'◀ पिछला', mr:'◀ मागील', gu:'◀ પાછળ'},
-      reveal:       {en:'Reveal', hi:'दिखाएं', mr:'दाखवा', gu:'બતાવો'},
-      next:         {en:'Next ▶', hi:'आगे ▶', mr:'पुढे ▶', gu:'આગળ ▶'},
-      of:           {en:'of', hi:'में से', mr:'पैकी', gu:'માંથી'},
-      this_is_my:   {en:'This is my', hi:'यह मेरा है', mr:'हे माझे आहे', gu:'આ મારું છે'}
+      what_is_this: 'What is this?',
+      it_is_a:      'It is a...',
+      prev:         '◀ Prev',
+      reveal:       'Reveal',
+      next:         'Next ▶',
+      of:           'of',
+      this_is_my:   'This is my'
     };
 
     function enableDrag(item, dropzones, onSuccess, onFail){
@@ -977,362 +1125,399 @@ function devSkipLogin(){
       }
     }
 
-    function renderLanguageGame(container, onComplete){
-      var order = ['bag','book','pencil','bottle','crayon','block'];
-      var i = 0, revealed = {};
+    // -----------------------------------------------------------------
+    // GENERIC "complete the sentence" renderer — takes its actual
+    // content from INTERACTIVE_ACTIVITIES (defined per week in
+    // all-weeks.js), not hardcoded here. Works for any week that
+    // defines a language activity of this type; this file has no
+    // knowledge of which week is currently active.
+    // -----------------------------------------------------------------
+    function renderActivityNotConfigured(container){
+      container.innerHTML = '<p class="sub">This activity has not been set up yet for this week.</p>';
+    }
+
+    function renderCompleteSentenceActivity(container, onComplete, item){
+      var options = [item.answer].concat(item.wrong);
+      options.sort(function(){ return Math.random() - 0.5; });
+
       container.innerHTML =
-        '<div class="g-lang-card">' +
-          '<span class="g-lang-emoji" id="gle">❓</span>' +
-          '<div class="g-lang-q" id="glq">' + pickLang(H5P_PHRASES.what_is_this) + '</div>' +
-          '<div class="g-lang-ans" id="gla"></div>' +
-          '<div class="g-lang-sent" id="gls"></div>' +
-          '<div class="g-lang-controls">' +
-            '<button class="g-btn secondary" id="glp">' + pickLang(H5P_PHRASES.prev) + '</button>' +
-            '<button class="g-btn" id="glr" style="background:var(--lang)">' + pickLang(H5P_PHRASES.reveal) + '</button>' +
-            '<button class="g-btn secondary" id="gln">' + pickLang(H5P_PHRASES.next) + '</button>' +
+        '<div style="background:#E6F1FB; border:3px solid #378ADD; border-radius:16px; padding:16px; text-align:center;">' +
+          '<div style="font-size:13px; font-weight:500; color:#042C53; margin-bottom:10px;">✏️ Complete the sentence</div>' +
+          '<div style="background:#fff; border-radius:12px; padding:16px; font-size:16px; margin-bottom:14px;">' +
+            item.prefix + ' <span id="csBlank" style="display:inline-block; min-width:70px; border-bottom:3px solid #378ADD; font-weight:500; color:#378ADD;">___</span>' + (item.suffix || '') +
           '</div>' +
-          '<div class="g-lang-prog" id="glg"></div>' +
+          '<div id="csOpts" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>' +
+          '<div id="csFeedback" style="margin-top:12px; font-size:14px; font-weight:500;"></div>' +
         '</div>';
-      var emojiEl = container.querySelector('#gle'), qEl = container.querySelector('#glq'),
-          ansEl = container.querySelector('#gla'), sentEl = container.querySelector('#gls'),
-          progEl = container.querySelector('#glg');
-      function render(){
-        progEl.textContent = (i+1) + ' ' + pickLang(H5P_PHRASES.of) + ' ' + order.length;
-        emojiEl.textContent = '❓'; qEl.textContent = pickLang(H5P_PHRASES.what_is_this);
-        ansEl.textContent = ''; sentEl.textContent = '';
-      }
-      container.querySelector('#glr').addEventListener('click', function(){
-        var key = order[i], obj = OBJECTS[key];
-        var objLabel = pickLang(obj.label);
-        emojiEl.textContent = obj.emoji; qEl.textContent = pickLang(H5P_PHRASES.it_is_a);
-        ansEl.textContent = objLabel + '!';
-        sentEl.textContent = '“' + pickLang(H5P_PHRASES.this_is_my) + ' ' + (currentLang === 'en' ? objLabel.toLowerCase() : objLabel) + '.”';
-        revealed[key] = true;
-        if(Object.keys(revealed).length >= order.length) onComplete();
-      });
-      container.querySelector('#glp').addEventListener('click', function(){ i=(i-1+order.length)%order.length; render(); });
-      container.querySelector('#gln').addEventListener('click', function(){ i=(i+1)%order.length; render(); });
-      render();
-    }
 
-    function renderNumeracyGame(container, onComplete){
-      var groups = {
-        writing:  {label:{en:'Writing', hi:'लिखना', mr:'लिहणे', gu:'લખવું'}, icon:'✏️', items:['pencil','crayon']},
-        reading:  {label:{en:'Reading', hi:'पढ़ना', mr:'वाचणे', gu:'વાંચવું'}, icon:'📖', items:['book']},
-        drinking: {label:{en:'Drinking', hi:'पीना', mr:'पिणे', gu:'પીવું'}, icon:'🥤', items:['bottle']},
-        playing:  {label:{en:'Playing', hi:'खेलना', mr:'खेळणे', gu:'રમવું'}, icon:'🧱', items:['block']}
-      };
-      var T = {
-        dragInstruction: {en:'Drag each item into its group', hi:'हर वस्तु को उसके समूह में खींचें', mr:'प्रत्येक वस्तू तिच्या गटात ओढा', gu:'દરેક વસ્તુને તેના જૂથમાં ખેંચો'},
-        allSorted: {en:'🎉 All sorted!', hi:'🎉 सब सही जगह पर!', mr:'🎉 सर्व नीट लावले!', gu:'🎉 બધું ગોઠવાઈ ગયું!'}
-      };
-      var allItems = [];
-      Object.keys(groups).forEach(function(g){ groups[g].items.forEach(function(k){ allItems.push(k); }); });
-      var total = allItems.length, placed = 0;
-      var zonesHtml = Object.keys(groups).map(function(g){
-        var grp = groups[g];
-        return '<div class="g-zone" data-accepts="' + grp.items.join(',') + '"><h5>' + grp.icon + ' ' + pickLang(grp.label) + '</h5></div>';
-      }).join('');
-      var trayHtml = allItems.map(function(key){ return '<div class="g-chip" data-key="' + key + '">' + OBJECTS[key].emoji + '</div>'; }).join('');
-      container.innerHTML =
-        '<div class="g-sort-status" id="gss">' + pickLang(T.dragInstruction) + ' (0 / ' + total + ')</div>' +
-        '<div class="g-sort-tray">' + trayHtml + '</div>' +
-        '<div class="g-zones">' + zonesHtml + '</div>';
-      var statusEl = container.querySelector('#gss');
-      var zones = Array.prototype.slice.call(container.querySelectorAll('.g-zone'));
-      var chips = Array.prototype.slice.call(container.querySelectorAll('.g-chip'));
-      chips.forEach(function(chip){
-        enableDrag(chip, zones, function(){
-          placed++;
-          if(placed >= total){ statusEl.textContent = pickLang(T.allSorted); onComplete(); }
-          else statusEl.textContent = pickLang(T.dragInstruction) + ' (' + placed + ' / ' + total + ')';
-        });
-      });
-    }
-
-    function renderSocialGame(container, onComplete){
-      var scenarios = [
-        {text:{en:'Your friend forgot their crayon. What do you do?', hi:'आपके दोस्त की क्रेयॉन खो गई है। आप क्या करेंगे?', mr:'तुझ्या मित्राचा क्रेयॉन विसरला. तू काय करशील?', gu:'તારા મિત્રનું ક્રેયોન ખોવાઈ ગયું. તું શું કરીશ?'}, options:[
-          {text:{en:'Share your crayon with your friend', hi:'अपनी क्रेयॉन दोस्त के साथ साझा करें', mr:'तुझा क्रेयॉन मित्राबरोबर वाटून घे', gu:'તારું ક્રેયોન મિત્ર સાથે વહેંચ'}, correct:true, feedback:{en:'Sharing makes friends happy! 🤝', hi:'साझा करना दोस्तों को खुश करता है! 🤝', mr:'वाटून घेतल्याने मित्र आनंदी होतात! 🤝', gu:'વહેંચવાથી મિત્રો ખુશ થાય છે! 🤝'}},
-          {text:{en:'Keep both crayons for yourself', hi:'दोनों क्रेयॉन अपने पास रखें', mr:'दोन्ही क्रेयॉन स्वतःकडे ठेव', gu:'બંને ક્રેયોન તારી પાસે રાખ'}, correct:false, feedback:{en:'That makes your friend feel left out.', hi:'इससे आपका दोस्त अकेला महसूस करेगा।', mr:'यामुळे तुझा मित्र दुर्लक्षित वाटेल.', gu:'આનાથી તારો મિત્ર છોડાયેલો અનુભવશે.'}}]},
-        {text:{en:'Everyone wants to talk at once. What should we do?', hi:'सब एक साथ बोलना चाहते हैं। हमें क्या करना चाहिए?', mr:'सगळे एकदमच बोलू इच्छितात. आपण काय करावे?', gu:'બધા એકસાથે બોલવા માંગે છે. આપણે શું કરવું જોઈએ?'}, options:[
-          {text:{en:'Shout louder than everyone else', hi:'सबसे तेज़ आवाज़ में चिल्लाएं', mr:'सर्वांपेक्षा जोरात ओरडा', gu:'બધા કરતાં વધુ જોરથી બૂમો પાડ'}, correct:false, feedback:{en:'That makes it hard for anyone to be heard.', hi:'इससे किसी की भी बात सुनना मुश्किल हो जाता है।', mr:'यामुळे कोणाचेही बोलणे ऐकणे कठीण होते.', gu:'આનાથી કોઈને સાંભળવું મુશ્કેલ બને છે.'}},
-          {text:{en:'Wait for your turn to speak', hi:'बोलने के लिए अपनी बारी का इंतज़ार करें', mr:'बोलण्यासाठी तुझी पाळी येईपर्यंत थांब', gu:'બોલવાનો તારો વારો રાહ જુઓ'}, correct:true, feedback:{en:'Waiting your turn shows kindness. ✅', hi:'बारी का इंतज़ार करना दयालुता दिखाता है। ✅', mr:'पाळीची वाट पाहणे दयाळूपणा दाखवते. ✅', gu:'વારાની રાહ જોવી એ દયા દર્શાવે છે. ✅'}}]},
-        {text:{en:'Your friend falls down while playing. What do you say?', hi:'खेलते समय आपका दोस्त गिर जाता है। आप क्या कहेंगे?', mr:'खेळताना तुझा मित्र पडतो. तू काय म्हणशील?', gu:'રમતી વખતે તારો મિત્ર પડી જાય છે. તું શું કહીશ?'}, options:[
-          {text:{en:'"Are you okay? Let me help you!"', hi:'"क्या तुम ठीक हो? मैं तुम्हारी मदद करता हूँ!"', mr:'"तू ठीक आहेस का? मी तुला मदत करतो!"', gu:'"તું બરાબર છે? હું તને મદદ કરું!"'}, correct:true, feedback:{en:'A kind and caring response. 💛', hi:'एक दयालु और परवाह करने वाला जवाब। 💛', mr:'एक दयाळू आणि काळजी घेणारे उत्तर. 💛', gu:'એક દયાળુ અને કાળજી રાખતો જવાબ. 💛'}},
-          {text:{en:'Laugh and walk away', hi:'हंसें और चले जाएं', mr:'हस आणि निघून जा', gu:'હસીને ચાલ્યો જા'}, correct:false, feedback:{en:'That would make your friend feel sad.', hi:'इससे आपका दोस्त दुखी हो जाएगा।', mr:'यामुळे तुझा मित्र दुःखी होईल.', gu:'આનાથી તારો મિત્ર દુઃખી થશે.'}}]}
-      ];
-      var nextBtnText = {en:'Next scenario ▶', hi:'आगे की स्थिति ▶', mr:'पुढील परिस्थिती ▶', gu:'આગળનું દ્રશ્ય ▶'};
-      var i = 0, answered = {};
-      container.innerHTML =
-        '<div class="g-scenario">' +
-          '<div class="g-scenario-text" id="gst"></div>' +
-          '<div class="g-scenario-opts" id="gso"></div>' +
-          '<div class="g-feedback" id="gsf"></div>' +
-          '<div class="g-scenario-controls"><button class="g-btn" id="gsn" style="background:var(--soc)">' + pickLang(nextBtnText) + '</button></div>' +
-        '</div>';
-      var textEl = container.querySelector('#gst'), optsEl = container.querySelector('#gso'), fbEl = container.querySelector('#gsf');
-      function render(){
-        var s = scenarios[i], sIndex = i;
-        textEl.textContent = pickLang(s.text); fbEl.textContent = ''; optsEl.innerHTML = '';
-        s.options.forEach(function(opt){
-          var btn = document.createElement('button');
-          btn.className = 'g-opt-btn'; btn.textContent = pickLang(opt.text);
-          btn.addEventListener('click', function(){
-            Array.prototype.slice.call(optsEl.children).forEach(function(b){ b.disabled = true; });
-            btn.classList.add(opt.correct ? 'correct' : 'incorrect');
-            fbEl.textContent = pickLang(opt.feedback);
-            answered[sIndex] = true;
-            if(Object.keys(answered).length >= scenarios.length) onComplete();
-          });
-          optsEl.appendChild(btn);
-        });
-      }
-      container.querySelector('#gsn').addEventListener('click', function(){ i=(i+1)%scenarios.length; render(); });
-      render();
-    }
-
-    function renderPhysicalGame(container, onComplete){
-      var cues = [
-        {icon:'🚶', title:'Line Walk', cue:'Walk heel-to-toe along the line.', seconds:8},
-        {icon:'🧍', title:'Balance', cue:'Stand on one foot and count to five.', seconds:6},
-        {icon:'🤾', title:'Ball Play', cue:'Throw and catch gently with a partner.', seconds:8},
-        {icon:'🏃', title:'Safe Running', cue:'Run in the big circle, freeze on "freeze!"', seconds:8}
-      ];
-      var i = 0, timerId = null, completed = {};
-      container.innerHTML =
-        '<div class="g-phy-card">' +
-          '<div class="g-phy-icon" id="gpi"></div>' +
-          '<div class="g-phy-title" id="gpt"></div>' +
-          '<div class="g-phy-cue" id="gpc"></div>' +
-          '<div class="g-phy-timer" id="gpm">Ready?</div>' +
-          '<div class="g-phy-controls">' +
-            '<button class="g-btn" id="gps" style="background:var(--phy)">Start</button>' +
-            '<button class="g-btn secondary" id="gpn">Next move ▶</button>' +
-          '</div>' +
-          '<div class="g-phy-prog" id="gpp"></div>' +
-        '</div>';
-      var iconEl = container.querySelector('#gpi'), titleEl = container.querySelector('#gpt'),
-          cueEl = container.querySelector('#gpc'), timerEl = container.querySelector('#gpm'),
-          progEl = container.querySelector('#gpp'), startBtn = container.querySelector('#gps');
-      function render(){
-        if(timerId){ clearInterval(timerId); timerId = null; }
-        var c = cues[i];
-        iconEl.textContent = c.icon; titleEl.textContent = c.title; cueEl.textContent = c.cue;
-        timerEl.textContent = 'Ready?'; progEl.textContent = (i+1) + ' of ' + cues.length;
-        startBtn.disabled = false;
-      }
-      startBtn.addEventListener('click', function(){
-        var c = cues[i], idx = i, remaining = c.seconds;
-        startBtn.disabled = true;
-        timerEl.textContent = remaining + 's';
-        timerId = setInterval(function(){
-          remaining--;
-          if(remaining <= 0){
-            clearInterval(timerId);
-            timerEl.textContent = 'Great job! 🎉';
-            completed[idx] = true;
-            if(Object.keys(completed).length >= cues.length) onComplete();
-          } else timerEl.textContent = remaining + 's';
-        }, 1000);
-      });
-      container.querySelector('#gpn').addEventListener('click', function(){ i=(i+1)%cues.length; render(); });
-      render();
-    }
-
-    function renderCreativeGame(container, onComplete){
-      var colors = ['#E15C74','#2C8FC4','#EE8F35','#3FA669','#D89A00','#7C6FD1'];
-      var colored = {};
-      container.innerHTML =
-        '<div class="g-color-wrap">' +
-          '<div class="g-palette" id="gcp"></div>' +
-          '<div class="g-canvas-frame"><svg viewBox="0 0 200 220">' +
-            '<rect id="gcBody" x="40" y="60" width="120" height="130" rx="18" fill="#f2f2f2" stroke="#333" stroke-width="3"/>' +
-            '<path id="gcFlap" d="M55 60 L145 60 L135 20 L65 20 Z" fill="#f2f2f2" stroke="#333" stroke-width="3"/>' +
-            '<path d="M75 20 Q100 -10 125 20" fill="none" stroke="#333" stroke-width="6" stroke-linecap="round"/>' +
-          '</svg></div>' +
-        '</div>' +
-        '<div style="text-align:center; margin-top:12px;"><button class="g-btn secondary" id="gcr">Reset colours</button></div>';
-      var paletteEl = container.querySelector('#gcp');
-      var current = colors[0];
-      colors.forEach(function(c, idx){
-        var sw = document.createElement('div');
-        sw.className = 'g-swatch' + (idx===0 ? ' selected' : '');
-        sw.style.background = c;
-        sw.addEventListener('click', function(){
-          current = c;
-          Array.prototype.slice.call(paletteEl.children).forEach(function(s){ s.classList.remove('selected'); });
-          sw.classList.add('selected');
-        });
-        paletteEl.appendChild(sw);
-      });
-      var paintable = [container.querySelector('#gcBody'), container.querySelector('#gcFlap')];
-      paintable.forEach(function(shape){
-        shape.addEventListener('click', function(){
-          shape.setAttribute('fill', current);
-          colored[shape.id] = true;
-          if(Object.keys(colored).length >= paintable.length) onComplete();
-        });
-      });
-      container.querySelector('#gcr').addEventListener('click', function(){
-        paintable.forEach(function(shape){ shape.setAttribute('fill', '#f2f2f2'); });
-      });
-    }
-
-    function renderLifeGame(container, onComplete){
-      var zones = [
-        {icon:'🪝', label:{en:'Hook', hi:'हुक', mr:'हूक', gu:'હૂક'},       accepts:['bag']},
-        {icon:'📚', label:{en:'Book Shelf', hi:'किताब शेल्फ', mr:'पुस्तक कपाट', gu:'પુસ્તક કબાટ'}, accepts:['book']},
-        {icon:'👜', label:{en:'Side Pocket', hi:'साइड पॉकेट', mr:'साइड पॉकेट', gu:'સાઇડ પોકેટ'},accepts:['bottle']},
-        {icon:'✏️', label:{en:'Pencil Box', hi:'पेंसिल बॉक्स', mr:'पेन्सिल बॉक्स', gu:'પેન્સિલ બોક્સ'}, accepts:['pencil','crayon']},
-        {icon:'🗑️', label:{en:'Toy Bin', hi:'खिलौना बिन', mr:'खेळणी बिन', gu:'રમકડાં ડબ્બો'},    accepts:['block']}
-      ];
-      var T = {
-        putAway: {en:'Put each item away', hi:'हर वस्तु को उसकी जगह पर रखें', mr:'प्रत्येक वस्तू तिच्या जागी ठेवा', gu:'દરેક વસ્તુ તેની જગ્યાએ મૂકો'},
-        allPlaced: {en:'🎉 Everything is in its place!', hi:'🎉 सब कुछ अपनी जगह पर है!', mr:'🎉 सर्व काही जागच्या जागी आहे!', gu:'🎉 બધું તેની જગ્યાએ છે!'}
-      };
-      var items = ['bag','book','bottle','pencil','crayon','block'];
-      var total = items.length, placed = 0;
-      var zonesHtml = zones.map(function(z){
-        return '<div class="g-life-zone" data-accepts="' + z.accepts.join(',') + '"><h5>' + z.icon + ' ' + pickLang(z.label) + '</h5></div>';
-      }).join('');
-      var trayHtml = items.map(function(key){ return '<div class="g-chip" data-key="' + key + '">' + OBJECTS[key].emoji + '</div>'; }).join('');
-      container.innerHTML =
-        '<div class="g-life-status" id="gls2">' + pickLang(T.putAway) + ' (0 / ' + total + ')</div>' +
-        '<div class="g-life-tray">' + trayHtml + '</div>' +
-        '<div class="g-life-zones">' + zonesHtml + '</div>';
-      var statusEl = container.querySelector('#gls2');
-      var zoneEls = Array.prototype.slice.call(container.querySelectorAll('.g-life-zone'));
-      var chips = Array.prototype.slice.call(container.querySelectorAll('.g-chip'));
-      chips.forEach(function(chip){
-        enableDrag(chip, zoneEls, function(){
-          placed++;
-          if(placed >= total){ statusEl.textContent = pickLang(T.allPlaced); onComplete(); }
-          else statusEl.textContent = pickLang(T.putAway) + ' (' + placed + ' / ' + total + ')';
-        });
-      });
-    }
-
-    function renderReflectGame(container, onComplete){
-      const prompts = [
-        {en:"I can name it!", hi:'मैं इसे नाम दे सकता हूँ!', mr:'मी हे नाव सांगू शकतो!', gu:'હું તેનું નામ આપી શકું!'},
-        {en:"I remember most of it", hi:'मुझे इसका ज़्यादातर हिस्सा याद है', mr:'मला याचा बराचसा भाग आठवतो', gu:'મને તેનો મોટાભાગનો ભાગ યાદ છે'},
-        {en:"I'll ask my teacher to explain again", hi:'मैं अपने शिक्षक से फिर से समझाने के लिए कहूँगा', mr:'मी माझ्या शिक्षकांना पुन्हा समजावण्यास सांगेन', gu:'હું મારા શિક્ષકને ફરી સમજાવવા કહીશ'}
-      ];
-      const quickCheck = {en:'Quick check — how did today go?', hi:'त्वरित जांच — आज का दिन कैसा रहा?', mr:'त्वरित तपासणी — आज कसा गेला?', gu:'ઝડપી ચકાસણી — આજનો દિવસ કેવો ગયો?'};
-      const wrappedUp = {en:'🎉 Nicely wrapped up!', hi:'🎉 अच्छी तरह से समाप्त!', mr:'🎉 छान समारोप!', gu:'🎉 સરસ સમાપન!'};
-      container.innerHTML =
-        '<div class="g-scenario">' +
-          '<div class="g-scenario-text">' + pickLang(quickCheck) + '</div>' +
-          '<div class="g-scenario-opts" id="grOpts"></div>' +
-          '<div class="g-feedback" id="grFeedback"></div>' +
-        '</div>';
-      const optsEl = container.querySelector('#grOpts');
-      prompts.forEach(text => {
-        const btn = document.createElement('button');
-        btn.className = 'g-opt-btn';
-        btn.textContent = pickLang(text);
-        btn.addEventListener('click', () => {
-          Array.from(optsEl.children).forEach(b => b.disabled = true);
-          btn.classList.add('correct');
-          container.querySelector('#grFeedback').textContent = pickLang(wrappedUp);
+      var optsEl = container.querySelector('#csOpts');
+      options.forEach(function(opt){
+        var btn = document.createElement('button');
+        btn.style.cssText = 'background:#fff; border:3px solid #85B7EB; border-radius:12px; padding:10px 16px; font-size:14px; cursor:pointer;';
+        btn.textContent = opt;
+        btn.addEventListener('click', function(){
+          Array.prototype.forEach.call(optsEl.children, function(b){ b.disabled = true; });
+          var isCorrect = opt === item.answer;
+          btn.style.background = isCorrect ? '#9FE1CB' : '#F5C4B3';
+          btn.style.borderColor = isCorrect ? '#1D9E75' : '#D85A30';
+          container.querySelector('#csBlank').textContent = item.answer;
+          container.querySelector('#csFeedback').innerHTML = isCorrect
+            ? '<span style="color:#0F6E56;">✓ ' + (item.emoji || '') + ' That\'s right!</span>'
+            : '<span style="color:#993C1D;">Not quite — it\'s "' + item.answer + '"</span>';
           onComplete();
         });
         optsEl.appendChild(btn);
       });
     }
 
-    function renderWelcomeExplore(container, onComplete){
-      const hotspots = [
-        {id:'board',  x:20,  y:14, w:70, h:40, emoji:'📝', label:{en:'Whiteboard — where we learn together', hi:'श्यामपट — जहाँ हम सब मिलकर सीखते हैं', mr:'फळा — जिथे आपण सगळे एकत्र शिकतो', gu:'વ્હાઇટબોર્ડ — જ્યાં આપણે સાથે શીખીએ છીએ'}},
-        {id:'shelf',  x:150, y:18, w:38, h:60, emoji:'📚', label:{en:'Book shelf — our story friends live here', hi:'किताबों की अलमारी — यहाँ हमारी कहानी वाले दोस्त रहते हैं', mr:'पुस्तकांचे कपाट — इथे आपले गोष्टीतले मित्र राहतात', gu:'પુસ્તકોનું કબાટ — અહીં આપણા વાર્તા મિત્રો રહે છે'}},
-        {id:'window', x:14,  y:96, w:42, h:38, emoji:'🪟', label:{en:'Window — sunshine says hello!', hi:'खिड़की — सूरज नमस्ते कहता है!', mr:'खिडकी — सूर्य नमस्कार करतो!', gu:'બારી — સૂરજ નમસ્તે કહે છે!'}},
-        {id:'desk',   x:74,  y:100,w:56, h:36, emoji:'🪑', label:{en:'Your desk — your very own spot', hi:'तुम्हारी डेस्क — तुम्हारी अपनी जगह', mr:'तुझे डेस्क — तुझी स्वतःची जागा', gu:'તારું ડેસ્ક — તારી પોતાની જગ્યા'}},
-        {id:'plant',  x:150, y:100,w:32, h:32, emoji:'🌱', label:{en:'Class plant — we take turns watering it', hi:'कक्षा का पौधा — हम बारी-बारी से पानी देते हैं', mr:'वर्गातील रोप — आपण आळीपाळीने पाणी घालतो', gu:'વર્ગનો છોડ — આપણે વારાફરતી પાણી આપીએ છીએ'}}
-      ];
-      const found = {};
-      const T = {
-        lyric: {en:'"Good morning, Friends!, we\'re happy today!<br>Welcome to our classroom, come on in and play!"', hi:'"सुप्रभात दोस्तों! आज हम खुश हैं!<br>हमारी कक्षा में आपका स्वागत है, आओ और खेलो!"', mr:'"सुप्रभात मित्रांनो! आज आम्ही आनंदी आहोत!<br>आमच्या वर्गात तुमचे स्वागत आहे, या आणि खेळा!"', gu:'"સુપ્રભાત મિત્રો! આજે આપણે ખુશ છીએ!<br>આપણા વર્ગમાં તમારું સ્વાગત છે, આવો અને રમો!"'},
-        playBtn: {en:'▶ Play welcome song', hi:'▶ स्वागत गीत बजाएं', mr:'▶ स्वागत गीत वाजवा', gu:'▶ સ્વાગત ગીત વગાડો'},
-        nextBtn: {en:"We sang it! Let's explore →", hi:'हमने गाया! अब चलो देखें →', mr:'आम्ही गायलं! चला शोधूया →', gu:'અમે ગાયું! ચાલો શોધીએ →'},
-        tapToExplore: {en:'Tap around the room to explore', hi:'कमरे में खोजने के लिए टैप करें', mr:'खोलीत शोधण्यासाठी टॅप करा', gu:'રૂમમાં શોધવા માટે ટેપ કરો'},
-        allFound: {en:'🎉 You explored the whole classroom!', hi:'🎉 आपने पूरी कक्षा का अन्वेषण कर लिया!', mr:'🎉 तुम्ही संपूर्ण वर्गाचा शोध घेतला!', gu:'🎉 તમે સમગ્ર વર્ગની શોધ કરી!'}
-      };
+    function renderLanguageGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.language && weekConfig.language.type === 'complete-sentence' && weekConfig.language.days[currentDay]){
+        renderCompleteSentenceActivity(container, onComplete, weekConfig.language.days[currentDay]);
+        return;
+      }
+      renderActivityNotConfigured(container);
+    }
 
-      function renderStepOne(){
-        container.innerHTML =
-          '<div class="g-welcome-song">' +
-            '<div class="g-welcome-note" id="gwNote">🎵</div>' +
-            '<p class="g-welcome-lyric">' + pickLang(T.lyric) + '</p>' +
-            '<div class="g-welcome-actions">' +
-              '<button class="g-btn welcome-play-btn"  style="background:var(--primary)" id="gwPlay">' + pickLang(T.playBtn) + '</button>' +
-              '<button class="g-btn" id="gwNext" style="background:var(--primary)">' + pickLang(T.nextBtn) + '</button>' +
-            '</div>' +
+    // -----------------------------------------------------------------
+    // GENERIC "match the pairs" renderer — takes its pairs from
+    // INTERACTIVE_ACTIVITIES (defined per week in all-weeks.js), not
+    // hardcoded here. Reusable for any week that defines a numeracy
+    // (or other domain) activity of this type.
+    // -----------------------------------------------------------------
+    function renderMatchPairsActivity(container, onComplete, config){
+      var pairs = config.pairs;
+      var matched = 0;
+
+      var rowsHtml = pairs.map(function(p, idx){
+        return '<div class="mp-row" data-idx="' + idx + '" style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">' +
+          '<div style="flex:1; background:#fff; border:3px dashed #D3D1C7; border-radius:14px; padding:12px; display:flex; align-items:center; gap:10px;">' +
+            '<span style="font-size:32px;">' + p.leftEmoji + '</span><span style="font-size:15px; font-weight:500;">' + p.left + '</span>' +
+          '</div>' +
+          '<button class="mp-connect" data-idx="' + idx + '" style="background:#fff; border:2px solid #AFA9EC; border-radius:50%; width:36px; height:36px; font-size:16px; cursor:pointer;">➜</button>' +
+          '<div style="flex:1; background:#fff; border:3px dashed #D3D1C7; border-radius:14px; padding:12px; display:flex; align-items:center; gap:10px; justify-content:flex-end;">' +
+            '<span style="font-size:15px; font-weight:500;">' + p.right + '</span><span style="font-size:32px;">' + p.rightEmoji + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      container.innerHTML =
+        '<div style="background:#EEEDFE; border:3px solid #AFA9EC; border-radius:16px; padding:16px;">' +
+          '<div style="font-size:13px; font-weight:500; color:#3C3489; margin-bottom:2px;">🔗 Match the pairs</div>' +
+          '<div style="font-size:13px; color:#534AB7; margin-bottom:14px;">' + (config.instruction || 'Tap each arrow to match the pairs.') + '</div>' +
+          rowsHtml +
+          '<div style="display:flex; align-items:center; gap:10px; margin-top:6px; background:#fff; border-radius:12px; padding:10px 14px;">' +
+            '<span id="mpProgress" style="font-size:13px; font-weight:500; color:#3C3489;">0 of ' + pairs.length + ' matched</span>' +
+            '<div style="flex:1; height:10px; background:#D3D1C7; border-radius:5px; overflow:hidden;"><div id="mpBar" style="width:0%; height:100%; background:#1D9E75;"></div></div>' +
+          '</div>' +
+        '</div>';
+
+      container.querySelectorAll('.mp-connect').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(btn.disabled) return;
+          btn.disabled = true;
+          btn.style.background = '#1D9E75'; btn.style.color = '#fff'; btn.style.borderColor = '#1D9E75';
+          var row = container.querySelector('.mp-row[data-idx="' + btn.getAttribute('data-idx') + '"]');
+          row.querySelectorAll('div').forEach(function(box){
+            box.style.border = '3px solid #1D9E75'; box.style.background = '#9FE1CB';
+          });
+          matched++;
+          container.querySelector('#mpProgress').textContent = matched + ' of ' + pairs.length + ' matched';
+          container.querySelector('#mpBar').style.width = Math.round((matched / pairs.length) * 100) + '%';
+          if(matched >= pairs.length) onComplete();
+        });
+      });
+    }
+
+    function renderNumeracyGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.numeracy && weekConfig.numeracy.type === 'match-pairs' && weekConfig.numeracy.days && weekConfig.numeracy.days[currentDay]){
+        renderMatchPairsActivity(container, onComplete, weekConfig.numeracy.days[currentDay]);
+        return;
+      }
+      renderActivityNotConfigured(container);
+    }
+
+    function renderSocialGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.story && weekConfig.story.type === 'tap-sequence' && weekConfig.story.days[currentDay]){
+        renderTapSequenceActivity(container, onComplete, weekConfig.story.days[currentDay]);
+        return;
+      }
+      renderActivityNotConfigured(container);
+    }
+
+    // -----------------------------------------------------------------
+    // GENERIC "jump count then guess the direction" renderer — tap to
+    // count jumps up to a target, then guess which side a sound came
+    // from. A different mechanic from step-count-find above, for
+    // variety across days.
+    // -----------------------------------------------------------------
+    function renderJumpDirectionActivity(container, onComplete, dayConfig){
+      var jumps = 0;
+
+      container.innerHTML =
+        '<div style="background:#EAF3DE; border:3px solid #639922; border-radius:16px; padding:16px; text-align:center;">' +
+          '<div style="font-size:13px; font-weight:500; color:#173404; margin-bottom:2px;">🐸 Jump and listen</div>' +
+          '<div style="font-size:13px; color:#3B6D11; margin-bottom:14px;">' + dayConfig.instruction + '</div>' +
+          '<div id="jdMain">' +
+            '<div id="jdCount" style="font-size:36px; font-weight:500; color:#173404; margin-bottom:10px;">0 / ' + dayConfig.targetJumps + '</div>' +
+            '<button id="jdJumpBtn" class="btn-primary" style="width:auto; padding:10px 22px;">🐸 Jump!</button>' +
+          '</div>' +
+        '</div>';
+
+      container.querySelector('#jdJumpBtn').addEventListener('click', function(){
+        jumps++;
+        container.querySelector('#jdCount').textContent = jumps + ' / ' + dayConfig.targetJumps;
+        if(jumps >= dayConfig.targetJumps){
+          var optsHtml = dayConfig.directions.map(function(d, idx){
+            return '<button class="jd-dir" data-idx="' + idx + '" style="background:#fff; border:3px solid #97C459; border-radius:14px; padding:16px; font-size:28px; cursor:pointer;">' + d.arrow + '</button>';
+          }).join('');
+          container.querySelector('#jdMain').innerHTML =
+            '<div style="font-size:13px; font-weight:500; color:#173404; margin-bottom:10px;">' + dayConfig.soundEmoji + ' Which way did the sound come from?</div>' +
+            '<div style="display:flex; gap:10px; justify-content:center;">' + optsHtml + '</div>' +
+            '<div id="jdFeedback" style="margin-top:12px; font-size:14px; font-weight:500;"></div>';
+          container.querySelectorAll('.jd-dir').forEach(function(btn){
+            btn.addEventListener('click', function(){
+              container.querySelectorAll('.jd-dir').forEach(function(b){ b.disabled = true; });
+              var idx = parseInt(btn.getAttribute('data-idx'), 10);
+              var isCorrect = dayConfig.directions[idx].correct;
+              btn.style.background = isCorrect ? '#C0DD97' : '#F5C4B3';
+              btn.style.borderColor = isCorrect ? '#3B6D11' : '#D85A30';
+              container.querySelector('#jdFeedback').innerHTML = isCorrect
+                ? '<span style="color:#27500A;">Thats right!</span>'
+                : '<span style="color:#993C1D;">Not quite - try listening again next time!</span>';
+              onComplete();
+            });
+          });
+        }
+      });
+    }
+
+    function renderPhysicalGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.outdoor && weekConfig.outdoor.days && weekConfig.outdoor.days[currentDay]){
+        var todayConfig = weekConfig.outdoor.days[currentDay];
+        if(todayConfig.type === 'step-count-find'){ renderStepCountFindActivity(container, onComplete, todayConfig); return; }
+        if(todayConfig.type === 'jump-direction'){ renderJumpDirectionActivity(container, onComplete, todayConfig); return; }
+      }
+      renderActivityNotConfigured(container);
+    }
+
+    function renderCreativeGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.create && weekConfig.create.type === 'colour-fill' && weekConfig.create.days[currentDay]){
+        renderColourFillActivity(container, onComplete, weekConfig.create.days[currentDay]);
+        return;
+      }
+      renderActivityNotConfigured(container);
+    }
+
+    function renderLifeGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.tidy && weekConfig.tidy.days && weekConfig.tidy.days[currentDay]){
+        var todayConfig = weekConfig.tidy.days[currentDay];
+        // No specific activity type built for this domain yet — add
+        // one here (and a dispatch line above) once designed.
+      }
+      renderActivityNotConfigured(container);
+    }
+
+    function renderReflectGame(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.reflect && weekConfig.reflect.days && weekConfig.reflect.days[currentDay]){
+        var todayConfig = weekConfig.reflect.days[currentDay];
+        // No specific activity type built for this domain yet — add
+        // one here (and a dispatch line above) once designed.
+      }
+      renderActivityNotConfigured(container);
+    }
+
+    // -----------------------------------------------------------------
+    // GENERIC "tap to explore" renderer — tap each hotspot to reveal
+    // it, in any order. Content comes from all-weeks.js.
+    // -----------------------------------------------------------------
+    function renderTapExploreActivity(container, onComplete, dayConfig){
+      var seen = 0, total = dayConfig.hotspots.length;
+      var itemsHtml = dayConfig.hotspots.map(function(h, idx){
+        return '<button class="te-spot" data-idx="' + idx + '" style="background:#fff; border:3px dashed #9FE1CB; border-radius:14px; padding:16px 10px; cursor:pointer; text-align:center;">' +
+          '<div style="font-size:36px;">' + h.emoji + '</div>' +
+          '<div class="te-label" style="font-size:12px; font-weight:500; color:#5F5E5A; margin-top:6px; visibility:hidden;">' + h.label + '</div>' +
+        '</button>';
+      }).join('');
+
+      var songHtml = '';
+      if(dayConfig.song){
+        songHtml =
+          '<div style="background:#fff; border-radius:12px; padding:16px; text-align:center; margin-bottom:14px;">' +
+            '<div style="font-size:32px; margin-bottom:6px;">🎶</div>' +
+            '<div style="font-size:14px; color:#5F5E5A; margin-bottom:10px;">' + dayConfig.song.lyrics + '</div>' +
+            '<button id="teSongBtn" style="background:#1D9E75; color:#fff; border:none; padding:9px 18px;">▶ Play welcome song</button>' +
           '</div>';
+      }
 
-        const noteEl = container.querySelector('#gwNote');
-        const playBtn = container.querySelector('#gwPlay');
-        const audioEl = new Audio('assets/audio/welcome-song.mp3');
+      container.innerHTML =
+        '<div style="background:#E1F5EE; border:3px solid #1D9E75; border-radius:16px; padding:16px;">' +
+          '<div style="font-size:13px; font-weight:500; color:#04342C; margin-bottom:2px;">👀 Tap to explore</div>' +
+          '<div style="font-size:13px; color:#0F6E56; margin-bottom:12px;">' + dayConfig.instruction + '</div>' +
+          songHtml +
+          '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px;">' + itemsHtml + '</div>' +
+          '<div style="display:flex; align-items:center; gap:10px; margin-top:14px; background:#fff; border-radius:12px; padding:10px 14px;">' +
+            '<span id="teProgress" style="font-size:13px; font-weight:500; color:#04342C;">0 of ' + total + ' found</span>' +
+            '<div style="flex:1; height:10px; background:#D3D1C7; border-radius:5px; overflow:hidden;"><div id="teBar" style="width:0%; height:100%; background:#1D9E75;"></div></div>' +
+          '</div>' +
+        '</div>';
 
-        function speakLyrics(){
+      if(dayConfig.song){
+        container.querySelector('#teSongBtn').addEventListener('click', function(){
           if(!('speechSynthesis' in window)) return;
-          const utter = new SpeechSynthesisUtterance(
-            "Good morning, good morning, we're happy today! Welcome to our classroom, come on in and play!"
-          );
-          utter.rate = 0.85;
-          utter.pitch = 1.3;
-          utter.onstart = () => noteEl.classList.add('playing');
-          utter.onend = () => noteEl.classList.remove('playing');
+          var utter = new SpeechSynthesisUtterance(dayConfig.song.spoken || dayConfig.song.lyrics.replace(/"/g, ''));
+          utter.rate = 0.85; utter.pitch = 1.3;
           window.speechSynthesis.cancel();
           window.speechSynthesis.speak(utter);
-        }
-
-        playBtn.addEventListener('click', () => {
-          audioEl.currentTime = 0;
-          noteEl.classList.add('playing');
-          audioEl.play()
-            .then(() => {})
-            .catch(() => { speakLyrics(); });
-        });
-
-        audioEl.addEventListener('ended', () => noteEl.classList.remove('playing'));
-
-        container.querySelector('#gwNext').addEventListener('click', () => {
-          window.speechSynthesis && window.speechSynthesis.cancel();
-          audioEl.pause();
-          renderStepTwo();
         });
       }
 
-      function renderStepTwo(){
-        const hotspotsHtml = hotspots.map(h =>
-          `<div class="g-welcome-hotspot ${found[h.id]?'found':''}" data-id="${h.id}"
-             style="left:${h.x}px; top:${h.y}px; width:${h.w}px; height:${h.h}px;">
-             ${found[h.id] ? h.emoji : '?'}
-           </div>`
-        ).join('');
+      container.querySelectorAll('.te-spot').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(btn.disabled) return;
+          btn.disabled = true;
+          btn.style.background = '#9FE1CB'; btn.style.borderStyle = 'solid'; btn.style.borderColor = '#1D9E75';
+          btn.querySelector('.te-label').style.visibility = 'visible';
+          seen++;
+          container.querySelector('#teProgress').textContent = seen + ' of ' + total + ' found';
+          container.querySelector('#teBar').style.width = Math.round((seen / total) * 100) + '%';
+          if(seen >= total) onComplete();
+        });
+      });
+    }
 
-        container.innerHTML =
-          `<div class="g-welcome-status" id="gwStatus">${pickLang(T.tapToExplore)} (0 / ${hotspots.length})</div>
-           <div class="g-welcome-room">${hotspotsHtml}</div>`;
+    // -----------------------------------------------------------------
+    // GENERIC "tap along in order" renderer — tap each step in the
+    // correct sequence; only the next expected step is tappable.
+    // -----------------------------------------------------------------
+    function renderTapSequenceActivity(container, onComplete, dayConfig){
+      var next = 0, total = dayConfig.sequence.length;
 
-        const statusEl = container.querySelector('#gwStatus');
-        container.querySelectorAll('.g-welcome-hotspot').forEach(el => {
-          el.addEventListener('click', () => {
-            const id = el.getAttribute('data-id');
-            if(found[id]) return;
-            const h = hotspots.find(x => x.id === id);
-            found[id] = true;
-            el.textContent = h.emoji;
-            el.classList.add('found');
-            const count = Object.keys(found).length;
-            statusEl.textContent = count < hotspots.length ? pickLang(h.label) : pickLang(T.allFound);
-            if(count >= hotspots.length) onComplete();
+      function renderRow(){
+        var itemsHtml = dayConfig.sequence.map(function(s, idx){
+          var isDone = idx < next, isNext = idx === next;
+          var style = isDone ? 'background:#9FE1CB; border:3px solid #1D9E75;'
+                    : isNext ? 'background:#fff; border:3px solid #7F77DD; box-shadow:0 0 0 3px #EEEDFE;'
+                    : 'background:#fff; border:3px dashed #D3D1C7; opacity:0.6;';
+          return '<button class="ts-step" data-idx="' + idx + '" style="' + style + ' border-radius:14px; padding:14px 10px; cursor:pointer; text-align:center; flex:1;">' +
+            '<div style="font-size:32px;">' + s.emoji + '</div>' +
+            '<div style="font-size:12px; font-weight:500; margin-top:4px;">' + s.label + '</div>' +
+          '</button>';
+        }).join('');
+        container.querySelector('#tsRow').innerHTML = itemsHtml;
+        container.querySelectorAll('.ts-step').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var idx = parseInt(btn.getAttribute('data-idx'), 10);
+            if(idx !== next) return; // only the highlighted next step responds
+            next++;
+            container.querySelector('#tsProgress').textContent = next + ' of ' + total;
+            if(next >= total) onComplete();
+            else renderRow();
           });
         });
       }
 
-      renderStepOne();
+      container.innerHTML =
+        '<div style="background:#FAECE7; border:3px solid #D85A30; border-radius:16px; padding:16px;">' +
+          '<div style="font-size:13px; font-weight:500; color:#4A1B0C; margin-bottom:2px;">🎵 Tap along</div>' +
+          '<div style="font-size:13px; color:#993C1D; margin-bottom:14px;">' + dayConfig.instruction + '</div>' +
+          '<div id="tsRow" style="display:flex; gap:8px;"></div>' +
+          '<div id="tsProgress" style="margin-top:12px; font-size:13px; font-weight:500; color:#4A1B0C;">0 of ' + total + '</div>' +
+        '</div>';
+      renderRow();
+    }
+
+    // -----------------------------------------------------------------
+    // GENERIC "colour and fill" renderer — pick a colour, tap a
+    // region to fill it. Content (regions, palette) from all-weeks.js.
+    // -----------------------------------------------------------------
+    function renderColourFillActivity(container, onComplete, dayConfig){
+      var filled = 0, total = dayConfig.regions.length, currentColour = dayConfig.palette[0];
+
+      var paletteHtml = dayConfig.palette.map(function(c, idx){
+        return '<button class="cf-swatch" data-idx="' + idx + '" style="width:34px; height:34px; border-radius:50%; background:' + c + '; border:3px solid ' + (idx===0 ? '#4B1528' : 'transparent') + '; cursor:pointer;"></button>';
+      }).join('');
+
+      var regionsHtml = dayConfig.regions.map(function(r, idx){
+        return '<button class="cf-region" data-idx="' + idx + '" style="background:#fff; border:3px dashed #D3D1C7; border-radius:14px; padding:16px 10px; cursor:pointer; text-align:center; flex:1;">' +
+          '<div style="font-size:28px;">' + (r.emoji || '⬜') + '</div>' +
+          '<div style="font-size:12px; font-weight:500; margin-top:4px;">' + r.label + '</div>' +
+        '</button>';
+      }).join('');
+
+      container.innerHTML =
+        '<div style="background:#FBEAF0; border:3px solid #D4537E; border-radius:16px; padding:16px;">' +
+          '<div style="font-size:13px; font-weight:500; color:#4B1528; margin-bottom:2px;">🖍️ Draw and colour</div>' +
+          '<div style="font-size:13px; color:#993556; margin-bottom:12px;">' + dayConfig.instruction + '</div>' +
+          '<div style="display:flex; gap:8px; margin-bottom:14px;">' + paletteHtml + '</div>' +
+          '<div style="display:flex; gap:10px;">' + regionsHtml + '</div>' +
+          '<div style="margin-top:12px; font-size:13px; font-weight:500; color:#4B1528;" id="cfProgress">0 of ' + total + ' coloured</div>' +
+        '</div>';
+
+      container.querySelectorAll('.cf-swatch').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          container.querySelectorAll('.cf-swatch').forEach(function(s){ s.style.borderColor = 'transparent'; });
+          btn.style.borderColor = '#4B1528';
+          currentColour = dayConfig.palette[parseInt(btn.getAttribute('data-idx'), 10)];
+        });
+      });
+      container.querySelectorAll('.cf-region').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(btn.getAttribute('data-filled')) return;
+          btn.setAttribute('data-filled', '1');
+          btn.style.background = currentColour; btn.style.border = '3px solid #4B1528';
+          filled++;
+          container.querySelector('#cfProgress').textContent = filled + ' of ' + total + ' coloured';
+          if(filled >= total) onComplete();
+        });
+      });
+    }
+
+    // -----------------------------------------------------------------
+    // GENERIC "count steps then find" renderer — tap to count up to
+    // a target, then a single tap-to-find reveal.
+    // -----------------------------------------------------------------
+    function renderStepCountFindActivity(container, onComplete, dayConfig){
+      var steps = 0;
+
+      container.innerHTML =
+        '<div style="background:#EAF3DE; border:3px solid #639922; border-radius:16px; padding:16px; text-align:center;">' +
+          '<div style="font-size:13px; font-weight:500; color:#173404; margin-bottom:2px;">👣 Count and play</div>' +
+          '<div style="font-size:13px; color:#3B6D11; margin-bottom:14px;">' + dayConfig.instruction + '</div>' +
+          '<div id="scfMain">' +
+            '<div id="scfCount" style="font-size:36px; font-weight:500; color:#173404; margin-bottom:10px;">0 / ' + dayConfig.targetSteps + '</div>' +
+            '<button id="scfStepBtn" class="btn-primary" style="width:auto; padding:10px 22px;">👣 Take a step</button>' +
+          '</div>' +
+        '</div>';
+
+      container.querySelector('#scfStepBtn').addEventListener('click', function(){
+        steps++;
+        container.querySelector('#scfCount').textContent = steps + ' / ' + dayConfig.targetSteps;
+        if(steps >= dayConfig.targetSteps){
+          container.querySelector('#scfMain').innerHTML =
+            '<div style="font-size:13px; font-weight:500; color:#173404; margin-bottom:10px;">Now find the ' + dayConfig.findLabel + '!</div>' +
+            '<button id="scfFindBtn" style="background:none; border:3px dashed #639922; border-radius:14px; padding:20px; font-size:48px; cursor:pointer;">' + dayConfig.findEmoji + '</button>';
+          container.querySelector('#scfFindBtn').addEventListener('click', function(){
+            this.style.border = '3px solid #3B6D11'; this.style.background = '#C0DD97';
+            onComplete();
+          });
+        }
+      });
+    }
+
+    function renderWelcomeExplore(container, onComplete){
+      var weekConfig = (typeof INTERACTIVE_ACTIVITIES !== 'undefined' && INTERACTIVE_ACTIVITIES[currentWeekKey()]) || {};
+      if(weekConfig.welcome && weekConfig.welcome.type === 'tap-explore' && weekConfig.welcome.days[currentDay]){
+        renderTapExploreActivity(container, onComplete, weekConfig.welcome.days[currentDay]);
+        return;
+      }
+      renderActivityNotConfigured(container);
     }
 
     return {
@@ -1431,5 +1616,17 @@ function devSkipLogin(){
 
   const role = params.get('dev_role') || 'teacher';
   selectedRole = role;
+
+  // Without this, window.location.search stays genuinely empty when
+  // someone visits index.html with no query string at all — meaning
+  // any fetch call that forwards window.location.search (like the
+  // School Events calendar) never actually sends ?dev_role=teacher
+  // to the backend, even though the dashboard itself defaults to
+  // teacher correctly. This keeps the visible URL honest about which
+  // role is actually active, fixing every downstream fetch at once.
+  if(!params.has('dev_role')){
+    history.replaceState(null, '', window.location.pathname + '?dev_role=' + role);
+  }
+
   devSkipLogin();
 })();

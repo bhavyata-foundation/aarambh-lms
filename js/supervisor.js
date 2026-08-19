@@ -364,145 +364,30 @@ function toggleMySchoolCard(schoolId){
    get_schools_list.php for a version filtered to this supervisor.
    ========================================================= */
 
-async function renderEventsSection(){
+function renderEventsSection(){
   const container = document.getElementById('events-admin-body');
   container.innerHTML = `<p class="sub">Loading…</p>`;
 
-  try{
-    const res = await fetch('backend/get_schools_list.php' + window.location.search);
-    const data = await res.json();
-    if(data.status !== 'success'){
-      container.innerHTML = `<p class="sub">Could not load schools right now.</p>`;
-      return;
-    }
-
-    container.innerHTML = `
-      <div class="visit-banner">
-        <div><strong>Add a new event</strong><br/>PTM, teacher training, or anything else worth flagging</div>
-      </div>
-
-      <form id="addEventForm" onsubmit="return submitNewEvent(event)" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:480px; margin-bottom:24px;">
-        <label class="field-label-admin">School</label>
-        <select id="evSchool" onchange="loadClassesForSelectedSchool()" required>
-          <option value="">— Select a school —</option>
-          ${data.schools.map(s => `<option value="${s.id}">${s.name} (Ward ${s.ward})</option>`).join('')}
-        </select>
-
-        <label class="field-label-admin">Class (optional — leave blank for whole school)</label>
-        <select id="evClass"><option value="">— Whole school —</option></select>
-
-        <label class="field-label-admin">Event type</label>
-        <select id="evType">
-          <option value="PTM">PTM</option>
-          <option value="Teacher Training">Teacher Training</option>
-          <option value="Other">Other</option>
-        </select>
-
-        <label class="field-label-admin">Date</label>
-        <input type="date" id="evDate" required />
-
-        <label class="field-label-admin">Time (optional)</label>
-        <input type="time" id="evTime" />
-
-        <label class="field-label-admin">Title</label>
-        <input type="text" id="evTitle" placeholder="e.g. First Term PTM" required />
-
-        <label class="field-label-admin">Notes (optional)</label>
-        <textarea id="evNotes" rows="2" style="width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:13px;"></textarea>
-
-        <div id="addEventResult" style="margin-top:10px;"></div>
-        <button type="submit" class="btn-sup" style="margin-top:10px;">Add event</button>
-      </form>
-
-      <h3 class="report-h3">All scheduled events</h3>
-      <div id="eventsListBody"><p class="sub">Loading events…</p></div>
-    `;
-
-    loadEventsList();
-  }catch(err){
-    container.innerHTML = `<p class="sub">Could not reach the server.</p>`;
-  }
-}
-
-async function loadClassesForSelectedSchool(){
-  const schoolId = document.getElementById('evSchool').value;
-  const classSelect = document.getElementById('evClass');
-  classSelect.innerHTML = `<option value="">— Whole school —</option>`;
-  if(!schoolId) return;
-
-  try{
-    const res = await fetch('backend/get_classes_for_school.php?school_id=' + schoolId + '&' + window.location.search.replace('?',''));
-    const data = await res.json();
-    if(data.status === 'success'){
-      data.classes.forEach(c => {
-        classSelect.innerHTML += `<option value="${c.id}">${c.name} — ${c.teacher_name}</option>`;
+  fetch('backend/get_schools_list.php' + window.location.search)
+    .then(r => r.json())
+    .then(data => {
+      if(data.status !== 'success'){
+        container.innerHTML = `<p class="sub">Could not load schools right now.</p>`;
+        return;
+      }
+      container.innerHTML = `<div id="supervisorEventsCalendar"></div>`;
+      initEventsCalendar('supervisorEventsCalendar', 'backend/get_events.php' + window.location.search, {
+        canAdd: true,
+        schools: data.schools,
+        addEventEndpoint: 'backend/add_event.php' + window.location.search,
+        classesEndpointBase: 'backend/get_classes_for_school.php' + window.location.search
       });
-    }
-  }catch(err){ /* leave as whole-school only if this fails */ }
-}
-
-async function submitNewEvent(event){
-  event.preventDefault();
-  const resultEl = document.getElementById('addEventResult');
-  resultEl.innerHTML = '';
-
-  const payload = {
-    school_id: document.getElementById('evSchool').value,
-    class_id: document.getElementById('evClass').value || null,
-    event_type: document.getElementById('evType').value,
-    event_date: document.getElementById('evDate').value,
-    event_time: document.getElementById('evTime').value || null,
-    title: document.getElementById('evTitle').value.trim(),
-    notes: document.getElementById('evNotes').value.trim()
-  };
-
-  try{
-    const res = await fetch('backend/add_event.php' + window.location.search, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
+    })
+    .catch(() => {
+      container.innerHTML = `<p class="sub">Could not reach the server.</p>`;
     });
-    const data = await res.json();
-
-    if(data.status !== 'success'){
-      resultEl.innerHTML = `<div class="au-error">${data.message}</div>`;
-      return false;
-    }
-
-    resultEl.innerHTML = `<div class="au-success">Event added.</div>`;
-    document.getElementById('addEventForm').reset();
-    document.getElementById('evClass').innerHTML = `<option value="">— Whole school —</option>`;
-    loadEventsList();
-  }catch(err){
-    resultEl.innerHTML = `<div class="au-error">Could not reach the server.</div>`;
-  }
-  return false;
 }
 
-async function loadEventsList(){
-  const listEl = document.getElementById('eventsListBody');
-  try{
-    const res = await fetch('backend/get_events.php' + window.location.search);
-    const data = await res.json();
-
-    if(data.status !== 'success' || !data.events.length){
-      listEl.innerHTML = `<p class="sub">No events scheduled yet.</p>`;
-      return;
-    }
-
-    listEl.innerHTML = data.events.map(e => `
-      <div class="vh-row">
-        <span class="vh-date">${e.event_date}${e.event_time ? ' · ' + e.event_time.slice(0,5) : ''}</span>
-        <span class="vh-teacher">${e.title} — ${e.school_name}${e.class_name ? ' (' + e.class_name + ')' : ' (whole school)'}</span>
-        <span class="vh-score good">${e.event_type}</span>
-        <span></span>
-        <span></span>
-      </div>
-    `).join('');
-  }catch(err){
-    listEl.innerHTML = `<p class="sub">Could not load events.</p>`;
-  }
-}
 
 renderTeacherList();
 renderChecklist();
