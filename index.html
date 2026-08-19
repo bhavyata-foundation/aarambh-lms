@@ -127,9 +127,17 @@
 </div>
 
 <script src="js/i18n.js" defer></script>
-<script src="js/weeks/all-weeks.js" defer></script>
+<!-- Weeks core must load first — it declares the shared containers
+     (WEEKLY_PLAN, INTERACTIVE_ACTIVITIES, etc.) that each week file
+     below adds its own content into. Add a new week's <script> tag
+     here, after weeks-core.js, once its file exists. -->
+<script src="js/weeks/weeks-core.js" defer></script>
+<script src="js/weeks/week1.js" defer></script>
+<script src="js/weeks/week2.js" defer></script>
 <script src="js/events-calendar.js" defer></script>
 <script src="js/main.js" defer></script>
+<!-- Must load AFTER main.js — see activity-renderers.js for why. -->
+<script src="js/weeks/activity-renderers.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
   });
