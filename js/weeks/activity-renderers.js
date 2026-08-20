@@ -801,6 +801,58 @@
     });
   }
 
+  // -----------------------------------------------------------------
+  // GENERIC "tick the box" renderer — one or more picture options,
+  // each with its own checkbox. Tap the correct picture(s) to tick
+  // them; wrong ones lock out with a cross but never block trying
+  // again, same "never complete on a wrong guess" rule as
+  // complete-sentence. Distinct from true-false: this shows several
+  // pictures side by side to choose from, not one statement to judge.
+  // -----------------------------------------------------------------
+  function renderTickChoiceActivity(container, onComplete, dayConfig){
+    var totalCorrect = dayConfig.options.filter(function(o){ return o.correct; }).length;
+    var tickedCorrect = 0;
+
+    var optsHtml = dayConfig.options.map(function(o, idx){
+      return '<button class="tc-opt" data-idx="' + idx + '" style="background:#fff; border:3px dashed #D3D1C7; border-radius:14px; padding:14px 10px; cursor:pointer; text-align:center;">' +
+        '<div style="font-size:36px;">' + o.emoji + '</div>' +
+        '<div style="font-size:12px; font-weight:500; color:#5F5E5A; margin:6px 0;">' + (o.label || '') + '</div>' +
+        '<div class="tc-box" style="width:26px; height:26px; margin:0 auto; border:2px solid #AFA9EC; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px;"></div>' +
+      '</button>';
+    }).join('');
+
+    container.innerHTML =
+      '<div style="background:#EEEDFE; border:3px solid #AFA9EC; border-radius:16px; padding:16px;">' +
+        '<div style="font-size:13px; font-weight:500; color:#3C3489; margin-bottom:2px;">☑️ Tick the box</div>' +
+        '<div style="font-size:13px; color:#534AB7; margin-bottom:14px;">' + dayConfig.instruction + '</div>' +
+        '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:10px;">' + optsHtml + '</div>' +
+        '<div id="tcFeedback" style="margin-top:12px; font-size:14px; font-weight:500;"></div>' +
+      '</div>';
+
+    container.querySelectorAll('.tc-opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(btn.disabled) return;
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        var opt = dayConfig.options[idx];
+        var box = btn.querySelector('.tc-box');
+        btn.disabled = true;
+        if(opt.correct){
+          box.style.background = '#9FE1CB'; box.style.borderColor = '#1D9E75'; box.textContent = '✓';
+          btn.style.borderStyle = 'solid'; btn.style.borderColor = '#1D9E75';
+          tickedCorrect++;
+          if(tickedCorrect >= totalCorrect){
+            container.querySelector('#tcFeedback').innerHTML = '<span style="color:#0F6E56;">✓ All correct!</span>';
+            onComplete();
+          }
+        } else {
+          box.style.background = '#F5C4B3'; box.style.borderColor = '#D85A30'; box.textContent = '✗';
+          btn.style.borderColor = '#D85A30'; btn.style.cursor = 'default';
+          container.querySelector('#tcFeedback').innerHTML = '<span style="color:#993C1D;">Not that one — try another!</span>';
+        }
+      });
+    });
+  }
+
   // Every activity type, mapped to its renderer — any domain can use
   // any of these, since the type actually decides how it renders,
   // not which domain it happens to be attached to.
@@ -817,7 +869,8 @@
     'true-false': renderTrueFalseActivity,
     'maze': renderMazeActivity,
     'complete-pattern': renderCompletePatternActivity,
-    'spot-difference': renderSpotDifferenceActivity
+    'spot-difference': renderSpotDifferenceActivity,
+    'tick-choice': renderTickChoiceActivity
   };
 
   function renderWelcomeExplore(container, onComplete){

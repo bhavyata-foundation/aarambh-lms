@@ -290,27 +290,64 @@ function admRerender() {
   else if (admActiveSection === 'review') renderQuarterlyReview();
 }
 
-/* One filter row above everything it scopes (never per-card filters). */
+/* One filter row above everything it scopes (never per-card filters).
+   Uses the shared grouped duration-picker dropdown (see superadmin.js)
+   instead of separate mode buttons + a per-mode select — same visual
+   pattern as Weekly Report / Supervisor Visits, but grouped by
+   Monthly / Quarterly / Yearly since trend comparison here genuinely
+   needs a longer time base than the 14 curriculum weeks. */
+function admPeriodBarGroups(){
+  const isSelected = (mode, key) => admPeriodMode === mode &&
+    ((mode === 'month' && admMonthIdx === key) ||
+     (mode === 'quarter' && admQuarterKey === key) ||
+     (mode === 'year' && admYearKey === key));
+
+  const monthOpts = ADMIN_MONTHS.map(function(m){
+    return {
+      value: 'month:' + m.idx,
+      label: m.label + (m.idx >= ADMIN_PARTIAL_FROM ? ' (to date)' : ''),
+      selected: isSelected('month', m.idx)
+    };
+  });
+  const quarterOpts = ADMIN_QUARTERS.map(function(q){
+    return {
+      value: 'quarter:' + q.key,
+      label: q.label + ' · ' + q.span + (q.partial ? ' (in progress)' : ''),
+      selected: isSelected('quarter', q.key)
+    };
+  });
+  const yearOpts = ADMIN_YEARS.map(function(y){
+    return {
+      value: 'year:' + y.key,
+      label: y.label + ' · ' + y.span + (y.partial ? ' (in progress)' : ''),
+      selected: isSelected('year', y.key)
+    };
+  });
+
+  return [
+    {label: 'Monthly', options: monthOpts},
+    {label: 'Quarterly', options: quarterOpts},
+    {label: 'Yearly', options: yearOpts}
+  ];
+}
+
+durationPickerRerenderers['admPeriod'] = function(){ admRerender(); };
+durationPickerRerenderers['admPeriod:select'] = function(value){
+  const parts = value.split(':');
+  const mode = parts[0], key = parts[1];
+  admPeriodMode = mode;
+  if(mode === 'month') admMonthIdx = parseInt(key, 10);
+  else if(mode === 'quarter') admQuarterKey = key;
+  else if(mode === 'year') admYearKey = key;
+  admRerender();
+};
+
 function admPeriodBar() {
   const p = admCurrentPeriod();
   return `<div class="adm-filter-row no-print">
-    <div class="adm-seg" role="group" aria-label="Period">
-      ${['month', 'quarter', 'year'].map(function (m) {
-        return `<button class="adm-seg-btn ${admPeriodMode === m ? 'active' : ''}" onclick="setAdmPeriodMode('${m}')">${m.charAt(0).toUpperCase() + m.slice(1)}</button>`;
-      }).join('')}
-    </div>
-    ${admPeriodMode === 'month' ? `<label class="adm-sel">Month
-      <select onchange="setAdmMonth(this.value)">
-        ${ADMIN_MONTHS.map(function (m) { return `<option value="${m.idx}" ${m.idx === admMonthIdx ? 'selected' : ''}>${m.label}${m.idx >= ADMIN_PARTIAL_FROM ? ' (to date)' : ''}</option>`; }).join('')}
-      </select></label>` : ''}
-    ${admPeriodMode === 'quarter' ? `<label class="adm-sel">Quarter
-      <select onchange="setAdmQuarter(this.value)">
-        ${ADMIN_QUARTERS.map(function (q) { return `<option value="${q.key}" ${q.key === admQuarterKey ? 'selected' : ''}>${q.label} · ${q.span}${q.partial ? ' (in progress)' : ''}</option>`; }).join('')}
-      </select></label>` : ''}
-    ${admPeriodMode === 'year' ? `<label class="adm-sel">Year
-      <select onchange="setAdmYear(this.value)">
-        ${ADMIN_YEARS.map(function (y) { return `<option value="${y.key}" ${y.key === admYearKey ? 'selected' : ''}>${y.label} · ${y.span}${y.partial ? ' (in progress)' : ''}</option>`; }).join('')}
-      </select></label>` : ''}
+    <label class="adm-sel">Period
+      ${durationPickerHtml('admPeriod', p.label, admPeriodBarGroups())}
+    </label>
     <span class="adm-period-tag">${p.span}${p.partial ? ' · incomplete period' : ''}</span>
     <button class="btn-sup-outline" onclick="window.print()">🖨 Print</button>
   </div>`;
@@ -411,127 +448,106 @@ function admBriefReport(a) {
    SECTION 1 — Supervisor Dashboard
    ============================================================ */
 
+let selectedSupervisorId = null;
+
+function selectSupervisor(supId){
+  selectedSupervisorId = supId;
+  renderSupervisorDashboard();
+}
+
+function supervisorSelectorHtml(){
+  return `
+    <div class="adm-seg" role="group" aria-label="Select supervisor" style="flex-wrap:wrap; margin-bottom:18px;">
+      ${SUPERVISORS_LIST.map(function(s){
+        return `<button class="adm-seg-btn ${s.id===selectedSupervisorId?'active':''}" onclick="selectSupervisor('${s.id}')">${supEscAdm(s.name)}</button>`;
+      }).join('')}
+    </div>`;
+}
+
+// One supervisor at a time — everything about them (real visits logged,
+// plus the illustrative programme metrics) in a single place, instead
+// of a hero + a grid of all 5 supervisors + a redundant table.
 function renderSupervisorDashboard() {
   admActiveSection = 'supervisors';
+  if(!selectedSupervisorId && SUPERVISORS_LIST.length) selectedSupervisorId = SUPERVISORS_LIST[0].id;
+  const sup = SUPERVISORS_LIST.find(function(s){ return s.id === selectedSupervisorId; });
+
+  if(!sup){
+    document.getElementById('admin-body').innerHTML = supervisorSelectorHtml() + `<p class="sub">No supervisors found.</p>`;
+    return;
+  }
+
+  // ----- Real visit records for this supervisor, across every week
+  // logged so far in SUPERVISOR_VISITS (not simulated). -----
+  const allVisits = [];
+  Object.keys(SUPERVISOR_VISITS).forEach(function(w){
+    SUPERVISOR_VISITS[w].forEach(function(v){
+      if(v.supervisorId === sup.id) allVisits.push(Object.assign({week: w}, v));
+    });
+  });
+  const visitedCount = allVisits.filter(function(v){ return v.visited; }).length;
+  const missedCount = allVisits.length - visitedCount;
+  const visitRate = allVisits.length ? Math.round(visitedCount / allVisits.length * 100) : 0;
+  const schoolNames = sup.schools.map(function(sid){ return schoolName(sid); }).join(', ');
+
+  const visitRowsHtml = allVisits.length ? allVisits.map(function(v){
+    return `<tr>
+      <td>Week ${v.week}</td>
+      <td>${v.date} (${v.day})</td>
+      <td>${schoolName(v.schoolId)}</td>
+      <td><span class="visit-pill ${v.visited?'yes':'no'}">${v.visited ? '✓ Visited' : '✗ Missed'}</span></td>
+      <td>${v.feedback}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No visits logged for ${supEscAdm(sup.name)} yet.</td></tr>`;
+
+  // ----- Illustrative programme metrics — simulated demo data, same
+  // period bar and disclaimer as School Performance / Quarterly Review. -----
   const p = admCurrentPeriod();
-  const aggs = SUPERVISORS_LIST.map(function (s) { return admSupervisorAgg(s.id, p.months); });
-  const prevAggs = p.prev ? SUPERVISORS_LIST.map(function (s) { return admSupervisorAgg(s.id, p.prev.months); }) : null;
-
-  const progSri = Math.round(admProgrammeSri(p.months));
-  const prevProgSri = p.prev ? Math.round(admProgrammeSri(p.prev.months)) : null;
-
-  const totVisitsDone = aggs.reduce(function (a, s) { return a + s.visitsDone; }, 0);
-  const totVisitsPlanned = aggs.reduce(function (a, s) { return a + s.visitsPlanned; }, 0);
-  const totTrainDone = aggs.reduce(function (a, s) { return a + s.trainingsDone; }, 0);
-  const totTrainPlanned = aggs.reduce(function (a, s) { return a + s.trainingsPlanned; }, 0);
-  const totPtmDone = aggs.reduce(function (a, s) { return a + s.ptmDone; }, 0);
-  const totPtmPlanned = aggs.reduce(function (a, s) { return a + s.ptmPlanned; }, 0);
-  const avgCoverage = Math.round(admAvg(aggs.map(function (s) { return s.coverage; })));
-
-  /* 12-month trailing trend for the hero sparkline */
-  const trailStart = Math.max(0, (p.months[p.months.length - 1]) - 11);
-  const trailMonths = [];
-  for (let i = trailStart; i <= p.months[p.months.length - 1]; i++) trailMonths.push(i);
-  const sriTrail = trailMonths.map(function (mi) { return Math.round(admProgrammeSri([mi])); });
+  const agg = admSupervisorAgg(sup.id, p.months);
 
   document.getElementById('admin-body').innerHTML = `
-    ${admPeriodBar()}
+    ${supervisorSelectorHtml()}
 
-    <div class="adm-hero">
-      <div>
-        <p class="adm-hero-label">Student Readiness Index — programme mean</p>
-        <p class="adm-hero-value">${progSri}<span class="adm-hero-unit">/100</span></p>
-        <p class="adm-hero-sub">${p.label} · ${SCHOOLS.length} schools · ${admDelta(progSri, prevProgSri) || 'no prior period'}${p.prev ? ' vs ' + p.prev.label : ''}</p>
-      </div>
-      <div class="adm-hero-trend">
-        ${admSparkline(sriTrail, { w: 180, h: 46 })}
-        <p class="adm-hero-trendlabel">SRI, trailing ${sriTrail.length} months</p>
-      </div>
+    <div class="visit-banner" style="margin-bottom:16px;">
+      <div><strong>${supEscAdm(sup.name)}</strong><br/>Responsible for ${sup.schools.length} school${sup.schools.length===1?'':'s'}: ${schoolNames}</div>
     </div>
 
+    <h3 class="report-h3">Visits — actual record</h3>
+    <div class="stat-grid">
+      <div class="stat-card"><p class="label">Visits logged</p><p class="value">${allVisits.length}</p></div>
+      <div class="stat-card"><p class="label">Visited</p><p class="value" style="color:var(--success)">${visitedCount}</p></div>
+      <div class="stat-card"><p class="label">Missed</p><p class="value" style="color:${missedCount ? 'var(--danger)' : 'inherit'}">${missedCount}</p></div>
+      <div class="stat-card"><p class="label">Visit rate</p><p class="value ${allVisits.length && visitRate<70 ? 'warn' : ''}">${allVisits.length ? visitRate + '%' : '—'}</p></div>
+    </div>
+    <div class="report-table-wrap"><table class="report-table">
+      <thead><tr><th>Week</th><th>Date</th><th>School</th><th>Status</th><th>Feedback</th></tr></thead>
+      <tbody>${visitRowsHtml}</tbody>
+    </table></div>
+
+    <h3 class="report-h3" style="margin-top:26px;">Activities performed (illustrative)</h3>
+    ${admPeriodBar()}
     <div class="stat-grid adm-tiles">
       <div class="stat-card">
-        <p class="label">Visits achieved</p>
-        <p class="value">${totVisitsDone}<span class="adm-of"> / ${totVisitsPlanned}</span></p>
-        ${admMeter(totVisitsPlanned ? totVisitsDone / totVisitsPlanned * 100 : 0)}
-        <p class="adm-tile-foot">${totVisitsPlanned ? Math.round(totVisitsDone / totVisitsPlanned * 100) : 0}% of plan</p>
-      </div>
-      <div class="stat-card">
         <p class="label">Teacher trainings held</p>
-        <p class="value">${totTrainDone}<span class="adm-of"> / ${totTrainPlanned}</span></p>
-        ${admMeter(totTrainPlanned ? totTrainDone / totTrainPlanned * 100 : 0)}
-        <p class="adm-tile-foot">${totTrainPlanned ? Math.round(totTrainDone / totTrainPlanned * 100) : 0}% of plan</p>
+        <p class="value">${agg.trainingsDone}<span class="adm-of"> / ${agg.trainingsPlanned}</span></p>
+        ${admMeter(agg.trainingPct || 0)}
       </div>
       <div class="stat-card">
         <p class="label">Parent meets held</p>
-        <p class="value">${totPtmDone}<span class="adm-of"> / ${totPtmPlanned}</span></p>
-        ${admMeter(totPtmPlanned ? totPtmDone / totPtmPlanned * 100 : 0)}
-        <p class="adm-tile-foot">${totPtmPlanned ? Math.round(totPtmDone / totPtmPlanned * 100) : 0}% of plan${totPtmPlanned ? '' : ' — none due this period'}</p>
+        <p class="value">${agg.ptmPlanned ? agg.ptmDone + '<span class="adm-of"> / ' + agg.ptmPlanned + '</span>' : '—'}</p>
+        ${agg.ptmPlanned ? admMeter(agg.ptmPct || 0) : ''}
       </div>
       <div class="stat-card">
-        <p class="label">Weekly plan implementation</p>
-        <p class="value">${avgCoverage}%</p>
-        ${admMeter(avgCoverage, 85, 70)}
-        <p class="adm-tile-foot">mean across all ${SCHOOLS.length} schools</p>
+        <p class="label">Plan implementation</p>
+        <p class="value">${agg.coverage}%</p>
+        ${admMeter(agg.coverage, 85, 70)}
+      </div>
+      <div class="stat-card">
+        <p class="label">SRI across their schools</p>
+        <p class="value">${agg.sri}</p>
+        <p class="adm-tile-foot">attendance ${agg.attendance}%</p>
       </div>
     </div>
-
-    <h3 class="report-h3">Per supervisor — achieved against plan</h3>
-    <p class="adm-note">Each meter is achieved ÷ planned for the period. Green ≥ 85%, amber 70–84%, red below 70%. The label carries the number, so the colour is never the only cue.</p>
-
-    <div class="adm-sup-grid">
-      ${aggs.map(function (a, i) {
-        const prev = prevAggs ? prevAggs[i] : null;
-        const trail = trailMonths.map(function (mi) { return admSupervisorAgg(a.supId, [mi]).visitPct || 0; });
-        return `<div class="adm-sup-card">
-          <div class="adm-sup-head">
-            <div>
-              <strong>${supEscAdm(a.name)}</strong>
-              <span class="adm-sup-meta">${a.schoolCount} schools</span>
-            </div>
-            <div class="adm-sup-spark">
-              ${admSparkline(trail, { w: 88, h: 24 })}
-              <span class="adm-sup-sparklabel">visit %, ${trail.length} mo</span>
-            </div>
-          </div>
-          <div class="adm-sup-rows">
-            ${admSupRow('Visits', a.visitsDone, a.visitsPlanned, a.visitPct, prev ? prev.visitPct : null)}
-            ${admSupRow('Trainings', a.trainingsDone, a.trainingsPlanned, a.trainingPct, prev ? prev.trainingPct : null)}
-            ${admSupRow('Parent meets', a.ptmDone, a.ptmPlanned, a.ptmPct, prev ? prev.ptmPct : null)}
-            ${admSupRow('Plan implementation', null, null, a.coverage, prev ? prev.coverage : null)}
-          </div>
-          <div class="adm-sup-foot">
-            <span>SRI across their schools <b>${a.sri}</b> ${admDelta(a.sri, prev ? prev.sri : null)}</span>
-            <span>Attendance <b>${a.attendance}%</b></span>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <h3 class="report-h3">Table view — same figures</h3>
-    <div class="report-table-wrap"><table class="report-table adm-table">
-      <thead><tr>
-        <th>Supervisor</th><th>Schools</th>
-        <th>Visits</th><th>Visit %</th>
-        <th>Trainings</th><th>Parent meets</th>
-        <th>Plan impl.</th><th>Attendance</th><th>SRI</th>
-      </tr></thead>
-      <tbody>
-        ${aggs.map(function (a) {
-          return `<tr>
-            <td><strong>${supEscAdm(a.name)}</strong></td>
-            <td>${a.schoolCount}</td>
-            <td>${a.visitsDone} / ${a.visitsPlanned}</td>
-            <td>${admPctCell(a.visitPct)}</td>
-            <td>${a.trainingsDone} / ${a.trainingsPlanned}</td>
-            <td>${a.ptmPlanned ? a.ptmDone + ' / ' + a.ptmPlanned : '—'}</td>
-            <td>${admPctCell(a.coverage, 85, 70)}</td>
-            <td>${a.attendance}%</td>
-            <td><strong>${a.sri}</strong></td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table></div>
 
     ${admMetricFootnote()}
   `;
@@ -638,7 +654,13 @@ function renderSchoolPerformance() {
       ${label}${active ? (admSort.dir === 1 ? ' ▲' : ' ▼') : ''}</th>`;
   };
 
-  document.getElementById('admin-body').innerHTML = `
+  // Renders into #schoolsPerfBody, a container created by
+  // renderSchoolsTeachers() in superadmin.js — School Performance
+  // is merged into the Schools & Teachers tab as a toggled view,
+  // not a standalone top-level section anymore. Falls back to
+  // #admin-body if that container isn't present for any reason.
+  const targetEl = document.getElementById('schoolsPerfBody') || document.getElementById('admin-body');
+  targetEl.innerHTML = `
     ${admPeriodBar()}
 
     <div class="stat-grid adm-tiles">

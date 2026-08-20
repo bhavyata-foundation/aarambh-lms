@@ -126,7 +126,6 @@ let selectedRole = 'teacher';
   }
 
   const SAMPLE_STUDENTS = ['Aarav Sharma','Priya Patil','Rohan Desai','Ananya Joshi','Kabir Mehta'];
-  const RATING_LEVELS = ['Emerging','Progressing','Achieving','Exceeding'];
 
   function selectRole(role, el){
     selectedRole = role;
@@ -628,30 +627,102 @@ function devSkipLogin(){
     initEventsCalendar('events-body', 'backend/get_events.php' + window.location.search);
   }
 
+  // ===== Activity photo uploads — one dropdown listing today's
+  // actual scheduled activities (same 8 rows shown in the Weekly
+  // Activities table above), rather than a single generic upload.
+  // Picking an activity reveals its own upload form; today's status
+  // per activity is remembered in localStorage (same "frontend-only
+  // until backend catches up" pattern as Materials and textbook
+  // progress) so refreshing the page doesn't lose the checkmarks. =====
+
+  function getPhotoUploadsToday(){
+    try{
+      const raw = localStorage.getItem('photoUploads_' + todayKey());
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){
+      return {};
+    }
+  }
+
+  function savePhotoUploadsToday(record){
+    try{
+      localStorage.setItem('photoUploads_' + todayKey(), JSON.stringify(record));
+    }catch(e){ /* localStorage unavailable — status just won't persist this session */ }
+  }
+
+  let uploadPhotoSelectedActivity = null;
+
   function renderUploadPhotoForm(){
     const container = document.getElementById('upload-photo-body');
+    const uploaded = getPhotoUploadsToday();
+    const doneCount = DOMAINS.filter(d => uploaded[d.key]).length;
+
+    const statusRows = DOMAINS.map(d => {
+      const entry = uploaded[d.key];
+      const isSelected = uploadPhotoSelectedActivity === d.key;
+      const time = entry ? new Date(entry.uploadedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : null;
+      return `
+        <div class="material-row ${isSelected ? 'active' : ''}" style="cursor:pointer;" onclick="selectUploadPhotoActivity('${d.key}')">
+          <div>
+            <div class="material-name">${entry ? '✓ ' : ''}${pickLang(d.label)} <span class="stage-time" style="font-weight:normal;">${d.time}</span></div>
+            <div class="material-meta">${entry ? (entry.note ? entry.note + ' · ' : '') + 'uploaded ' + time : 'Not uploaded yet'}</div>
+          </div>
+        </div>`;
+    }).join('');
+
     container.innerHTML = `
       <div class="visit-banner" style="margin-bottom:20px;">
-        <div><strong>Upload a photo of today's activity</strong><br/>This goes straight to your class's own Google Drive — nothing is kept on this app's servers.</div>
+        <div><strong>Upload today's activity photos</strong><br/>${doneCount} of ${DOMAINS.length} activities uploaded today · goes straight to your class's Google Drive — nothing kept on this app's servers.</div>
       </div>
 
-      <form id="uploadPhotoForm" onsubmit="return submitActivityPhoto(event)" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:420px;">
-        <label class="field-label-admin">Photo</label>
-        <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" capture="environment" required />
+      <label class="field-label-admin">Select activity</label>
+      <select id="uploadPhotoActivitySelect" onchange="selectUploadPhotoActivity(this.value)" style="max-width:420px;">
+        <option value="">— Choose today's activity —</option>
+        ${DOMAINS.map(d => `<option value="${d.key}" ${uploadPhotoSelectedActivity===d.key?'selected':''}>${uploaded[d.key] ? '✓ ' : ''}${pickLang(d.label)} (${d.time})</option>`).join('')}
+      </select>
+
+      <div id="uploadPhotoActiveForm" style="margin-top:14px;"></div>
+
+      <h3 class="report-h3" style="margin-top:26px;">Today's upload status</h3>
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px 16px;">
+        ${statusRows}
+      </div>
+    `;
+
+    if(uploadPhotoSelectedActivity) renderUploadPhotoActiveForm();
+  }
+
+  function selectUploadPhotoActivity(activityKey){
+    uploadPhotoSelectedActivity = activityKey || null;
+    renderUploadPhotoForm();
+  }
+
+  function renderUploadPhotoActiveForm(){
+    const domain = DOMAINS.find(d => d.key === uploadPhotoSelectedActivity);
+    const wrap = document.getElementById('uploadPhotoActiveForm');
+    if(!domain || !wrap) return;
+    const uploaded = getPhotoUploadsToday();
+    const entry = uploaded[domain.key];
+
+    wrap.innerHTML = `
+      <form onsubmit="return submitActivityPhoto(event, '${domain.key}')" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:420px;">
+        <label class="field-label-admin">Photo — ${pickLang(domain.label)}</label>
+        <input type="file" id="photoFile-${domain.key}" accept="image/jpeg,image/png,image/webp" capture="environment" required />
 
         <label class="field-label-admin">Note (optional — becomes part of the filename)</label>
-        <input type="text" id="photoNote" placeholder="e.g. Numeracy sorting activity" />
+        <input type="text" id="photoNote-${domain.key}" placeholder="e.g. ${pickLang(domain.label)} activity" value="${entry ? (entry.note || '') : ''}" />
 
-        <div id="uploadPhotoResult" style="margin-top:10px;"></div>
-        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">Upload photo</button>
+        <div id="uploadPhotoResult-${domain.key}" style="margin-top:10px;"></div>
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">${entry ? 'Replace photo' : 'Upload photo'}</button>
       </form>
     `;
   }
 
-  async function submitActivityPhoto(event){
+  async function submitActivityPhoto(event, activityKey){
     event.preventDefault();
-    const fileInput = document.getElementById('photoFile');
-    const resultEl = document.getElementById('uploadPhotoResult');
+    const domain = DOMAINS.find(d => d.key === activityKey);
+    const fileInput = document.getElementById('photoFile-' + activityKey);
+    const resultEl = document.getElementById('uploadPhotoResult-' + activityKey);
     resultEl.innerHTML = '';
 
     if(!fileInput.files.length){
@@ -659,9 +730,17 @@ function devSkipLogin(){
       return false;
     }
 
+    const note = document.getElementById('photoNote-' + activityKey).value.trim();
+
     const formData = new FormData();
     formData.append('photo', fileInput.files[0]);
-    formData.append('note', document.getElementById('photoNote').value.trim());
+    formData.append('note', note);
+    // activity + activity_label tell the backend which of today's
+    // scheduled activities this belongs to, so it can be routed into
+    // that activity's own subfolder in the class's Google Drive once
+    // that routing is wired up on the backend.
+    formData.append('activity', activityKey);
+    formData.append('activity_label', pickLang(domain.label));
 
     resultEl.innerHTML = `<p class="sub">Uploading…</p>`;
 
@@ -677,8 +756,10 @@ function devSkipLogin(){
         return false;
       }
 
-      resultEl.innerHTML = `<div class="au-success">${data.message}</div>`;
-      document.getElementById('uploadPhotoForm').reset();
+      const uploaded = getPhotoUploadsToday();
+      uploaded[activityKey] = { note, uploadedAt: Date.now() };
+      savePhotoUploadsToday(uploaded);
+      renderUploadPhotoForm();
     }catch(err){
       resultEl.innerHTML = `<div class="au-error">Could not reach the server.</div>`;
     }
@@ -948,19 +1029,56 @@ function devSkipLogin(){
     const body = document.getElementById('week-body');
     body.innerHTML = `
       <div class="value-banner" id="value-banner"></div>
+      <div id="festival-banner"></div>
       <div id="day-summary"></div>
-      <div id="rating-panel-container"></div>
       <div class="domain-grid" id="domain-grid"></div>
     `;
     renderDailyView();
   }
 
   const domainDone = {};   // key: day-domain -> true/false
-  const dayRatings = {};   // key: day-domain -> {studentName: rating}
 
   function renderDailyView(){
     const day = DAYS.find(d => d.key === currentDay);
     document.getElementById('value-banner').innerHTML = `<strong>Value:</strong> ${alwaysEnglish(day.value)} &nbsp;·&nbsp; <strong>Link:</strong> ${alwaysEnglish(day.link)}`;
+
+    // Festival banner — shows above the regular domain cards on
+    // days that have one (see js/weeks/festivals.js), never in
+    // place of them.
+    const festivalKey = 'wk' + currentWeekNum + '-' + currentDay;
+    const festival = (typeof FESTIVALS !== 'undefined') ? FESTIVALS[festivalKey] : undefined;
+    document.getElementById('festival-banner').innerHTML = festival ? `
+      <div class="festival-card">
+        <div class="festival-photo-wrap">
+          <img src="${festival.image}" alt="${festival.title}" class="festival-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="festival-photo-fallback" style="display:none;">Add a photo at<br>${festival.image}</div>
+        </div>
+        <div class="festival-body">
+          <div class="festival-tag">Festival</div>
+          <div class="festival-title">${festival.title}</div>
+          <div class="festival-subtitle">${festival.subtitle}</div>
+          <div class="festival-activity">${festival.activity}</div>
+          ${festival.colouringActivity ? '<div id="festival-colouring-mount" class="festival-colouring-mount"></div>' : ''}
+          ${festival.significance ? `
+            <div class="festival-significance">
+              <div class="festival-significance-title">What each part means</div>
+              ${festival.significance.map(s => `
+                <div class="festival-significance-row">
+                  <span class="festival-significance-part">${s.part}</span>
+                  <span class="festival-significance-meaning">${s.meaning}</span>
+                </div>`).join('')}
+            </div>` : ''}
+        </div>
+      </div>` : '';
+
+    // Mount the flag/chakra colouring activity, if this festival has
+    // one — reuses the same colour-fill engine every other week's
+    // colouring activities use, called directly since this isn't
+    // tied to a domain/day lookup like the 8 cards below it.
+    if(festival && festival.colouringActivity && typeof GENERIC_TYPE_RENDERERS !== 'undefined'){
+      const mountEl = document.getElementById('festival-colouring-mount');
+      if(mountEl) GENERIC_TYPE_RENDERERS['colour-fill'](mountEl, function(){}, festival.colouringActivity);
+    }
 
     let doneCount = 0;
     let cardsHtml = '';
@@ -986,7 +1104,7 @@ function devSkipLogin(){
             <span class="stage-tag ${done?'done':''}">${done ? 'Done' : 'Not done'}</span>
           </div>
           <div class="materials-line">Planned activity: ${activity}</div>
-          <div class="competency-tag">Covers: ${competencyFor(dom.key)}</div>
+          <div class="competency-tag">Covers: ${competencyFor(dom.key)} <span class="cg-tag">${dom.cg}</span></div>
           <div class="stage-foot">
             <label class="mark-taught">
               <input type="checkbox" ${done?'checked':''} onchange="toggleDomainDone('${dom.key}', this)" />
@@ -1004,7 +1122,7 @@ function devSkipLogin(){
           <span class="stage-tag ${done?'done':''}">${done ? 'Done today' : 'Pending'}</span>
         </div>
         <div class="materials-line">Planned activity: ${activity}</div>
-        <div class="competency-tag">Covers: ${competencyFor(dom.key)}</div>
+        <div class="competency-tag">Covers: ${competencyFor(dom.key)} <span class="cg-tag">${dom.cg}</span></div>
         <div class="h5p-block">
           <div class="h5p-frame" id="${mountId(key)}">${done ? '<div class="h5p-done-msg">✓ Practised — nice work!</div>' : ''}</div>
         </div>
@@ -1013,7 +1131,6 @@ function devSkipLogin(){
             <input type="checkbox" ${done?'checked':''} onchange="toggleDomainDone('${dom.key}', this)" />
             Mark as done today
           </label>
-          <button class="btn-rate-open small" onclick="openRatingPanel('${dom.key}')">Enter proficiency</button>
         </div>
       </div>`;
     });
@@ -1078,47 +1195,6 @@ function devSkipLogin(){
         renderDailyView();
       });
     }
-  }
-
-  function openRatingPanel(domainKey){
-    const key = currentDay + '-' + domainKey;
-    const existing = dayRatings[key] || {};
-    const domainLabel = DOMAINS.find(d=>d.key===domainKey).label;
-    const dayLabel = DAYS.find(d=>d.key===currentDay).label;
-    const competencyText = competencyFor(domainKey);
-
-    let html = `<div class="rating-panel">
-      <p class="rp-title">Enter proficiency — ${domainLabel}, ${dayLabel}</p>
-      <p class="rp-competency"><strong>Covers:</strong> ${competencyText}</p>`;
-    SAMPLE_STUDENTS.forEach(name => {
-      const current = existing[name] || '';
-      html += `<div class="rp-row"><span>${name}</span>
-        <select id="rate-${name.replace(/\s/g,'_')}">
-          <option value="">— Select —</option>
-          ${RATING_LEVELS.map(l => `<option value="${l}" ${current===l?'selected':''}>${l}</option>`).join('')}
-        </select></div>`;
-    });
-    html += `<div class="rp-actions">
-        <button class="btn-save" onclick="saveRatings('${domainKey}')">Save ratings</button>
-        <button class="btn-cancel" onclick="closeRatingPanel()">Cancel</button>
-      </div></div>`;
-    document.getElementById('rating-panel-container').innerHTML = html;
-    document.getElementById('rating-panel-container').scrollIntoView({behavior:'smooth', block:'center'});
-  }
-
-  function saveRatings(domainKey){
-    const key = currentDay + '-' + domainKey;
-    const ratings = {};
-    SAMPLE_STUDENTS.forEach(name => {
-      const sel = document.getElementById(`rate-${name.replace(/\s/g,'_')}`);
-      if(sel && sel.value) ratings[name] = sel.value;
-    });
-    dayRatings[key] = ratings;
-    closeRatingPanel();
-  }
-
-  function closeRatingPanel(){
-    document.getElementById('rating-panel-container').innerHTML = '';
   }
 
 /* =========================================================

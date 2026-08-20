@@ -65,7 +65,10 @@ ACTIVITY_COMPETENCIES.wk2 = {
 weeksWithContent.push(2);
 
 // -----------------------------------------------------------------
-// INTERACTIVE ACTIVITIES — 6 domains x 5 days = 30 activities.
+// INTERACTIVE ACTIVITIES — 7 tracked domains x 5 days = 35 activities.
+// Deliberately varied activity types across the week within each
+// domain (not the same game repeated 5x) — same discipline as
+// week1.js. See activity-renderers.js for what each "type" needs.
 // -----------------------------------------------------------------
 INTERACTIVE_ACTIVITIES.wk2 = {
   welcome: {
@@ -85,43 +88,41 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         ]
       },
       tue: {
-        type: 'tap-explore',
-        instruction: 'Tap the puzzle pieces and sound objects you can play with!',
-        hotspots: [
-          {emoji:'🧩', label:'A puzzle piece'},
-          {emoji:'🔔', label:'A bell'},
-          {emoji:'🥁', label:'A drum'},
-          {emoji:'🪗', label:'A shaker'}
+        type: 'sorting',
+        instruction: 'Sort each toy into the right basket — does it make a sound, or is it quiet?',
+        items: [
+          {key:'bell', emoji:'🔔'},
+          {key:'drum', emoji:'🥁'},
+          {key:'puzzle', emoji:'🧩'},
+          {key:'book', emoji:'📖'}
+        ],
+        baskets: [
+          {emoji:'🔊', label:'Makes a sound', accepts:['bell','drum']},
+          {emoji:'🤫', label:'Quiet toy', accepts:['puzzle','book']}
         ]
       },
       wed: {
-        type: 'tap-explore',
-        instruction: 'Tap what you can see at attendance time!',
-        hotspots: [
-          {emoji:'🌸', label:'A flower'},
-          {emoji:'👃', label:'A nose'},
-          {emoji:'👏', label:'Clapping hands'},
-          {emoji:'📋', label:'The attendance list'}
-        ]
+        type: 'spot-difference',
+        instruction: 'It\'s attendance time! Look at both rows of flowers — tap the one in the second row that\'s different.',
+        rowA: ['🌸','🌸','🌸','🌸','🌸'],
+        rowB: ['🌸','🌸','🌼','🌸','🌸'],
+        differentIndex: 2
       },
       thu: {
-        type: 'tap-explore',
-        instruction: 'Tap what helps you stay clean and healthy!',
-        hotspots: [
-          {emoji:'🧼', label:'Soap'},
-          {emoji:'🪥', label:'A toothbrush'},
-          {emoji:'🍎', label:'A fruit'},
-          {emoji:'🍯', label:'Something sweet'}
+        type: 'true-false',
+        statements: [
+          {emoji:'🧼', text:'Washing hands keeps us healthy.', isTrue:true},
+          {emoji:'🍬', text:'Eating lots of sweets every day is a healthy habit.', isTrue:false}
         ]
       },
       fri: {
-        type: 'tap-explore',
-        instruction: 'Tap the weather and the things you can feel!',
-        hotspots: [
-          {emoji:'☀️', label:'Sunny weather'},
-          {emoji:'🌧️', label:'Rainy weather'},
-          {emoji:'🧶', label:'Something soft'},
-          {emoji:'🪨', label:'Something rough'}
+        type: 'maze',
+        instruction: 'Walk the weather-and-texture path! Tap each step in order.',
+        path: [
+          {emoji:'☀️'},
+          {emoji:'🧶'},
+          {emoji:'🪨'},
+          {emoji:'🧊'}
         ]
       }
     }
@@ -139,43 +140,33 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         ]
       },
       tue: {
-        type: 'tap-sequence',
-        instruction: 'Listen, listen! Tap each sound in order as you hear it.',
-        sequence: [
-          {emoji:'👂', label:'Listen'},
-          {emoji:'🔔', label:'A bell rings'},
-          {emoji:'👂', label:'Listen again'},
-          {emoji:'🐶', label:'A dog barks'}
-        ]
+        type: 'complete-pattern',
+        instruction: 'Listen, listen! What sound comes next in the pattern?',
+        pattern: ['🔔','🐶','🔔','🐶'],
+        options: ['🔔','🐱','🐦'],
+        answer: '🔔'
       },
       wed: {
-        type: 'tap-sequence',
-        instruction: 'Clap your hands, then smell the flower — tap in order!',
-        sequence: [
-          {emoji:'👏', label:'Clap'},
-          {emoji:'👏', label:'Clap again'},
-          {emoji:'👃', label:'Smell'},
-          {emoji:'🌸', label:'A flower!'}
+        type: 'match-pairs',
+        instruction: 'Match each part of the story to what it means!',
+        pairs: [
+          {leftEmoji:'👏', left:'Clap your hands', right:'Ready to smell', rightEmoji:'👃'},
+          {leftEmoji:'🌸', left:'A pretty flower', right:'Smells sweet', rightEmoji:'😊'},
+          {leftEmoji:'👃', left:'My nose', right:'Helps me smell', rightEmoji:'✨'}
         ]
       },
       thu: {
-        type: 'tap-sequence',
-        instruction: 'Sit calmly, breathe, then taste — tap in order!',
-        sequence: [
-          {emoji:'🧘', label:'Sit calmly'},
-          {emoji:'😮\u200d💨', label:'Breathe'},
-          {emoji:'👅', label:'Taste'},
-          {emoji:'😋', label:'Yum!'}
-        ]
+        type: 'spot-difference',
+        instruction: 'Look at the story pictures — find the one that\'s different in the second row!',
+        rowA: ['🧘','😮\u200d💨','👅','😋'],
+        rowB: ['🧘','🧘','👅','😋'],
+        differentIndex: 1
       },
       fri: {
-        type: 'tap-sequence',
-        instruction: 'Feel each texture in order, from soft to warm!',
-        sequence: [
-          {emoji:'🧶', label:'Soft wool'},
-          {emoji:'🪨', label:'Rough stone'},
-          {emoji:'🧊', label:'Cold ice'},
-          {emoji:'☀️', label:'Warm sun'}
+        type: 'true-false',
+        statements: [
+          {emoji:'🤝', text:'Every child deserves a chance to learn.', isTrue:true},
+          {emoji:'🤚', text:'We cannot feel anything with our skin.', isTrue:false}
         ]
       }
     }
@@ -192,55 +183,77 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         ]
       },
       tue: {
-        type: 'match-pairs',
-        instruction: 'Guess the sound, then match it to what made it!',
-        pairs: [
-          {leftEmoji:'🐶', left:'Woof woof', right:'Dog', rightEmoji:'🐕'},
-          {leftEmoji:'🚗', left:'Beep beep', right:'Car', rightEmoji:'🚙'},
-          {leftEmoji:'🐦', left:'Tweet tweet', right:'Bird', rightEmoji:'🕊️'}
-        ]
+        type: 'complete-pattern',
+        instruction: 'Count along with the pattern — what number comes next?',
+        pattern: ['1️⃣','2️⃣','3️⃣','4️⃣'],
+        options: ['5️⃣','2️⃣','8️⃣'],
+        answer: '5️⃣'
       },
       wed: {
-        type: 'match-pairs',
-        instruction: 'Match each movement or smell to the right word!',
-        pairs: [
-          {leftEmoji:'🙆', left:'A big jump', right:'Big', rightEmoji:'⬆️'},
-          {leftEmoji:'🤏', left:'A small step', right:'Small', rightEmoji:'⬇️'},
-          {leftEmoji:'🌸', left:'A flower', right:'Sweet smell', rightEmoji:'😊'}
+        type: 'sorting',
+        instruction: 'Sort each movement or thing as Big or Small!',
+        items: [
+          {key:'b1', emoji:'🤸'},
+          {key:'b2', emoji:'🐘'},
+          {key:'s1', emoji:'🐜'},
+          {key:'s2', emoji:'🤏'}
+        ],
+        baskets: [
+          {emoji:'⬆️', label:'Big', accepts:['b1','b2']},
+          {emoji:'⬇️', label:'Small', accepts:['s1','s2']}
         ]
       },
       thu: {
-        type: 'match-pairs',
-        instruction: 'Match each taste to the right word!',
-        pairs: [
-          {leftEmoji:'🍯', left:'Honey', right:'Sweet', rightEmoji:'😊'},
-          {leftEmoji:'🥨', left:'Pretzel', right:'Salty', rightEmoji:'😐'},
-          {leftEmoji:'🍋', left:'Lemon', right:'Sour', rightEmoji:'😖'}
+        type: 'drag-drop',
+        instruction: 'Drag each food to Sweet or Salty!',
+        items: [
+          {key:'honey', emoji:'🍯'},
+          {key:'pretzel', emoji:'🥨'}
+        ],
+        destinations: [
+          {emoji:'😊', label:'Sweet', accepts:['honey']},
+          {emoji:'😐', label:'Salty', accepts:['pretzel']}
         ]
       },
       fri: {
-        type: 'match-pairs',
-        instruction: 'Match each object to how it feels!',
-        pairs: [
-          {leftEmoji:'🧶', left:'Wool', right:'Soft', rightEmoji:'☁️'},
-          {leftEmoji:'🪨', left:'Stone', right:'Hard', rightEmoji:'💪'},
-          {leftEmoji:'🧸', left:'Teddy bear', right:'Soft', rightEmoji:'☁️'}
-        ]
+        type: 'spot-difference',
+        instruction: 'One of these feels different from the rest — find the odd one out!',
+        rowA: ['🧸','🧸','🧸','🧸'],
+        rowB: ['🧸','🪨','🧸','🧸'],
+        differentIndex: 1
       }
     }
   },
   language: {
     days: {
       mon: {
-        type: 'complete-sentence',prefix:'I see with my', answer:'eyes', wrong:['ears','hands'], emoji:'👁️'},
+        type: 'complete-sentence', prefix:'I see with my', answer:'eyes', wrong:['ears','hands'], emoji:'👁️'
+      },
       tue: {
-        type: 'complete-sentence',prefix:'I hear with my', answer:'ears', wrong:['eyes','nose'], emoji:'👂'},
+        type: 'match-pairs',
+        instruction: 'Match each action word to what it means!',
+        pairs: [
+          {leftEmoji:'👏', left:'Clap', right:'Hands together', rightEmoji:'🙌'},
+          {leftEmoji:'🤸', left:'Jump', right:'Up in the air', rightEmoji:'⬆️'},
+          {leftEmoji:'🧍', left:'Stand', right:'Up tall', rightEmoji:'📏'}
+        ]
+      },
       wed: {
-        type: 'complete-sentence',prefix:'I smell with my', answer:'nose', wrong:['ears','tongue'], emoji:'👃'},
+        type: 'complete-sentence', prefix:'I smell with my', answer:'nose', wrong:['ears','tongue'], emoji:'👃'
+      },
       thu: {
-        type: 'complete-sentence',prefix:'I taste with my', answer:'tongue', wrong:['nose','skin'], emoji:'👅'},
+        type: 'maze',
+        instruction: 'Walk the calm-words path — breathe, stretch, calm, taste!',
+        path: [
+          {emoji:'😮\u200d💨'},
+          {emoji:'🧘'},
+          {emoji:'😌'},
+          {emoji:'👅'}
+        ]
+      },
       fri: {
-        type: 'complete-sentence',prefix:'I touch with my', answer:'skin', wrong:['eyes','tongue'], emoji:'🤚'}
+        type: 'complete-sentence', prefix:'I touch with my', answer:'skin', wrong:['eyes','tongue'], emoji:'🤚'
+      }
     }
   },
   create: {
@@ -257,45 +270,47 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         ]
       },
       tue: {
-        type: 'colour-fill',
-        instruction: 'Pick a colour, then press each finger to make a handprint!',
-        palette: ['#F5C4B3','#9FE1CB','#B5D4F4','#FAC775','#ED93B1'],
-        regions: [
-          {emoji:'👍', label:'Thumb'},
-          {emoji:'☝️', label:'Pointer'},
-          {emoji:'🖕', label:'Middle'},
-          {emoji:'💍', label:'Ring'},
-          {emoji:'🤙', label:'Pinky'}
+        type: 'drag-drop',
+        instruction: 'Drag each finger sticker onto its matching spot to make a handprint!',
+        items: [
+          {key:'thumb', emoji:'👍'},
+          {key:'pointer', emoji:'☝️'},
+          {key:'pinky', emoji:'🤙'}
+        ],
+        destinations: [
+          {emoji:'👍', label:'Thumb spot', accepts:['thumb']},
+          {emoji:'☝️', label:'Pointer spot', accepts:['pointer']},
+          {emoji:'🤙', label:'Pinky spot', accepts:['pinky']}
         ]
       },
       wed: {
-        type: 'colour-fill',
-        instruction: 'Pick a colour, then colour in the parts of the face near your nose!',
-        palette: ['#F5C4B3','#9FE1CB','#B5D4F4'],
-        regions: [
-          {emoji:'👃', label:'Nose'},
-          {emoji:'👀', label:'Around the eyes'},
-          {emoji:'😊', label:'Cheeks'}
+        type: 'match-pairs',
+        instruction: 'Match each body part to what it does, before you colour it in!',
+        pairs: [
+          {leftEmoji:'👃', left:'Nose', right:'Smells things', rightEmoji:'🌸'},
+          {leftEmoji:'👀', left:'Eyes', right:'See colours', rightEmoji:'🎨'},
+          {leftEmoji:'😊', left:'Cheeks', right:'Feel warm', rightEmoji:'☀️'}
         ]
       },
       thu: {
-        type: 'colour-fill',
-        instruction: 'Pick a colour, then colour in the parts you taste with!',
-        palette: ['#F5C4B3','#FAC775','#ED93B1'],
-        regions: [
-          {emoji:'👅', label:'Tongue'},
-          {emoji:'👄', label:'Lips'},
-          {emoji:'🦷', label:'Teeth'}
-        ]
+        type: 'complete-pattern',
+        instruction: 'What colour comes next in the pattern for your yoga-pose colouring?',
+        pattern: ['🔴','🔵','🔴','🔵'],
+        options: ['🔴','🟡','🟢'],
+        answer: '🔴'
       },
       fri: {
-        type: 'colour-fill',
-        instruction: 'Pick a colour, then colour in the parts you feel with!',
-        palette: ['#F5C4B3','#9FE1CB','#B5D4F4'],
-        regions: [
-          {emoji:'✋', label:'Hand'},
-          {emoji:'🦶', label:'Foot'},
-          {emoji:'😊', label:'Face'}
+        type: 'sorting',
+        instruction: 'Sort each texture before pasting it onto your worksheet!',
+        items: [
+          {key:'wool', emoji:'🧶'},
+          {key:'cotton', emoji:'☁️'},
+          {key:'stone', emoji:'🪨'},
+          {key:'wood', emoji:'🪵'}
+        ],
+        baskets: [
+          {emoji:'🧸', label:'Soft', accepts:['wool','cotton']},
+          {emoji:'💪', label:'Rough / Hard', accepts:['stone','wood']}
         ]
       }
     }
@@ -321,11 +336,14 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         ]
       },
       wed: {
-        type: 'step-count-find',
-        instruction: 'Balance and walk five steps, then find something that smells nice!',
-        targetSteps: 5,
-        findEmoji: '🌸',
-        findLabel: 'flower'
+        type: 'maze',
+        instruction: 'Balance and walk the path, one step at a time, to reach the flower!',
+        path: [
+          {emoji:'🚶'},
+          {emoji:'🚶'},
+          {emoji:'⚖️'},
+          {emoji:'🌸'}
+        ]
       },
       thu: {
         type: 'step-count-find',
@@ -335,11 +353,14 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         findLabel: 'honey jar'
       },
       fri: {
-        type: 'step-count-find',
-        instruction: 'Clap, jump, sit, and stand five times, then find something fun to touch!',
-        targetSteps: 5,
-        findEmoji: '🧶',
-        findLabel: 'soft wool ball'
+        type: 'tap-sequence',
+        instruction: 'Tap along as you clap, jump, sit, and stand — in order!',
+        sequence: [
+          {emoji:'👏', label:'Clap'},
+          {emoji:'🤸', label:'Jump'},
+          {emoji:'🪑', label:'Sit'},
+          {emoji:'🧍', label:'Stand'}
+        ]
       }
     }
   },
@@ -353,25 +374,22 @@ INTERACTIVE_ACTIVITIES.wk2 = {
         ]
       },
       tue: {
-        type: 'true-false',
-        statements: [
-          {emoji:'👂', text:'We hear with our ears.', isTrue:true},
-          {emoji:'👂', text:'We hear with our nose.', isTrue:false}
-        ]
+        type: 'complete-sentence', prefix:'I hear with my', answer:'ears', wrong:['eyes','nose'], emoji:'👂'
       },
       wed: {
-        type: 'true-false',
-        statements: [
-          {emoji:'👃', text:'We smell with our nose.', isTrue:true},
-          {emoji:'👃', text:'We smell with our eyes.', isTrue:false}
+        type: 'match-pairs',
+        instruction: 'Match each recap picture to what we learned today!',
+        pairs: [
+          {leftEmoji:'👏', left:'Clap or jump', right:'Show me!', rightEmoji:'🙌'},
+          {leftEmoji:'👃', left:'Nose', right:'Smelling', rightEmoji:'🌸'}
         ]
       },
       thu: {
-        type: 'true-false',
-        statements: [
-          {emoji:'👅', text:'We taste with our tongue.', isTrue:true},
-          {emoji:'👅', text:'We taste with our ears.', isTrue:false}
-        ]
+        type: 'complete-pattern',
+        instruction: 'Take three calm breaths — what comes next in our calm-down pattern?',
+        pattern: ['😮\u200d💨','🧘','😮\u200d💨','🧘'],
+        options: ['😮\u200d💨','😢','😡'],
+        answer: '😮\u200d💨'
       },
       fri: {
         type: 'true-false',

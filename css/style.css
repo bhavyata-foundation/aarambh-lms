@@ -140,8 +140,6 @@
     .stat-grid{grid-template-columns:repeat(2,1fr);}
     .day-tabs, .domain-tabs{overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; padding-bottom:4px;}
     .day-tab, .domain-tab{flex-shrink:0;}
-    .rp-row{flex-wrap:wrap; gap:6px;}
-    .rp-row select{width:100%;}
     .attendance-summary{grid-template-columns:repeat(3,1fr); gap:8px;}
     .attendance-row{padding:10px 12px;}
   }
@@ -200,7 +198,6 @@
   .stage-foot{display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid var(--border); gap:10px; flex-wrap:wrap;}
   .mark-taught{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); cursor:pointer;}
   .mark-taught input{margin:0; width:14px; height:14px; cursor:pointer;}
-  .btn-rate-open.small{margin:0; padding:6px 12px; font-size:11px;}
 
   .stage-card{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--primary); border-radius:10px; padding:14px; margin-bottom:12px;}
   .stage-card.done{border-top-color:var(--success);}
@@ -323,18 +320,6 @@
   @media (max-width:520px){ .g-life-zones{grid-template-columns:repeat(2,1fr);} }
   .g-life-zone{border:2px dashed var(--life); border-radius:10px; min-height:80px; padding:8px 4px; text-align:center; background:rgba(124,111,209,0.06);}
   .g-life-zone h5{margin:0 0 4px; font-size:0.68rem; color:var(--life-dark);}
-
-  .rating-panel{background:var(--card); border:1px solid var(--primary); border-radius:10px; padding:16px; margin-bottom:20px;}
-  .rating-panel .rp-title{font-size:14px; font-weight:bold; margin:0 0 4px;}
-  .rating-panel .rp-sub{font-size:12px; color:var(--text-muted); margin:0 0 14px;}
-  .rating-panel .rp-competency{font-size:12px; color:var(--text); background:var(--primary-light); border-radius:6px; padding:8px 10px; margin:0 0 14px;}
-  .rp-row{display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;}
-  .rp-row:last-of-type{border-bottom:none;}
-  .rp-row select{padding:6px 10px; border-radius:6px; border:1px solid var(--border); font-size:12px;}
-  .rp-actions{display:flex; gap:10px; margin-top:14px;}
-  .btn-save{background:var(--primary); color:#fff; border:none; padding:9px 18px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;}
-  .btn-cancel{background:transparent; color:var(--text-muted); border:1px solid var(--border); padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer;}
-  .btn-rate-open{background:var(--primary-light); color:var(--primary-dark); border:none; padding:8px 16px; border-radius:8px; font-size:12px; cursor:pointer; margin-bottom:20px;}
 
   .empty-state{background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:30px; text-align:center; color:var(--text-muted); font-size:13px; margin-bottom:20px;}
 
@@ -635,9 +620,6 @@
 .school-card-details .row{display:flex; justify-content:space-between; gap:10px;}
 .school-card-details .row span:first-child{color:var(--text-muted); flex-shrink:0;}
 .school-card-details .row span:last-child{text-align:right;}
-.school-week-select{width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; margin-top:6px;}
-.school-week-result{margin-top:8px; font-size:11.5px; line-height:1.5;}
-.school-week-result:empty{margin-top:0;}
 
 .school-accordion-item{border-bottom:1px solid var(--border);}
 .school-accordion-head{display:flex; align-items:center; justify-content:space-between; padding:10px 16px; cursor:pointer; font-size:12px; font-weight:bold;}
@@ -645,8 +627,6 @@
 .school-accordion-head .cat-chevron{font-size:10px; color:var(--text-muted);}
 .school-accordion-body{padding:0 16px 12px 16px;}
 .school-supervisor-row{display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--bg); border-radius:8px; padding:8px 10px; font-size:11.5px;}
-.btn-view-report-sm{background:var(--primary); color:#fff; border:none; padding:5px 10px; border-radius:12px; font-size:10.5px; font-weight:bold; cursor:pointer; white-space:nowrap;}
-.btn-view-report-sm:hover{background:var(--primary-dark);}
 
 @media print{
   .sidebar, .sidebar-backdrop, .topbar, .report-toolbar button, .review-box{display:none !important;}
@@ -690,6 +670,7 @@ html[lang="hi"] body, html[lang="mr"] body{
 .lang-btn.active{background:#fff; color:var(--primary-dark); font-weight:bold;}
 
 .competency-tag{font-size:11px; color:var(--primary-dark); background:var(--primary-light); border-radius:6px; padding:5px 8px; margin-bottom:10px; display:inline-block;}
+.cg-tag{font-size:10px; font-weight:bold; color:var(--primary-dark); background:#fff; border:1px solid var(--primary); border-radius:10px; padding:1px 7px; margin-left:4px; display:inline-block; vertical-align:1px;}
 
 .events-h3{font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;}
 .event-card{background:var(--card); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
@@ -744,6 +725,7 @@ html[lang="hi"] body, html[lang="mr"] body{
 .page-complete-toggle.is-done .pct-label{color:var(--primary-dark);}
 
 .material-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);}
+.material-row.active{background:var(--primary-light); margin:0 -16px; padding:12px 16px; border-radius:8px; border-bottom:none;}
 .material-row:last-child{border-bottom:none;}
 .material-name{font-weight:600; font-size:14px;}
 .material-meta{font-size:12px; color:var(--text-muted); margin-top:2px;}
@@ -758,3 +740,61 @@ html[lang="hi"] body, html[lang="mr"] body{
 .stage-card:fullscreen .h5p-block{max-width:700px; margin:20px auto; width:100%;}
 .stage-card:fullscreen .name{font-size:22px;}
 .stage-card:fullscreen .materials-line{font-size:16px;}
+/* =========================================================
+   DURATION PICKER — a reusable grouped dropdown (quick presets
+   under small section headers) used for report period selection:
+   Weekly Report, Supervisor Visits log (week-based), and the
+   Supervisor Dashboard / School Performance / Quarterly Review
+   period bar (month/quarter/year-based). One shared look, two
+   different sets of options depending on what each report needs.
+   ========================================================= */
+.dp-wrap{position:relative; display:inline-block; min-width:260px;}
+.dp-trigger{width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:13px; font-family:inherit; color:var(--text); cursor:pointer; text-align:left;}
+.dp-trigger:hover{border-color:var(--primary);}
+.dp-trigger.open{border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light);}
+.dp-caret{font-size:10px; color:var(--text-muted); flex-shrink:0;}
+.dp-panel{position:absolute; top:calc(100% + 6px); left:0; right:0; min-width:280px; max-height:320px; overflow-y:auto; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:200; padding:6px 0;}
+.dp-group-label{padding:8px 14px 4px; font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);}
+.dp-option{display:block; width:100%; text-align:left; background:none; border:none; padding:9px 14px; font-size:13px; font-family:inherit; color:var(--text); cursor:pointer;}
+.dp-option:hover{background:var(--primary-light);}
+.dp-option.selected{color:var(--primary-dark); font-weight:bold;}
+.dp-divider{height:1px; background:var(--border); margin:6px 0;}
+.dp-custom-range{display:flex; align-items:center; gap:8px; padding:10px 14px; flex-wrap:wrap;}
+.dp-custom-range select{padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12.5px;}
+.dp-custom-range button{background:var(--primary); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-size:12.5px; font-weight:bold; cursor:pointer;}
+
+/* =========================================================
+   OVERVIEW — upcoming events strip. Horizontally-scrolling
+   small cards, same visual language as stat-card/material-row.
+   ========================================================= */
+.events-strip{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px;}
+.event-strip-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; min-width:170px; flex-shrink:0; cursor:pointer;}
+.event-strip-card:hover{border-color:var(--primary);}
+.event-strip-type{font-size:11px; font-weight:bold;}
+.event-strip-title{font-size:13px; margin-top:2px;}
+.event-strip-more{display:flex; align-items:center; justify-content:center; min-width:90px; flex-shrink:0; font-size:12px; font-weight:bold; color:var(--primary-dark); cursor:pointer; border:1px dashed var(--border); border-radius:10px; padding:10px 14px;}
+.event-strip-more:hover{background:var(--primary-light); border-color:var(--primary);}
+
+/* =========================================================
+   FESTIVAL BANNER — Layout A (photo hero): a real photo on
+   top, festival name + activity below. Shows above the day's
+   regular domain cards on days that have one (see
+   js/weeks/festivals.js). The fallback box only shows if the
+   real photo file at .festival-photo's src is missing.
+   ========================================================= */
+.festival-card{background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:18px;}
+.festival-photo-wrap{position:relative; width:100%; min-height:120px; background:var(--primary-light);}
+.festival-photo{width:100%; height:auto; object-fit:contain; display:block; margin:0 auto;}
+.festival-photo-fallback{position:absolute; inset:0; align-items:center; justify-content:center; text-align:center; font-size:12px; color:var(--primary-dark); padding:10px;}
+.festival-body{padding:14px 18px;}
+.festival-tag{font-size:10px; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; color:var(--primary-dark); background:var(--primary-light); display:inline-block; padding:3px 8px; border-radius:6px; margin-bottom:6px;}
+.festival-title{font-size:17px; font-weight:bold;}
+.festival-subtitle{font-size:12px; color:var(--text-muted); margin-top:2px;}
+.festival-activity{font-size:13px; margin-top:8px;}
+.festival-colouring-mount{margin-top:14px;}
+.festival-significance{margin-top:16px; padding-top:14px; border-top:1px solid var(--border);}
+.festival-significance-title{font-size:12px; font-weight:bold; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
+.festival-significance-row{display:flex; flex-direction:column; gap:2px; padding:7px 0; border-bottom:1px solid var(--border);}
+.festival-significance-row:last-child{border-bottom:none;}
+.festival-significance-part{font-size:13px; font-weight:bold;}
+.festival-significance-meaning{font-size:12.5px; color:var(--text-muted);}
