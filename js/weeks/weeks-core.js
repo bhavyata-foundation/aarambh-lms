@@ -38,7 +38,7 @@ const WEEKS = [
   {w:8, theme:'Beads, Jewellery & Rangoli Patterns', dates:'3–7 Aug 2026'},
   {w:9, theme:'Number, Sound & Movement Patterns', dates:'10–14 Aug 2026'},
   {w:10, theme:'Counting Classroom Items', dates:'17–21 Aug 2026'},
-  {w:11, theme:'Food and Snacks Counting', dates:'24–28 Aug 2026'},
+  {w:11, theme:'Plants, Seeds & Flowers', dates:'24–28 Aug 2026'},
   {w:12, theme:'Counting with Sticks', dates:'31 Aug–4 Sep 2026'},
   {w:13, theme:'Number Line Walk', dates:'7–11 Sep 2026'},
   {w:14, theme:'Group Counting', dates:'14–18 Sep 2026'}
