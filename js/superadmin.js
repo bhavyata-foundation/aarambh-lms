@@ -1,8 +1,14 @@
 /* =========================================================
    SESSION GUARD — checks with the server that someone is actually
    logged in as a superadmin before showing anything on this page.
+
+   Forwards this page's own query string (e.g. ?dev_role=superadmin)
+   to the session check — without this, a dev-mode role selected on
+   the login page never actually reaches session_check.php, since a
+   query param on THIS page's URL isn't automatically attached to a
+   separate fetch() call.
    ========================================================= */
-fetch('backend/session_check.php')
+fetch('backend/session_check.php' + window.location.search)
   .then(r => r.json())
   .then(data => {
     if(data.status !== 'logged_in' || data.role !== 'superadmin'){
@@ -507,7 +513,7 @@ function markReportReviewed(weekNum){
 
 function renderEventsRecord(){
   document.getElementById('admin-body').innerHTML = `<div id="superadminEventsCalendar"></div>`;
-  initEventsCalendar('superadminEventsCalendar', 'backend/get_events.php');
+  initEventsCalendar('superadminEventsCalendar', 'backend/get_events.php' + window.location.search);
 }
 
 function renderSupervisorVisitsLog(){

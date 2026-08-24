@@ -411,6 +411,77 @@ function handleLoginSubmit(event){
   return false;
 }
 
+/* =========================================================
+   SAVED LOGIN — stores email + password in this browser's
+   localStorage so the fields can be auto-filled next visit.
+
+   Deliberately NOT the same thing as the browser's own "Save
+   password?" prompt (already wired up separately) — that one is
+   encrypted by the browser/OS. This one is plain localStorage,
+   readable by anyone with access to this browser or DevTools on
+   this device. Only meant for a personal device, never a shared
+   or public computer — the prompt below says so directly.
+   ========================================================= */
+const SAVED_LOGIN_KEY = 'savedLoginCredentials';
+
+function getSavedLoginCredentials(){
+  try{
+    const raw = localStorage.getItem(SAVED_LOGIN_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){ return null; }
+}
+
+function saveLoginCredentials(email, password){
+  try{ localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({email, password})); }
+  catch(e){ /* localStorage unavailable — just won't persist */ }
+}
+
+function clearSavedLoginCredentials(){
+  try{ localStorage.removeItem(SAVED_LOGIN_KEY); } catch(e){}
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  const link = document.getElementById('clearSavedLoginLink');
+  if(link) link.remove();
+}
+
+function autoFillSavedLogin(){
+  const saved = getSavedLoginCredentials();
+  if(!saved) return;
+  document.getElementById('loginEmail').value = saved.email;
+  document.getElementById('loginPassword').value = saved.password;
+
+  const footer = document.querySelector('.login-footer');
+  if(footer && !document.getElementById('clearSavedLoginLink')){
+    const link = document.createElement('div');
+    link.id = 'clearSavedLoginLink';
+    link.style.cssText = 'text-align:center; margin-top:8px;';
+    link.innerHTML = `<a href="#" onclick="clearSavedLoginCredentials(); return false;" style="font-size:12px; color:var(--text-muted); text-decoration:underline;">Not you? Clear saved login</a>`;
+    footer.insertAdjacentElement('afterend', link);
+  }
+}
+
+function showSaveLoginPrompt(email, password){
+  return new Promise(resolve => {
+    const wrap = document.createElement('div');
+    wrap.id = 'saveLoginModalWrap';
+    wrap.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000;';
+    wrap.innerHTML = `
+      <div style="background:#fff; border-radius:12px; padding:22px 24px; max-width:380px; width:90%;">
+        <h3 style="margin:0 0 8px; font-size:16px;">Save this login on this device?</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin:0 0 6px;">Next time, your email and password will be filled in automatically here.</p>
+        <p style="font-size:12px; color:var(--danger, #c8433f); margin:0 0 18px;">Only do this on your own personal device — anyone else using this browser afterward could see your password.</p>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button id="saveLoginNoBtn" style="padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:#fff; font-size:13px;">No, don't save</button>
+          <button id="saveLoginYesBtn" class="btn-primary" style="width:auto; padding:8px 16px; font-size:13px;">Yes, save it</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+
+    document.getElementById('saveLoginYesBtn').onclick = () => { wrap.remove(); resolve(true); };
+    document.getElementById('saveLoginNoBtn').onclick = () => { wrap.remove(); resolve(false); };
+  });
+}
+
 async function login(){
   const emailEl = document.getElementById('loginEmail');
   const passwordEl = document.getElementById('loginPassword');
@@ -446,6 +517,13 @@ async function login(){
       btnEl.disabled = false;
       btnEl.textContent = 'Sign in';
       return;
+    }
+
+    const alreadySaved = getSavedLoginCredentials();
+    const isSameAsSaved = alreadySaved && alreadySaved.email === email && alreadySaved.password === password;
+    if(!isSameAsSaved){
+      const wantsToSave = await showSaveLoginPrompt(email, password);
+      if(wantsToSave) saveLoginCredentials(email, password);
     }
 
     // The role that actually matters is whatever the SERVER says this
@@ -489,6 +567,41 @@ function logout(){
   document.getElementById('view-login').classList.remove('hidden');
   // Deliberately NOT clearing today's saved attendance record here —
   // logging back in the same day should still recognise it's already marked.
+}
+
+/* =========================================================
+   DEV MODE — skip login entirely while iterating on the frontend.
+
+   NOTE: the actual auto-run trigger for this now lives at the very
+   END of this file, not here — it has to run AFTER every other
+   variable in this file is declared (expandedWeek, attendanceRecords,
+   etc.), otherwise it fires too early and hits a "cannot access
+   before initialization" error. See the bottom of the file.
+
+   On localhost, this runs AUTOMATICALLY on every page load — no
+   click needed, so a reload during frontend work drops you straight
+   onto the dashboard instead of back at the login screen.
+
+   Defaults to the teacher dashboard. To test a different role:
+     index.html?dev_role=supervisor
+     index.html?dev_role=superadmin
+     index.html?dev_role=parent
+   To see the REAL login screen on localhost, add ?no_dev=1 to the
+   URL — that one flag turns the auto-bypass off for that page load.
+   ========================================================= */
+
+function devSkipLogin(){
+  // Respects whichever role tab is currently selected on the login card.
+  document.getElementById('view-login').classList.add('hidden');
+  if(selectedRole === 'teacher'){
+    enterTeacherFlow();
+  } else if(selectedRole === 'supervisor'){
+    window.location.href = 'supervisor.html?dev_role=supervisor';
+  } else if(selectedRole === 'superadmin'){
+    window.location.href = 'superadmin.html?dev_role=superadmin';
+  } else if(selectedRole === 'parent'){
+    window.location.href = 'parent.html?dev_role=parent';
+  }
 }
 
   function toggleSidebar(){
@@ -550,6 +663,7 @@ function logout(){
     document.getElementById('navEvents').classList.toggle('active', section === 'events');
     document.getElementById('navUploadPhoto').classList.toggle('active', section === 'uploadphoto');
     document.getElementById('navMaterials').classList.toggle('active', section === 'materials');
+    document.getElementById('navVolunteers').classList.toggle('active', section === 'volunteers');
     document.getElementById('sidebar-workbook-section').classList.toggle('hidden', section !== 'workbook');
 
     const labelEl = document.getElementById('pageLabel');
@@ -559,6 +673,7 @@ function logout(){
         : section === 'events' ? 'School Events'
         : section === 'uploadphoto' ? 'Upload Activity Photo'
         : section === 'materials' ? 'Materials'
+        : section === 'volunteers' ? 'Parent Volunteers'
         : 'Weekly Activities';
     }
 
@@ -568,6 +683,7 @@ function logout(){
     document.getElementById('events-body').classList.add('hidden');
     document.getElementById('upload-photo-body').classList.add('hidden');
     document.getElementById('materials-body').classList.add('hidden');
+    document.getElementById('volunteers-body').classList.add('hidden');
 
     if(section === 'attendance'){
       document.getElementById('attendance-body').classList.remove('hidden');
@@ -590,6 +706,10 @@ function logout(){
       document.getElementById('materials-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Items received from BMC, and whether they\'ve reached your class';
       renderMaterials();
+    } else if(section === 'volunteers'){
+      document.getElementById('volunteers-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Parents interested in helping out as co-educators in your class';
+      renderParentVolunteers();
     } else {
       document.getElementById('week-body').classList.remove('hidden');
       openWeek(currentWeekNum);
@@ -602,7 +722,7 @@ function logout(){
   // identical rather than three separate implementations drifting apart.
 
   function renderSchoolEvents(){
-    initEventsCalendar('events-body', 'backend/get_events.php');
+    initEventsCalendar('events-body', 'backend/get_events.php' + window.location.search);
   }
 
   function renderUploadPhotoForm(){
@@ -643,7 +763,7 @@ function logout(){
     resultEl.innerHTML = `<p class="sub">Uploading…</p>`;
 
     try{
-      const res = await fetch('backend/upload_activity_photo.php', {
+      const res = await fetch('backend/upload_activity_photo.php' + window.location.search, {
         method: 'POST',
         body: formData
       });
@@ -711,6 +831,94 @@ function logout(){
       <div id="addMaterialFormWrap" class="hidden"></div>
       <div id="materialsList">${rows || '<p class="sub">No materials logged yet — tap "+ Add material" once something arrives.</p>'}</div>
     `;
+  }
+
+  /* =========================================================
+     PARENT VOLUNTEERS — this teacher's class context is fixed here
+     for now (matches "Mrs. Sharma — Jr KG B" above) — in a real
+     backend this would come from the logged-in teacher's own class
+     assignment instead of being hardcoded. Reads/writes the same
+     shared storage the parent dashboard uses (parent-committee.js),
+     so a parent's real submission shows up here without a page
+     reload needed on the parent's side.
+     ========================================================= */
+  const CURRENT_TEACHER_CLASS = {
+    school: 'Triveni Sangam Municipal School',
+    className: 'Jr KG'
+  };
+  const COMMITTEE_SOFT_CAP = 2;
+
+  function renderParentVolunteers(){
+    const container = document.getElementById('volunteers-body');
+    const all = loadParentCommitteeApplications().filter(a =>
+      a.school === CURRENT_TEACHER_CLASS.school && a.className === CURRENT_TEACHER_CLASS.className
+    );
+    const committee = all.filter(a => a.status === 'selected');
+    const applicants = all.filter(a => a.status !== 'selected');
+
+    const scoredApplicants = applicants.map(a => ({
+      app: a,
+      result: calculateSuitabilityScore(a, committee)
+    })).sort((x, y) => y.result.total - x.result.total);
+
+    const committeeRows = committee.map(a => `
+      <div class="material-row">
+        <div>
+          <strong>${a.parentName}</strong> — ${a.childName}
+          <div class="sub" style="margin-top:2px;">${a.occupation || 'No occupation given'} · Available ${(a.availableDays||[]).join(', ') || 'not specified'}</div>
+        </div>
+        <span class="visit-pill yes">On committee</span>
+      </div>`).join('');
+
+    const applicantRows = scoredApplicants.map(({app, result}) => `
+      <div class="material-row" style="align-items:flex-start;">
+        <div style="flex:1;">
+          <strong>${app.parentName}</strong>
+          <span class="cg-tag" style="margin-left:6px;">${result.total.toFixed(1)}</span>
+          — ${app.childName}
+          <div class="sub" style="margin-top:2px;">${app.occupation || 'No occupation given'} · Available ${(app.availableDays||[]).join(', ') || 'not specified'}</div>
+          <button style="font-size:12px; background:none; border:none; color:var(--text-muted); text-decoration:underline; padding:4px 0; cursor:pointer;" onclick="toggleScoreBreakdown('${app.id}')">See score breakdown</button>
+          <div id="score-breakdown-${app.id}" class="hidden" style="font-size:12px; color:var(--text-muted); margin-top:4px; padding:8px 10px; background:var(--bg); border-radius:8px;">
+            Education ${result.breakdown.education.score}/${result.breakdown.education.max} ·
+            Demonstrated activity ${result.breakdown.activity.score}/${result.breakdown.activity.max} ·
+            Fills a gap ${result.breakdown.availability.score}/${result.breakdown.availability.max} ·
+            Occupation match ${result.breakdown.occupation.score}/${result.breakdown.occupation.max}
+          </div>
+        </div>
+        <button class="btn-primary" style="width:auto; padding:7px 14px; font-size:13px;" onclick="addToParentsCommittee('${app.id}')">Add to committee</button>
+      </div>`).join('');
+
+    container.innerHTML = `
+      <div class="visit-banner" style="margin-bottom:16px;">
+        <div><strong>Parents Committee</strong><br/>${committee.length} of ${COMMITTEE_SOFT_CAP} slots filled</div>
+      </div>
+      <div id="committeeList">${committeeRows || '<p class="sub">No one selected yet for this class.</p>'}</div>
+
+      <h3 class="report-h3" style="margin-top:24px;">Applicants</h3>
+      <div id="applicantsList">${applicantRows || '<p class="sub">No applications for this class yet.</p>'}</div>
+    `;
+  }
+
+  function toggleScoreBreakdown(appId){
+    const el = document.getElementById('score-breakdown-' + appId);
+    if(el) el.classList.toggle('hidden');
+  }
+
+  function addToParentsCommittee(appId){
+    const all = loadParentCommitteeApplications().filter(a =>
+      a.school === CURRENT_TEACHER_CLASS.school && a.className === CURRENT_TEACHER_CLASS.className
+    );
+    const currentCommitteeSize = all.filter(a => a.status === 'selected').length;
+
+    if(currentCommitteeSize >= COMMITTEE_SOFT_CAP){
+      const proceed = confirm(
+        `This class already has ${currentCommitteeSize} parents on the committee. Add another anyway?`
+      );
+      if(!proceed) return;
+    }
+
+    updateParentCommitteeApplicationStatus(appId, 'selected');
+    renderParentVolunteers();
   }
 
   function toggleAddMaterialForm(){
@@ -1111,16 +1319,65 @@ function logout(){
    to need this position.
    ========================================================= */
 (function checkExistingSession(){
-  fetch('backend/session_check.php')
+  fetch('backend/session_check.php' + window.location.search)
     .then(r => r.json())
     .then(data => {
-      if(data.status !== 'logged_in' || data.role !== 'teacher') return;
+      if(data.status !== 'logged_in' || data.role !== 'teacher'){
+        autoFillSavedLogin();
+        return;
+      }
       selectedRole = 'teacher';
       document.getElementById('view-login').classList.add('hidden');
       enterTeacherFlow();
       renderPreviewBanner(data.is_previewing);
+
+      // Coming from Textbooks' sidebar (e.g. index.html?section=materials) —
+      // jump straight to that section, but only if the dashboard itself is
+      // actually showing (enterTeacherFlow sometimes shows the attendance
+      // gate screen instead, which has no sidebar to switch within).
+      const params = new URLSearchParams(window.location.search);
+      const requestedSection = params.get('section');
+      if(requestedSection && !document.getElementById('view-dashboard').classList.contains('hidden')){
+        switchSidebarSection(requestedSection);
+      }
     })
-    .catch(() => { /* not logged in, or server unreachable — just show the login form */ });
+    .catch(() => { autoFillSavedLogin(); });
+})();
+
+/* =========================================================
+   DEV MODE — the actual trigger (restored). Runs last, after every
+   let/const in this file is initialized.
+
+   Also activates on the GitHub Pages demo URL
+   (bhavyata-foundation.github.io) — deliberately, for showing
+   officials the frontend without needing real credentials.
+   This is SAFE specifically because GitHub Pages serves static
+   files only (no PHP, no database) — there is no real student
+   or teacher data behind this URL for a bypass to expose.
+   This check must NEVER be widened to include the real live domain
+   (bhavyatafoundation.com), since that one IS connected to a
+   real database.
+   ========================================================= */
+(function autoDevBypassOnLoad(){
+  const DEMO_HOSTNAMES = ['localhost', '127.0.0.1', 'bhavyata-foundation.github.io'];
+  const isLocal = DEMO_HOSTNAMES.includes(window.location.hostname);
+  const params = new URLSearchParams(window.location.search);
+
+  if(isLocal){
+    const wrap = document.getElementById('devSkipLoginWrap');
+    if(wrap) wrap.classList.remove('hidden');
+  }
+
+  if(!isLocal || params.has('no_dev')) return;
+
+  const role = params.get('dev_role') || 'teacher';
+  selectedRole = role;
+
+  if(!params.has('dev_role')){
+    history.replaceState(null, '', window.location.pathname + '?dev_role=' + role);
+  }
+
+  devSkipLogin();
 })();
 
 // -------------------------------------------------------------------------

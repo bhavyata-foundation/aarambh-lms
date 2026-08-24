@@ -30,7 +30,19 @@ ini_set('display_errors', '0');
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id'])) {
+// -------------------------------------------------------------------------
+// DEV BYPASS — same pattern as session_check.php. The "skip login" button
+// never creates a real PHP session, so $_SESSION is genuinely empty when
+// testing this way. On localhost with ?dev_role=teacher present, this
+// treats the request as that role WITHOUT a real user_id — since a fake
+// dev session has no real class link, the teacher branch below just
+// returns every event as a testing convenience, not real per-teacher
+// scoping. Does nothing outside localhost.
+// -------------------------------------------------------------------------
+$isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80', '127.0.0.1:80']);
+$devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
+
+if (!$devRole && !isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['status' => 'error', 'message' => 'Not authorized.']);
     exit;
@@ -39,10 +51,23 @@ if (!isset($_SESSION['user_id'])) {
 require_once __DIR__ . '/db_config.php';
 $conn = get_db_connection();
 
-$role = $_SESSION['role'] ?? null;
+$role = $_SESSION['role'] ?? $devRole;
 $events = [];
 
-if ($role === 'teacher') {
+if ($role === 'teacher' && !isset($_SESSION['user_id'])) {
+    // Dev-mode teacher session with no real user_id to look up a class
+    // for — just return every event as a testing convenience.
+    $result = $conn->query("
+        SELECT e.id, e.event_type, e.event_date, e.event_time, e.title, e.notes,
+               s.name AS school_name, c.name AS class_name
+        FROM events e
+        JOIN schools s ON s.id = e.school_id
+        LEFT JOIN classes c ON c.id = e.class_id
+        ORDER BY e.event_date ASC
+    ");
+    while ($row = $result->fetch_assoc()) $events[] = $row;
+
+} elseif ($role === 'teacher') {
     // Find this teacher's class(es) first, then pull events for those
     // schools — either school-wide (class_id IS NULL) or aimed at her
     // specific class.

@@ -10,8 +10,8 @@
      initEventsCalendar('containerId', fetchUrl, {
        canAdd: true,
        schools: [...],                          // already fetched by the caller
-       addEventEndpoint: 'backend/add_event.php',
-       classesEndpointBase: 'backend/get_classes_for_school.php'
+       addEventEndpoint: 'backend/add_event.php' + window.location.search,
+       classesEndpointBase: 'backend/get_classes_for_school.php' + window.location.search
      });
    Tap a day to see what's scheduled AND get a compact
    "+ Add event" button right there — no separate form sitting

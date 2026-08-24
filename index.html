@@ -37,6 +37,11 @@
       </form>
       <div class="forgot">Forgot password?</div>
       <div class="login-footer">🛟 <span>New here? Contact your school admin for access.</span></div>
+      <div id="devSkipLoginWrap" class="hidden" style="text-align:center; margin-top:10px;">
+        <a href="#" onclick="devSkipLogin(); return false;" style="font-size:12px; color:var(--text-muted); text-decoration:underline;">
+          Skip login (dev mode)
+        </a>
+      </div>
     </div>
   </div>
 </div>
@@ -89,6 +94,7 @@
       <button class="sidebar-nav-btn" id="navEvents" onclick="switchSidebarSection('events')">📌 <span>School Events</span></button>
       <button class="sidebar-nav-btn" id="navUploadPhoto" onclick="switchSidebarSection('uploadphoto')">📷 <span>Upload Activity Photo</span></button>
       <button class="sidebar-nav-btn" id="navMaterials" onclick="switchSidebarSection('materials')">📦 <span>Materials</span></button>
+      <button class="sidebar-nav-btn" id="navVolunteers" onclick="switchSidebarSection('volunteers')">🤝 <span>Parent Volunteers</span></button>
       <button class="sidebar-nav-btn" onclick="location.href='textbooks.html'">📚 <span>Textbooks</span></button>
     </div>
     <div id="sidebar-workbook-section">
@@ -121,6 +127,7 @@
     <div id="events-body" class="hidden"></div>
     <div id="upload-photo-body" class="hidden"></div>
     <div id="materials-body" class="hidden"></div>
+    <div id="volunteers-body" class="hidden"></div>
   </div>
   </div>
 </div>
@@ -133,14 +140,8 @@
 <script src="js/weeks/weeks-core.js" defer></script>
 <script src="js/weeks/week1.js" defer></script>
 <script src="js/weeks/week2.js" defer></script>
-<script src="js/weeks/week3.js" defer></script>
-<script src="js/weeks/week4.js" defer></script>
-<script src="js/weeks/week5.js" defer></script>
-<script src="js/weeks/week6.js" defer></script>
-<script src="js/weeks/week7.js" defer></script>
-<script src="js/weeks/week8.js" defer></script>
-<script src="js/weeks/week9.js" defer></script>
 <script src="js/events-calendar.js" defer></script>
+<script src="js/parent-committee.js" defer></script>
 <script src="js/main.js" defer></script>
 <!-- Must load AFTER main.js — see activity-renderers.js for why. -->
 <script src="js/weeks/activity-renderers.js" defer></script>

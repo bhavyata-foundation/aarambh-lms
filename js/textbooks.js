@@ -1,3 +1,64 @@
+// =========================================================================
+// SESSION GUARD — same check every other teacher page already has. This
+// page previously had none at all, meaning it could be reached directly
+// by URL with no login whatsoever — fixed here alongside the sidebar
+// consistency fix, since both touch the same page shell.
+// =========================================================================
+fetch('backend/session_check.php' + window.location.search)
+  .then(r => r.json())
+  .then(data => {
+    if(data.status !== 'logged_in' || data.role !== 'teacher'){
+      window.location.href = 'index.html';
+      return;
+    }
+    renderPreviewBanner(data.is_previewing);
+  })
+  .catch(() => { window.location.href = 'index.html'; });
+
+function renderPreviewBanner(isPreviewing){
+  const el = document.getElementById('preview-banner');
+  if(!el) return;
+  el.innerHTML = isPreviewing ? `
+    <div class="preview-banner">
+      <span>👁️ Previewing as this role</span>
+      <button onclick="returnToSuperAdmin()">Return to Super Admin</button>
+    </div>` : '';
+}
+
+function returnToSuperAdmin(){
+  fetch('backend/return_to_admin.php', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if(data.status === 'success') window.location.href = 'superadmin.html';
+    })
+    .catch(() => {});
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
+
+function toggleUserMenu(){
+  document.getElementById('userDropdown').classList.toggle('hidden');
+}
+function closeUserMenu(){
+  document.getElementById('userDropdown').classList.add('hidden');
+}
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('userMenu');
+  if(menu && !menu.contains(e.target)) closeUserMenu();
+});
+
+function logout(){
+  fetch('backend/logout.php').catch(() => {});
+  window.location.href = 'index.html';
+}
+
 // ===== Textbook data =====
 const TEXTBOOKS = {
   'jrkg': [

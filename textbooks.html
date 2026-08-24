@@ -8,16 +8,52 @@
 </head>
 <body>
 
+<div id="preview-banner"></div>
+
 <div class="topbar">
-  <div><span class="brand">Bhavyata portal</span><span class="tag">Textbooks</span></div>
-  <button onclick="location.href='index.html'">← Back to dashboard</button>
+  <div class="topbar-left">
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span>
+    <span class="page-label">Textbooks</span>
+  </div>
+  <div class="user-menu" id="userMenu">
+    <button class="user-menu-trigger" onclick="toggleUserMenu()">
+      <span class="user-avatar">MS</span>
+      <span class="user-name-block">
+        <span class="user-name">Mrs. Sharma</span>
+        <span class="tag">Teacher</span>
+      </span>
+      <span class="user-caret">▾</span>
+    </button>
+    <div class="user-dropdown hidden" id="userDropdown">
+      <button onclick="logout()">Log out</button>
+    </div>
+  </div>
 </div>
 
+<div class="layout">
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-nav">
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=workbook'">📘 <span>Weekly Activities</span></button>
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=attendance'">🗓️ <span>Attendance</span></button>
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=calendar'">📅 <span>My Attendance</span></button>
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=events'">📌 <span>School Events</span></button>
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=uploadphoto'">📷 <span>Upload Activity Photo</span></button>
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=materials'">📦 <span>Materials</span></button>
+    <button class="sidebar-nav-btn" onclick="location.href='index.html?section=volunteers'">🤝 <span>Parent Volunteers</span></button>
+    <button class="sidebar-nav-btn active">📚 <span>Textbooks</span></button>
+  </div>
+</div>
+
+<div class="dash">
 <div class="bookstore-wrap">
   <div class="bookstore-filterbar">
     <div id="division-tabs" class="division-tabs-row"></div>
   </div>
   <div id="textbook-body"></div>
+</div>
+</div>
 </div>
 
 <div id="book-reader-overlay" class="hidden">

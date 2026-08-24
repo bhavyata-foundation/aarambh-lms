@@ -2,8 +2,12 @@
 // SESSION GUARD — checks with the server that someone is actually logged
 // in as a supervisor before showing anything on this page. Without this,
 // anyone could reach supervisor.html just by typing the URL directly.
+//
+// Forwards this page's own query string (e.g. ?dev_role=supervisor) to
+// the session check — without this, a dev-mode role selected on the
+// login page never actually reaches session_check.php.
 // =========================================================================
-fetch('backend/session_check.php')
+fetch('backend/session_check.php' + window.location.search)
   .then(r => r.json())
   .then(data => {
     if(data.status !== 'logged_in' || data.role !== 'supervisor'){
@@ -390,7 +394,7 @@ function renderEventsSection(){
   const container = document.getElementById('events-admin-body');
   container.innerHTML = `<p class="sub">Loading…</p>`;
 
-  fetch('backend/get_schools_list.php')
+  fetch('backend/get_schools_list.php' + window.location.search)
     .then(r => r.json())
     .then(data => {
       if(data.status !== 'success'){
@@ -398,11 +402,11 @@ function renderEventsSection(){
         return;
       }
       container.innerHTML = `<div id="supervisorEventsCalendar"></div>`;
-      initEventsCalendar('supervisorEventsCalendar', 'backend/get_events.php', {
+      initEventsCalendar('supervisorEventsCalendar', 'backend/get_events.php' + window.location.search, {
         canAdd: true,
         schools: data.schools,
-        addEventEndpoint: 'backend/add_event.php',
-        classesEndpointBase: 'backend/get_classes_for_school.php'
+        addEventEndpoint: 'backend/add_event.php' + window.location.search,
+        classesEndpointBase: 'backend/get_classes_for_school.php' + window.location.search
       });
     })
     .catch(() => {
