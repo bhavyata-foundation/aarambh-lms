@@ -88,6 +88,7 @@
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-nav">
+      <button class="sidebar-nav-btn" id="navMyDay" onclick="switchSidebarSection('myday')">▦ <span>My Day</span></button>
       <button class="sidebar-nav-btn active" id="navWorkbook" onclick="switchSidebarSection('workbook')">📘 <span>Weekly Activities</span></button>
       <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ <span>Attendance</span></button>
       <button class="sidebar-nav-btn" id="navCalendar" onclick="switchSidebarSection('calendar')">📅 <span>My Attendance</span></button>
@@ -126,6 +127,7 @@
     <div id="calendar-body" class="hidden"></div>
     <div id="events-body" class="hidden"></div>
     <div id="upload-photo-body" class="hidden"></div>
+    <div id="myday-body" class="hidden"></div>
     <div id="materials-body" class="hidden"></div>
     <div id="volunteers-body" class="hidden"></div>
   </div>

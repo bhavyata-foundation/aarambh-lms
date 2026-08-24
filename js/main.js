@@ -657,6 +657,7 @@ function devSkipLogin(){
   function todayKey(){ return new Date().toISOString().slice(0,10); }
 
   function switchSidebarSection(section){
+    document.getElementById('navMyDay').classList.toggle('active', section === 'myday');
     document.getElementById('navWorkbook').classList.toggle('active', section === 'workbook');
     document.getElementById('navAttendance').classList.toggle('active', section === 'attendance');
     document.getElementById('navCalendar').classList.toggle('active', section === 'calendar');
@@ -668,7 +669,8 @@ function devSkipLogin(){
 
     const labelEl = document.getElementById('pageLabel');
     if(labelEl){
-      labelEl.textContent = section === 'attendance' ? 'Attendance'
+      labelEl.textContent = section === 'myday' ? 'My Day'
+        : section === 'attendance' ? 'Attendance'
         : section === 'calendar' ? 'My Attendance'
         : section === 'events' ? 'School Events'
         : section === 'uploadphoto' ? 'Upload Activity Photo'
@@ -682,6 +684,7 @@ function devSkipLogin(){
     document.getElementById('calendar-body').classList.add('hidden');
     document.getElementById('events-body').classList.add('hidden');
     document.getElementById('upload-photo-body').classList.add('hidden');
+    document.getElementById('myday-body').classList.add('hidden');
     document.getElementById('materials-body').classList.add('hidden');
     document.getElementById('volunteers-body').classList.add('hidden');
 
@@ -702,6 +705,10 @@ function devSkipLogin(){
       document.getElementById('upload-photo-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Photos go straight to your class\'s Google Drive';
       renderUploadPhotoForm();
+    } else if(section === 'myday'){
+      document.getElementById('myday-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Today\'s sessions, attendance, and materials at a glance';
+      renderMyDay();
     } else if(section === 'materials'){
       document.getElementById('materials-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Items received from BMC, and whether they\'ve reached your class';
@@ -919,6 +926,153 @@ function devSkipLogin(){
 
     updateParentCommitteeApplicationStatus(appId, 'selected');
     renderParentVolunteers();
+  }
+
+  /* =========================================================
+     MY DAY — rebuilt against the extracted prototype design system
+     (tile/pill/meter/sec/card classes, now merged into style.css).
+     Uses the REAL DOMAINS array above (real times, real CG codes,
+     real week/theme data) — only the delivery-tracking numbers
+     (sessions confirmed, week compliance, attendance) are realistic
+     PLACEHOLDER values for now, per the agreed "frontend first,
+     database after" plan. Nothing here reads from a real backend yet.
+
+     ADAPTED FROM THE ORIGINAL PROTOTYPE: the original used hover-only
+     tooltips for session detail, which don't work on phones/tablets.
+     Replaced with tap-to-expand panels instead.
+     ========================================================= */
+  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function f1(n){ return (Math.round(n * 10) / 10).toFixed(1); }
+
+  function mdGrid(cls, items){ const g = document.createElement('div'); g.className = 'g ' + cls; items.forEach(i => i && g.appendChild(i)); return g; }
+
+  function mdTile(k, v, unit, extra, formula, mtr){
+    const t = document.createElement('div'); t.className = 'tile';
+    t.innerHTML = `<div class="k">${esc(k)}</div><div class="v">${v}${unit ? `<small> ${esc(unit)}</small>` : ''}</div>`;
+    if(extra){ const d = document.createElement('div'); d.className = 'd'; d.innerHTML = extra; t.appendChild(d); }
+    if(mtr) t.appendChild(mtr);
+    if(formula){ const f = document.createElement('div'); f.className = 'f'; f.textContent = formula; t.appendChild(f); }
+    return t;
+  }
+
+  function mdPill(l, c){ return `<span class="pill ${c}">${esc(l)}</span>`; }
+
+  function mdMeter(pct, cls){
+    const m = document.createElement('div'); m.className = 'meter' + (cls ? ' ' + cls : '');
+    const i = document.createElement('i'); i.style.width = Math.max(0, Math.min(100, pct)) + '%'; m.appendChild(i);
+    return m;
+  }
+
+  function mdSec(title, right){
+    const s = document.createElement('div'); s.className = 'sec';
+    s.innerHTML = `<h2>${esc(title)}</h2><div class="hr"></div>${right || ''}`;
+    return s;
+  }
+
+  function mdCard(title, cap, bodyEl){
+    const c = document.createElement('div'); c.className = 'card';
+    if(title){
+      c.innerHTML = `<div class="hd"><div><h3>${esc(title)}</h3>${cap ? `<p class="cap">${cap}</p>` : ''}</div></div>`;
+    }
+    if(bodyEl) c.appendChild(bodyEl);
+    return c;
+  }
+
+  function mdStatusBand(pct, good, warn){
+    if(pct >= (good || 85)) return {l:'On track', c:'good'};
+    if(pct >= (warn || 70)) return {l:'Watch', c:'warn'};
+    return {l:'Action', c:'crit'};
+  }
+
+  // Placeholder per-day delivery status — realistic stand-in until real
+  // attendance/delivery tracking exists in the backend. Keys match
+  // DAYS[] indices (mon=0 ... fri=4).
+  const MYDAY_PLACEHOLDER_DELIVERY = {
+    0: ['delivered','delivered','delivered','modified','delivered','delivered','not delivered','delivered'],
+    1: ['delivered','delivered','delivered','delivered','delivered','delivered','delivered','delivered'],
+    2: ['delivered','modified','delivered','delivered','not delivered','delivered','delivered','delivered'],
+    3: ['delivered','delivered','delivered','delivered','delivered','modified','delivered','delivered'],
+    4: ['delivered','delivered','delivered','delivered','delivered','delivered','delivered','delivered']
+  };
+  const MYDAY_PLACEHOLDER_MATERIALS = [
+    {item:'Crayon boxes', issued:10, uses:14, state:'ok'},
+    {item:'Worksheet paper', issued:200, uses:88, state:'low'},
+    {item:'Story picture cards', issued:1, uses:22, state:'ok'},
+    {item:'Bead threading kits', issued:15, uses:6, state:'ok'},
+    {item:'Clay for modelling', issued:5, uses:2, state:'damaged'}
+  ];
+  let myDayIndex = 0; // 0=mon ... matches DAYS[] order
+
+  function renderMyDay(){
+    const container = document.getElementById('myday-body');
+    container.innerHTML = '';
+
+    const dayLabels = ['Mon','Tue','Wed','Thu','Fri'];
+    const delivery = MYDAY_PLACEHOLDER_DELIVERY[myDayIndex];
+    const done = delivery.filter(s => s !== 'not delivered').length;
+    const weekPct = 87.5;
+    const modifiedCount = Object.values(MYDAY_PLACEHOLDER_DELIVERY).flat().filter(s => s === 'modified').length;
+    const classPresent = 26, classTotal = 28;
+    const myAttendancePct = 96;
+
+    container.appendChild(mdGrid('g4', [
+      mdTile('Sessions confirmed', done + ' of ' + DOMAINS.length, '',
+        mdPill(mdStatusBand(done/DOMAINS.length*100, 100, 75).l, mdStatusBand(done/DOMAINS.length*100, 100, 75).c),
+        'One tap per session', mdMeter(done/DOMAINS.length*100, done===DOMAINS.length ? 'good' : 'warn')),
+      mdTile('Week compliance', f1(weekPct), '%',
+        mdPill(mdStatusBand(weekPct).l, mdStatusBand(weekPct).c) + mdPill(modifiedCount + ' modified', 'info'),
+        'delivered ÷ planned', mdMeter(weekPct)),
+      mdTile('Class present today', classPresent + ' of ' + classTotal, '',
+        mdPill('Register saved', 'good'), 'Persisted per date'),
+      mdTile('My attendance', myAttendancePct, '%',
+        mdPill('Marked present 9:04 AM', 'good'), 'Gate at first class start')
+    ]));
+
+    const startBtn = document.createElement('button');
+    startBtn.className = 'btn-primary';
+    startBtn.style.cssText = 'width:auto; padding:10px 20px; margin:14px 0 0;';
+    startBtn.textContent = '▶ Start today\u2019s activities';
+    startBtn.onclick = goToTodaysActivities;
+    container.appendChild(startBtn);
+
+    const dayBar = document.createElement('div'); dayBar.className = 'fbar';
+    dayBar.innerHTML = '<div class="ctl"><label>Teaching day</label><div style="display:flex;gap:5px" id="mdDayChips"></div></div>';
+    container.appendChild(dayBar);
+    const dc = document.getElementById('mdDayChips');
+    dayLabels.forEach((dn, i) => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (i === myDayIndex ? ' sel' : '');
+      b.textContent = dn;
+      b.onclick = () => { myDayIndex = i; renderMyDay(); };
+      dc.appendChild(b);
+    });
+
+    container.appendChild(mdSec('Materials needed this week'));
+    const matList = document.createElement('div'); matList.className = 'list';
+    matList.innerHTML = MYDAY_PLACEHOLDER_MATERIALS.map(k => `<div class="row"><div class="t"><b>${esc(k.item)}</b><span>${k.issued} issued · used ${k.uses} times this term</span></div>
+      <div>${k.state==='ok' ? mdPill('In stock','good') : (k.state==='low' ? mdPill('Low stock','warn') : mdPill('Damaged','crit'))}</div></div>`).join('');
+    container.appendChild(mdCard(null, null, matList));
+
+    container.appendChild(mdSec('Suggestions for next week', '<span class="reqs">Advisory only</span>'));
+    const sg = document.createElement('div'); sg.className = 'g g2';
+    const c1 = document.createElement('div');
+    c1.innerHTML = `<p style="margin:0 0 8px">Suggest a revisit session for <b>Numeracy</b>, using the authored activities for its curricular goal.</p>
+      <div style="display:flex;gap:6px"><span class="chip sel">Accept</span><span class="chip">Edit</span><span class="chip">Reject</span></div>`;
+    sg.appendChild(mdCard('Revisit a domain', 'Rule: two or more assessment points with over 40% at the lowest tier.', c1));
+    const c2 = document.createElement('div');
+    c2.innerHTML = `<p style="margin:0 0 8px"><b>Tidy &amp; Put Away</b> was not delivered this week. Most common reason: time lost to assembly.</p>
+      <div style="display:flex;gap:6px"><span class="chip sel">Accept</span><span class="chip">Edit</span><span class="chip">Reject</span></div>`;
+    sg.appendChild(mdCard('A session keeps slipping', 'Pattern across recent weeks.', c2));
+    container.appendChild(sg);
+  }
+
+  // Takes the day currently selected in My Day (myDayIndex) straight into
+  // Weekly Activities, opened to that exact same day — one tap, no
+  // duplicated activity content living in two places at once.
+  function goToTodaysActivities(){
+    const dayKeyForIndex = ['mon','tue','wed','thu','fri'][myDayIndex];
+    currentDay = dayKeyForIndex;
+    switchSidebarSection('workbook');
   }
 
   function toggleAddMaterialForm(){
