@@ -1,14 +1,8 @@
 /* =========================================================
    SESSION GUARD — checks with the server that someone is actually
    logged in as a superadmin before showing anything on this page.
-
-   Forwards this page's own query string (e.g. ?dev_role=superadmin)
-   to the session check — without this, a dev-mode role selected on
-   the login page never actually reaches session_check.php, since a
-   query param on THIS page's URL isn't automatically attached to a
-   separate fetch() call.
    ========================================================= */
-fetch('backend/session_check.php' + window.location.search)
+fetch('backend/session_check.php')
   .then(r => r.json())
   .then(data => {
     if(data.status !== 'logged_in' || data.role !== 'superadmin'){
@@ -16,6 +10,31 @@ fetch('backend/session_check.php' + window.location.search)
     }
   })
   .catch(() => { window.location.href = 'index.html'; });
+
+// -------------------------------------------------------------------------
+// PREVIEW AS — lets a logged-in superadmin temporarily switch their
+// session to view as Teacher / Supervisor / Parent, without logging out
+// or needing a second password. See backend/preview_as.php — this only
+// works because the CURRENT session is already a real superadmin login;
+// it's not reachable any other way.
+// -------------------------------------------------------------------------
+function previewAs(role){
+  closeUserMenu();
+  fetch('backend/preview_as.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ role })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(data.status === 'success'){
+        window.location.href = data.redirect;
+      } else {
+        alert(data.message || 'Could not start preview.');
+      }
+    })
+    .catch(() => { alert('Could not reach the server.'); });
+}
 
 /* =========================================================
    SUPER ADMIN — data
@@ -220,7 +239,7 @@ const CLASS_LOOKUP = {
 };
 
 const reviewedReports = {}; // key: weekNum -> {by, date, note}
-let currentReportWeekRange = {from: 1, to: 1};
+let currentReportWeek = 1;
 let expandedSchool = null;
 let expandedSchoolCard = null;
 
@@ -249,104 +268,12 @@ document.addEventListener('click', function(e){
 });
 
 /* =========================================================
-   DURATION PICKER — a reusable grouped dropdown ("Select
-   Duration" style: a trigger showing the current selection,
-   opening a panel with quick-pick options under small section
-   headers). Used by Weekly Report and Supervisor Visits (both
-   week-based) and, with a different option set, by the
-   Supervisor Dashboard / School Performance / Quarterly Review
-   period bar in superadmin-dashboards.js (month/quarter/year).
-
-   Each caller supplies:
-     id       — unique string, so multiple pickers can exist and
-                only one opens at a time
-     groups   — [{label, options:[{value,label,selected?}]}, ...]
-     trigger  — the label text shown on the closed trigger button
-     onSelect — function(value) called when an option is chosen;
-                the caller decides what that value means and how
-                to re-render itself
-     customHtml — optional extra HTML appended inside the open
-                panel (e.g. the "From week / To week" custom-range
-                controls), rendered by the caller
+   Section switching
    ========================================================= */
-
-let openDurationPickerId = null;
-
-function durationPickerHtml(id, trigger, groups, customHtml){
-  const isOpen = openDurationPickerId === id;
-  const groupsHtml = groups.map(g => `
-    <div class="dp-group-label">${g.label}</div>
-    ${g.options.map(o => `<button type="button" class="dp-option ${o.selected?'selected':''}" onclick="event.stopPropagation(); durationPickerSelect('${id}','${o.value}')">${o.label}</button>`).join('')}
-  `).join('<div class="dp-divider"></div>');
-
-  return `
-    <div class="dp-wrap" data-dp-id="${id}">
-      <button type="button" class="dp-trigger ${isOpen?'open':''}" onclick="event.stopPropagation(); toggleDurationPicker('${id}')">
-        <span>${trigger}</span>
-        <span class="dp-caret">${isOpen ? '▲' : '▼'}</span>
-      </button>
-      ${isOpen ? `<div class="dp-panel" onclick="event.stopPropagation()">${groupsHtml}${customHtml || ''}</div>` : ''}
-    </div>`;
-}
-
-function toggleDurationPicker(id){
-  openDurationPickerId = (openDurationPickerId === id) ? null : id;
-  durationPickerRerender(id);
-}
-
-// Each picker's owning report knows how to re-render just itself;
-// registered here so toggleDurationPicker/durationPickerSelect can
-// reach the right one without hardcoding a big if/else chain.
-const durationPickerRerenderers = {};
-
-function durationPickerRerender(id){
-  if(durationPickerRerenderers[id]) durationPickerRerenderers[id]();
-}
-
-function durationPickerSelect(id, value){
-  openDurationPickerId = null;
-  if(durationPickerRerenderers[id + ':select']) durationPickerRerenderers[id + ':select'](value);
-}
-
-document.addEventListener('click', function(e){
-  if(openDurationPickerId && !e.target.closest('.dp-wrap')){
-    const id = openDurationPickerId;
-    openDurationPickerId = null;
-    durationPickerRerender(id);
-  }
-});
-
-/* ---- shared week-range helpers (curriculum Weeks 1–14) ---- */
-
-// Week 1's Monday, matching WEEKS[0].dates ("15–19 Jun 2026") —
-// every subsequent week is exactly 7 days later, so this is enough
-// to compute which curriculum week any date falls in without
-// parsing every week's display string.
-// Term 1 runs 14 curriculum weeks (matches WEEKS.length in the
-// teacher-facing js/weeks/weeks-core.js) — duplicated as a plain
-// number here since superadmin.html doesn't load that file.
-const TOTAL_CURRICULUM_WEEKS = 14;
-
-const TERM_WEEK1_MONDAY = new Date(2026, 5, 15);
-
-function weekNumberForDate(d){
-  const diffDays = Math.floor((d - TERM_WEEK1_MONDAY) / 86400000);
-  const wk = Math.floor(diffDays / 7) + 1;
-  return Math.max(1, Math.min(TOTAL_CURRICULUM_WEEKS, wk));
-}
-
-function currentCurriculumWeek(){
-  return weekNumberForDate(new Date());
-}
-
-function weekRangeLabel(from, to){
-  return from === to ? `Week ${from}` : `Week ${from}–${to}`;
-}
-
 
 function switchAdminSection(section){
   const navMap = {
-    overview:'navOverview', supervisors:'navSupervisors',
+    overview:'navOverview', supervisors:'navSupervisors', performance:'navPerformance',
     review:'navReview', report:'navWeeklyReport', visits:'navVisits', schools:'navSchools',
     adduser:'navAddUser', events:'navEvents'
   };
@@ -356,20 +283,22 @@ function switchAdminSection(section){
   const subMap = {
     overview:    'Overview across all schools',
     supervisors: 'Supervisor performance — achieved against plan',
+    performance: 'All schools — attendance, learning and readiness',
     review:      'Quarterly and annual review',
     report:      'Weekly report generator',
     visits:      'Supervisor visit log',
-    schools:     'Schools by ward, teacher assignment, and performance',
-    adduser:     'Create a new login, or add a new school to the programme',
+    schools:     'Schools by ward',
+    adduser:     'Create a new login for a teacher, supervisor, or parent',
     events:      'PTMs, teacher trainings, and other scheduled events — across every school'
   };
   const labelMap = {
     overview:    'Overview',
     supervisors: 'Supervisor Dashboard',
+    performance: 'School Performance',
     review:      'Quarterly Review',
     report:      'Weekly Report',
     visits:      'Supervisor Visits',
-    schools:     'Schools & Teachers',
+    schools:     'Schools',
     adduser:     'Add User',
     events:      'Events'
   };
@@ -379,16 +308,15 @@ function switchAdminSection(section){
   document.getElementById('sidebar-schools-section').classList.toggle('hidden', section !== 'schools');
 
   if(section === 'overview') renderAdminOverview();
-  else if(section === 'report') renderWeeklyReport(currentReportWeekRange);
+  else if(section === 'report') renderWeeklyReport(currentReportWeek);
   else if(section === 'visits') renderSupervisorVisitsLog();
   else if(section === 'schools'){ renderSchoolAccordion(); renderSchoolsTeachers(); }
   else if(section === 'adduser') renderAddUserForm();
   else if(section === 'events') renderEventsRecord();
-  // The 2 sections below are rendered by js/superadmin-dashboards.js,
+  // The 3 sections below are rendered by js/superadmin-dashboards.js,
   // loaded after this file — see that file for the render functions.
-  // (School Performance used to be a 3rd section here — it now lives
-  // inside 'schools' as a toggle, see renderSchoolsTeachers().)
   else if(section === 'supervisors') renderSupervisorDashboard();
+  else if(section === 'performance') renderSchoolPerformance();
   else if(section === 'review') renderQuarterlyReview();
 
   closeSidebar();
@@ -405,320 +333,50 @@ function supervisorName(id){ const s = SUPERVISORS_LIST.find(x => x.id === id); 
    Overview
    ========================================================= */
 
-let overviewWeekRange = null; // null = auto (latest week with any real data)
-
-function resolveOverviewWeek(){
-  if(overviewWeekRange) return overviewWeekRange;
-  const visitWeeks = Object.keys(SUPERVISOR_VISITS).map(Number);
-  const worksheetWeeks = Object.keys(WORKSHEET_COMPLETION).map(Number);
-  const dataWeeks = visitWeeks.concat(worksheetWeeks);
-  const latest = dataWeeks.length ? Math.max(...dataWeeks) : 1;
-  return {from: latest, to: latest};
-}
-
-function overviewDurationGroups(range){
-  const cur = currentCurriculumWeek();
-  const sel = w => range.from === w && range.to === w;
-  const quick = [{value: `${cur}-${cur}`, label: `This week (Week ${cur})`, selected: sel(cur)}];
-  const allWeeks = [];
-  for(let w = 1; w <= TOTAL_CURRICULUM_WEEKS; w++){
-    allWeeks.push({value: `${w}-${w}`, label: `Week ${w}`, selected: sel(w)});
-  }
-  return [{label: 'Quick picks', options: quick}, {label: 'All weeks', options: allWeeks}];
-}
-
-durationPickerRerenderers['overviewPeriod'] = () => renderAdminOverview();
-durationPickerRerenderers['overviewPeriod:select'] = (value) => {
-  const [from, to] = value.split('-').map(Number);
-  overviewWeekRange = {from, to};
-  renderAdminOverview();
-};
-
 function renderAdminOverview(){
-  const cur = currentCurriculumWeek();
-  const range = resolveOverviewWeek();
-  const viewingWeek = range.from;
-
-  // Growth data (STUDENT_GROWTH) is only ever seeded for the schools
-  // that have actually had a check-in logged so far — it is NOT the
-  // total student population across all 23 schools. Showing it as a
-  // bare "Students tracked" number next to "Schools: 23" makes it
-  // look like something is broken (e.g. "7" students across 23
-  // schools). Being explicit about the sample size here instead of
-  // implying full coverage.
-  const schoolsWithGrowthData = Object.keys(STUDENT_GROWTH).length;
-  const totalStudentsTracked = Object.values(STUDENT_GROWTH).reduce((sum, arr) => sum + arr.length, 0);
-
+  const totalStudents = Object.values(STUDENT_GROWTH).reduce((sum, arr) => sum + arr.length, 0);
   const assignedTeacherCount = SCHOOLS.reduce((sum, sc) =>
     sum + sc.classes.filter(c => c.teacher).length, 0);
-
-  const visits = SUPERVISOR_VISITS[viewingWeek] || [];
+  const visits = SUPERVISOR_VISITS[1] || [];
   const visitedCount = visits.filter(v => v.visited).length;
-  const missedVisits = visits.filter(v => !v.visited);
   const visitRate = visits.length ? Math.round((visitedCount / visits.length) * 100) : 0;
-
-  const completionValues = Object.values(WORKSHEET_COMPLETION[viewingWeek] || {});
+  const completionValues = Object.values(WORKSHEET_COMPLETION[1] || {});
   const avgWorksheet = completionValues.length
     ? Math.round(completionValues.reduce((a,b) => a+b, 0) / completionValues.length) : 0;
 
-  // ----- Needs attention — computed from the FULL 23-school dataset,
-  // not just the schools with week-by-week sample data. These are
-  // real, actionable gaps: an unassigned class, or a teacher name
-  // that's still a placeholder from the original ward-sheet import.
-  // Ordered by how actionable/urgent each is, most first. -----
-  const unassignedClasses = [];
-  const placeholderTeacherClasses = [];
-  SCHOOLS.forEach(sc => {
-    sc.classes.forEach(c => {
-      if(!c.teacher){
-        unassignedClasses.push(`${sc.name} — ${c.name}`);
-      } else if(/bmc/i.test(c.teacher)){
-        placeholderTeacherClasses.push(`${sc.name} — ${c.name} (${c.teacher})`);
-      }
-    });
-  });
-
-  const attentionRows = [];
-  if(unassignedClasses.length){
-    attentionRows.push(`
-      <div class="material-row">
-        <div>
-          <div class="material-name">👤 ${unassignedClasses.length} class${unassignedClasses.length===1?'':'es'} still need a teacher assigned</div>
-          <div class="material-meta">${unassignedClasses.slice(0,3).join(' · ')}${unassignedClasses.length>3?' · …':''}</div>
-        </div>
-        <button class="material-toggle-btn" onclick="switchAdminSection('adduser')">Add User</button>
-      </div>`);
-  }
-  if(placeholderTeacherClasses.length){
-    attentionRows.push(`
-      <div class="material-row">
-        <div>
-          <div class="material-name">🏷️ ${placeholderTeacherClasses.length} class${placeholderTeacherClasses.length===1?'':'es'} have a placeholder teacher name to confirm</div>
-          <div class="material-meta">${placeholderTeacherClasses.slice(0,3).join(' · ')}${placeholderTeacherClasses.length>3?' · …':''}</div>
-        </div>
-        <button class="material-toggle-btn" onclick="switchAdminSection('schools')">Schools & Teachers</button>
-      </div>`);
-  }
-  if(missedVisits.length){
-    attentionRows.push(`
-      <div class="material-row">
-        <div>
-          <div class="material-name">🚗 ${missedVisits.length} missed visit${missedVisits.length===1?'':'s'} in Week ${viewingWeek}</div>
-          <div class="material-meta">${missedVisits.slice(0,3).map(v => schoolName(v.schoolId)).join(' · ')}${missedVisits.length>3?' · …':''}</div>
-        </div>
-        <button class="material-toggle-btn" onclick="switchAdminSection('visits')">Supervisor Visits</button>
-      </div>`);
-  }
-  const attentionCount = unassignedClasses.length + placeholderTeacherClasses.length + missedVisits.length;
-
   document.getElementById('admin-body').innerHTML = `
-    <div class="visit-banner" style="margin-bottom:18px;">
-      <div><strong>Week ${cur} of ${TOTAL_CURRICULUM_WEEKS}</strong> · Term 1</div>
-    </div>
-
-    <div class="adm-sel" style="margin-bottom:8px;">Programme</div>
     <div class="stat-grid">
-      <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('schools')"><p class="label">Schools</p><p class="value">${SCHOOLS.length}</p></div>
-      <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('schools')"><p class="label">Teachers assigned</p><p class="value">${assignedTeacherCount}</p></div>
-      <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('supervisors')"><p class="label">Supervisors</p><p class="value">${SUPERVISORS_LIST.length}</p></div>
+      <div class="stat-card"><p class="label">Schools</p><p class="value">${SCHOOLS.length}</p></div>
+      <div class="stat-card"><p class="label">Teachers assigned</p><p class="value">${assignedTeacherCount}</p></div>
+      <div class="stat-card"><p class="label">Supervisors</p><p class="value">${SUPERVISORS_LIST.length}</p></div>
+      <div class="stat-card"><p class="label">Students tracked</p><p class="value">${totalStudents}</p></div>
+      <div class="stat-card"><p class="label">Supervisor visit rate (Wk 1)</p><p class="value" style="color:${visitRate>=70?'var(--success)':'var(--danger)'}">${visitRate}%</p></div>
+      <div class="stat-card"><p class="label">Avg worksheet completion (Wk 1)</p><p class="value">${avgWorksheet}%</p></div>
     </div>
-
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:22px; margin-bottom:8px; flex-wrap:wrap; gap:10px;">
-      <div class="adm-sel" style="margin-bottom:0;">${weekRangeLabel(viewingWeek, viewingWeek)}'s performance</div>
-      ${durationPickerHtml('overviewPeriod', weekRangeLabel(viewingWeek, viewingWeek), overviewDurationGroups(range))}
-    </div>
-    <div class="stat-grid">
-      <div class="stat-card" style="cursor:pointer;" onclick="schoolsTeachersView='performance'; switchAdminSection('schools')">
-        <p class="label">Students tracked</p>
-        <p class="value">${totalStudentsTracked}</p>
-        <p style="font-size:10px; color:var(--text-muted); margin:2px 0 0;">across ${schoolsWithGrowthData} of ${SCHOOLS.length} schools with growth data logged so far</p>
-      </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('visits')"><p class="label">Supervisor visit rate</p><p class="value ${visits.length ? (visitRate>=70?'':'warn') : ''}">${visits.length ? visitRate + '%' : '—'}</p>${!visits.length ? `<p style="font-size:10px; color:var(--text-muted); margin:2px 0 0;">No visits logged for Week ${viewingWeek}</p>` : ''}</div>
-      <div class="stat-card" style="cursor:pointer;" onclick="schoolsTeachersView='performance'; switchAdminSection('schools')"><p class="label">Avg worksheet completion</p><p class="value ${completionValues.length ? (avgWorksheet>=70?'':'warn') : ''}">${completionValues.length ? avgWorksheet + '%' : '—'}</p>${!completionValues.length ? `<p style="font-size:10px; color:var(--text-muted); margin:2px 0 0;">No completion data for Week ${viewingWeek}</p>` : ''}</div>
-    </div>
-
-    <div class="adm-sel" style="margin-top:22px; margin-bottom:8px;">Upcoming events</div>
-    <div id="overviewEventsStrip" class="events-strip">
-      <p style="font-size:12px; color:var(--text-muted);">Loading…</p>
-    </div>
-
-    <div class="visit-banner" style="margin-top:22px; display:block;">
-      <strong>Needs attention${attentionCount ? ' (' + attentionCount + ')' : ''}</strong>
-    </div>
-    ${attentionRows.length ? `
-      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px 16px; margin-bottom:16px;">
-        ${attentionRows.join('')}
-      </div>
-    ` : `
-      <p style="font-size:13px; color:var(--success); margin-top:8px;">✓ Nothing needs attention right now.</p>
-    `}
-
-    <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+    <p style="font-size:12px; color:var(--text-muted); margin-top:14px;">
       Head to <b>Weekly Report</b> to generate a full report with per-class detail, visit feedback, and student growth for any week.
     </p>
   `;
-
-  renderUpcomingEventsStrip();
-}
-
-// Real events, fetched the same way the Events tab's calendar does —
-// filtered to today-or-later, soonest first, capped at 3. Clicking any
-// card (or the strip having nothing to show) just points at the full
-// Events tab rather than trying to deep-link into a specific date.
-function renderUpcomingEventsStrip(){
-  const el = document.getElementById('overviewEventsStrip');
-  if(!el) return;
-  const todayStr = new Date().toISOString().slice(0, 10);
-
-  fetch('backend/get_events.php' + window.location.search)
-    .then(r => r.json())
-    .then(data => {
-      if(data.status !== 'success'){
-        el.innerHTML = `<p style="font-size:12px; color:var(--text-muted);">Could not load events right now.</p>`;
-        return;
-      }
-      const upcoming = data.events
-        .filter(e => e.event_date >= todayStr)
-        .sort((a, b) => a.event_date.localeCompare(b.event_date))
-        .slice(0, 3);
-
-      if(!upcoming.length){
-        el.innerHTML = `<p style="font-size:12px; color:var(--text-muted);">No upcoming events scheduled.</p>`;
-        return;
-      }
-
-      el.innerHTML = upcoming.map(e => {
-        const niceDate = new Date(e.event_date + 'T00:00:00').toLocaleDateString([], {day:'numeric', month:'short'});
-        const color = EVENT_TYPE_COLORS[e.event_type] || 'var(--text-muted)';
-        return `
-          <div class="event-strip-card" onclick="switchAdminSection('events')">
-            <div class="event-strip-type" style="color:${color};">${e.event_type} · ${niceDate}</div>
-            <div class="event-strip-title">${e.class_name ? e.school_name + ' — ' + e.class_name : e.school_name}</div>
-          </div>`;
-      }).join('') + `<div class="event-strip-more" onclick="switchAdminSection('events')">See all →</div>`;
-    })
-    .catch(() => {
-      el.innerHTML = `<p style="font-size:12px; color:var(--text-muted);">Could not reach the server.</p>`;
-    });
 }
 
 /* =========================================================
    Weekly Report
    ========================================================= */
 
-let weeklyReportCustomOpen = false;
-let weeklyReportCustomFrom = 1;
-let weeklyReportCustomTo = 1;
-
-function weeklyReportDurationGroups(range){
-  const cur = currentCurriculumWeek();
-  const clamp = n => Math.max(1, Math.min(TOTAL_CURRICULUM_WEEKS, n));
-  const sel = v => v.from === range.from && v.to === range.to;
-
-  const quick = [
-    {from: cur, to: cur},
-    {from: clamp(cur-1), to: cur},
-    {from: clamp(cur-3), to: cur}
-  ].map(v => ({
-    value: `${v.from}-${v.to}`,
-    label: v.from === v.to ? `This week (Week ${v.from})` : `Past ${v.to-v.from+1} weeks (${weekRangeLabel(v.from, v.to)})`,
-    selected: sel(v)
-  }));
-
-  const allWeeks = [];
-  for(let w = 1; w <= TOTAL_CURRICULUM_WEEKS; w++){
-    allWeeks.push({value: `${w}-${w}`, label: `Week ${w}`, selected: sel({from:w, to:w})});
-  }
-
-  return [
-    {label: 'Quick picks', options: quick},
-    {label: 'All weeks', options: allWeeks},
-    {label: 'Other', options: [{value:'custom', label:'Custom week range…', selected:false}]}
-  ];
-}
-
-function weeklyReportCustomRangeHtml(){
-  if(!weeklyReportCustomOpen) return '';
-  let opts = '';
-  for(let w = 1; w <= TOTAL_CURRICULUM_WEEKS; w++) opts += `<option value="${w}">Week ${w}</option>`;
-  let fromOpts = '', toOpts = '';
-  for(let w = 1; w <= TOTAL_CURRICULUM_WEEKS; w++){
-    fromOpts += `<option value="${w}" ${w===weeklyReportCustomFrom?'selected':''}>From: Week ${w}</option>`;
-    toOpts   += `<option value="${w}" ${w===weeklyReportCustomTo?'selected':''}>To: Week ${w}</option>`;
-  }
-  return `
-    <div class="dp-divider"></div>
-    <div class="dp-custom-range">
-      <select onchange="weeklyReportCustomFrom=parseInt(this.value)">${fromOpts}</select>
-      <select onchange="weeklyReportCustomTo=parseInt(this.value)">${toOpts}</select>
-      <button type="button" onclick="applyWeeklyReportCustomRange()">Apply</button>
-    </div>`;
-}
-
-function applyWeeklyReportCustomRange(){
-  const from = Math.min(weeklyReportCustomFrom, weeklyReportCustomTo);
-  const to = Math.max(weeklyReportCustomFrom, weeklyReportCustomTo);
-  weeklyReportCustomOpen = false;
-  renderWeeklyReport({from, to});
-}
-
-durationPickerRerenderers['weeklyReportDuration'] = () => renderWeeklyReport(currentReportWeekRange);
-durationPickerRerenderers['weeklyReportDuration:select'] = (value) => {
-  if(value === 'custom'){
-    weeklyReportCustomOpen = true;
-    weeklyReportCustomFrom = currentReportWeekRange.from;
-    weeklyReportCustomTo = currentReportWeekRange.to;
-    openDurationPickerId = 'weeklyReportDuration'; // keep the panel open so the custom controls are visible
-    renderWeeklyReport(currentReportWeekRange);
-    return;
-  }
-  const [from, to] = value.split('-').map(Number);
-  renderWeeklyReport({from, to});
-};
-
-function renderWeeklyReport(range){
-  currentReportWeekRange = range;
-  const weeksInRange = [];
-  for(let w = range.from; w <= range.to; w++) weeksInRange.push(w);
-  const isSingleWeek = range.from === range.to;
-
-  // Combine visits across every week in the selected range.
-  let visits = [];
-  weeksInRange.forEach(w => {
-    (SUPERVISOR_VISITS[w] || []).forEach(v => visits.push(Object.assign({week: w}, v)));
-  });
-
-  // Average worksheet completion per school across whichever weeks
-  // in range actually have data logged — schools with no data in
-  // ANY week of the range still show '—', same as before.
-  const completionSums = {};
-  weeksInRange.forEach(w => {
-    const c = WORKSHEET_COMPLETION[w];
-    if(!c) return;
-    Object.keys(c).forEach(schoolId => {
-      if(!completionSums[schoolId]) completionSums[schoolId] = [];
-      completionSums[schoolId].push(c[schoolId]);
-    });
-  });
-  const completion = {};
-  Object.keys(completionSums).forEach(schoolId => {
-    const arr = completionSums[schoolId];
-    completion[schoolId] = Math.round(arr.reduce((a,b) => a+b, 0) / arr.length);
-  });
-
-  // A sign-off is inherently tied to ONE week's report — only show
-  // it (and only look up an existing review) when a single week is
-  // selected, not an aggregated multi-week range.
-  const reviewed = isSingleWeek ? reviewedReports[range.from] : null;
+function renderWeeklyReport(weekNum){
+  currentReportWeek = weekNum;
+  const visits = SUPERVISOR_VISITS[weekNum] || [];
+  const completion = WORKSHEET_COMPLETION[weekNum] || {};
+  const reviewed = reviewedReports[weekNum];
 
   const visitRows = visits.length ? visits.map(v => `
     <tr>
-      <td>${weeksInRange.length > 1 ? 'Wk ' + v.week + ' · ' : ''}${v.date} (${v.day})</td>
+      <td>${v.date} (${v.day})</td>
       <td>${supervisorName(v.supervisorId)}</td>
       <td>${schoolName(v.schoolId)}</td>
       <td><span class="visit-pill ${v.visited?'yes':'no'}">${v.visited ? '✓ Visited' : '✗ Missed'}</span></td>
       <td>${v.feedback}</td>
-    </tr>`).join('') : `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No visit records logged for ${weekRangeLabel(range.from, range.to)} yet.</td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No visit records logged for this week yet.</td></tr>`;
 
   const classRows = SCHOOLS.map(sc => {
     const pct = completion[sc.id] !== undefined ? completion[sc.id] : null;
@@ -740,8 +398,10 @@ function renderWeeklyReport(range){
 
   document.getElementById('admin-body').innerHTML = `
     <div class="report-toolbar">
-      <label>Report period
-        ${durationPickerHtml('weeklyReportDuration', weekRangeLabel(range.from, range.to), weeklyReportDurationGroups(range), weeklyReportCustomRangeHtml())}
+      <label>Week
+        <select id="reportWeekSelect" onchange="renderWeeklyReport(parseInt(this.value))">
+          ${Object.keys(SUPERVISOR_VISITS).map(w => `<option value="${w}" ${parseInt(w)===weekNum?'selected':''}>Week ${w}</option>`).join('')}
+        </select>
       </label>
       <button class="btn-sup-outline" onclick="window.print()">🖨 Print report</button>
     </div>
@@ -778,15 +438,11 @@ function renderWeeklyReport(range){
       <div id="classLookupResult"></div>
     </div>
 
-    ${isSingleWeek ? `
-      <div class="review-box">
-        <label class="field-label-admin">Reviewer note (optional)</label>
-        <textarea id="reviewNote" placeholder="e.g. Flagged Sector 8 for a follow-up visit next week">${reviewed ? reviewed.note : ''}</textarea>
-        <button class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;" onclick="markReportReviewed(${range.from})">${reviewed ? 'Update review' : 'Mark report as reviewed'}</button>
-      </div>
-    ` : `
-      <p style="font-size:12px; color:var(--text-muted); margin-top:16px;">Sign-off is only available when viewing a single week — pick one week above to review and sign off on it.</p>
-    `}
+    <div class="review-box">
+      <label class="field-label-admin">Reviewer note (optional)</label>
+      <textarea id="reviewNote" placeholder="e.g. Flagged Sector 8 for a follow-up visit next week">${reviewed ? reviewed.note : ''}</textarea>
+      <button class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;" onclick="markReportReviewed(${weekNum})">${reviewed ? 'Update review' : 'Mark report as reviewed'}</button>
+    </div>
   `;
 }
 
@@ -842,7 +498,7 @@ function renderClassLookupResult(){
 function markReportReviewed(weekNum){
   const note = document.getElementById('reviewNote').value;
   reviewedReports[weekNum] = {by: 'Super Admin', date: new Date().toLocaleDateString(), note};
-  renderWeeklyReport({from: weekNum, to: weekNum});
+  renderWeeklyReport(weekNum);
 }
 
 /* =========================================================
@@ -851,89 +507,15 @@ function markReportReviewed(weekNum){
 
 function renderEventsRecord(){
   document.getElementById('admin-body').innerHTML = `<div id="superadminEventsCalendar"></div>`;
-  initEventsCalendar('superadminEventsCalendar', 'backend/get_events.php' + window.location.search);
+  initEventsCalendar('superadminEventsCalendar', 'backend/get_events.php');
 }
-
-let visitsLogRange = null; // null = All weeks (default, matches old behavior)
-let visitsLogCustomOpen = false;
-let visitsLogCustomFrom = 1;
-let visitsLogCustomTo = 1;
-
-function visitsLogDurationGroups(range){
-  const cur = currentCurriculumWeek();
-  const clamp = n => Math.max(1, Math.min(TOTAL_CURRICULUM_WEEKS, n));
-  const sel = v => range && v.from === range.from && v.to === range.to;
-
-  const quick = [
-    {from: cur, to: cur},
-    {from: clamp(cur-1), to: cur},
-    {from: clamp(cur-3), to: cur}
-  ].map(v => ({
-    value: `${v.from}-${v.to}`,
-    label: v.from === v.to ? `This week (Week ${v.from})` : `Past ${v.to-v.from+1} weeks (${weekRangeLabel(v.from, v.to)})`,
-    selected: sel(v)
-  }));
-
-  const allWeeks = [];
-  for(let w = 1; w <= TOTAL_CURRICULUM_WEEKS; w++){
-    allWeeks.push({value: `${w}-${w}`, label: `Week ${w}`, selected: sel({from:w, to:w})});
-  }
-
-  return [
-    {label: 'Quick picks', options: [{value:'all', label:'All weeks', selected: range===null}].concat(quick)},
-    {label: 'Individual weeks', options: allWeeks},
-    {label: 'Other', options: [{value:'custom', label:'Custom week range…', selected:false}]}
-  ];
-}
-
-function visitsLogCustomRangeHtml(){
-  if(!visitsLogCustomOpen) return '';
-  let fromOpts = '', toOpts = '';
-  for(let w = 1; w <= TOTAL_CURRICULUM_WEEKS; w++){
-    fromOpts += `<option value="${w}" ${w===visitsLogCustomFrom?'selected':''}>From: Week ${w}</option>`;
-    toOpts   += `<option value="${w}" ${w===visitsLogCustomTo?'selected':''}>To: Week ${w}</option>`;
-  }
-  return `
-    <div class="dp-divider"></div>
-    <div class="dp-custom-range">
-      <select onchange="visitsLogCustomFrom=parseInt(this.value)">${fromOpts}</select>
-      <select onchange="visitsLogCustomTo=parseInt(this.value)">${toOpts}</select>
-      <button type="button" onclick="applyVisitsLogCustomRange()">Apply</button>
-    </div>`;
-}
-
-function applyVisitsLogCustomRange(){
-  const from = Math.min(visitsLogCustomFrom, visitsLogCustomTo);
-  const to = Math.max(visitsLogCustomFrom, visitsLogCustomTo);
-  visitsLogCustomOpen = false;
-  visitsLogRange = {from, to};
-  renderSupervisorVisitsLog();
-}
-
-durationPickerRerenderers['visitsLogDuration'] = () => renderSupervisorVisitsLog();
-durationPickerRerenderers['visitsLogDuration:select'] = (value) => {
-  if(value === 'all'){ visitsLogRange = null; renderSupervisorVisitsLog(); return; }
-  if(value === 'custom'){
-    visitsLogCustomOpen = true;
-    visitsLogCustomFrom = visitsLogRange ? visitsLogRange.from : 1;
-    visitsLogCustomTo = visitsLogRange ? visitsLogRange.to : 1;
-    openDurationPickerId = 'visitsLogDuration';
-    renderSupervisorVisitsLog();
-    return;
-  }
-  const [from, to] = value.split('-').map(Number);
-  visitsLogRange = {from, to};
-  renderSupervisorVisitsLog();
-};
 
 function renderSupervisorVisitsLog(){
   const allVisits = [];
   Object.keys(SUPERVISOR_VISITS).forEach(w => {
-    const wNum = parseInt(w, 10);
-    if(visitsLogRange && (wNum < visitsLogRange.from || wNum > visitsLogRange.to)) return;
     SUPERVISOR_VISITS[w].forEach(v => allVisits.push(Object.assign({week: w}, v)));
   });
-  const rows = allVisits.length ? allVisits.map(v => `
+  const rows = allVisits.map(v => `
     <tr>
       <td>Week ${v.week}</td>
       <td>${v.date} (${v.day})</td>
@@ -941,17 +523,9 @@ function renderSupervisorVisitsLog(){
       <td>${schoolName(v.schoolId)}</td>
       <td><span class="visit-pill ${v.visited?'yes':'no'}">${v.visited ? '✓ Visited' : '✗ Missed'}</span></td>
       <td>${v.feedback}</td>
-    </tr>`).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No visit records logged${visitsLogRange ? ' for ' + weekRangeLabel(visitsLogRange.from, visitsLogRange.to) : ''}.</td></tr>`;
-
-  const triggerLabel = visitsLogRange ? weekRangeLabel(visitsLogRange.from, visitsLogRange.to) : 'All weeks';
+    </tr>`).join('');
 
   document.getElementById('admin-body').innerHTML = `
-    <div class="report-toolbar">
-      <label>Period
-        ${durationPickerHtml('visitsLogDuration', triggerLabel, visitsLogDurationGroups(visitsLogRange), visitsLogCustomRangeHtml())}
-      </label>
-      <button class="btn-sup-outline" onclick="window.print()">🖨 Print</button>
-    </div>
     <div class="report-table-wrap"><table class="report-table">
       <thead><tr><th>Week</th><th>Date</th><th>Supervisor</th><th>School</th><th>Status</th><th>Feedback</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -965,40 +539,14 @@ function renderSupervisorVisitsLog(){
    ========================================================= */
 
 let selectedWard = null;
-let schoolsTeachersView = 'browse'; // 'browse' | 'performance'
 
 function getWards(){
   return [...new Set(SCHOOLS.map(s => s.ward))].sort();
 }
 
-function setSchoolsTeachersView(view){
-  schoolsTeachersView = view;
-  renderSchoolsTeachers();
-}
-
-function schoolsTeachersToggleBarHtml(){
-  return `
-    <div class="adm-seg" role="group" aria-label="Schools & Teachers view" style="margin-bottom:16px;">
-      <button class="adm-seg-btn ${schoolsTeachersView==='browse'?'active':''}" onclick="setSchoolsTeachersView('browse')">Browse by ward</button>
-      <button class="adm-seg-btn ${schoolsTeachersView==='performance'?'active':''}" onclick="setSchoolsTeachersView('performance')">Performance table</button>
-    </div>`;
-}
-
 function renderSchoolsTeachers(){
   selectedWard = null;
-  expandedSchoolCard = null;
-
-  if(schoolsTeachersView === 'performance'){
-    // renderSchoolPerformance() (in superadmin-dashboards.js) now
-    // renders into #schoolsPerfBody instead of replacing all of
-    // #admin-body, so the toggle above stays put while its own
-    // period bar / sort / filter controls re-render inside it.
-    document.getElementById('admin-body').innerHTML = schoolsTeachersToggleBarHtml() + `<div id="schoolsPerfBody"></div>`;
-    renderSchoolPerformance();
-    return;
-  }
-
-  document.getElementById('admin-body').innerHTML = schoolsTeachersToggleBarHtml() + `<div class="ward-grid" id="wardGrid"></div>`;
+  document.getElementById('admin-body').innerHTML = `<div class="ward-grid" id="wardGrid"></div>`;
   renderWardCards();
 }
 
@@ -1014,17 +562,10 @@ function renderWardCards(){
 }
 
 function selectWard(ward){
-  // Drilling into a ward is always a "browse" action — force this
-  // explicitly so the view can never get stuck showing the wrong
-  // thing no matter what was selected before.
-  schoolsTeachersView = 'browse';
   selectedWard = ward;
   expandedSchoolCard = null;
   const count = SCHOOLS.filter(s => s.ward === ward).length;
-  // The toggle bar stays visible here too — this used to disappear
-  // once you drilled into a ward, leaving only the small "← All
-  // wards" text link as the sole way back.
-  document.getElementById('admin-body').innerHTML = schoolsTeachersToggleBarHtml() + `
+  document.getElementById('admin-body').innerHTML = `
     <button class="btn-sup-outline" style="margin-bottom:16px;" onclick="renderSchoolsTeachers()">← All wards</button>
     <h3 class="report-h3">Ward ${ward} — ${count} school${count===1?'':'s'}</h3>
     <div class="schools-grid" id="schoolsGrid"></div>
@@ -1049,12 +590,16 @@ function renderSchoolCards(){
       </div>
       ${isOpen ? `<div class="school-card-details" onclick="event.stopPropagation()">
         <div class="row"><span>📍 Address</span><span>${sc.address || '—'}</span></div>
-        ${sc.classes.map(c => {
-          const strength = CLASS_LOOKUP[sc.id] && CLASS_LOOKUP[sc.id][c.name] ? CLASS_LOOKUP[sc.id][c.name].enrolled : null;
-          return `<div class="row"><span>👤 ${c.name} teacher</span><span>${c.teacher || 'Unassigned'}</span></div>
-        <div class="row"><span>👥 ${c.name} strength</span><span>${strength !== null ? strength + ' students' : 'Not recorded yet'}</span></div>`;
-        }).join('')}
+        ${sc.classes.map(c => `<div class="row"><span>👤 ${c.name} teacher</span><span>${c.teacher || 'Unassigned'}</span></div>`).join('')}
         <div class="row"><span>🧭 Supervisor assigned</span><span>${sv ? sv.name : 'Unassigned'}</span></div>
+        <div>
+          <span style="font-weight:bold;">🗒 Weekly visit</span>
+          <select class="school-week-select" onchange="showSchoolWeekVisit('${sc.id}', this.value)">
+            <option value="">Select a week —</option>
+            ${Object.keys(SUPERVISOR_VISITS).map(w => `<option value="${w}">Week ${w}</option>`).join('')}
+          </select>
+          <div class="school-week-result" id="weekResult-${sc.id}"></div>
+        </div>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -1065,10 +610,24 @@ function toggleSchoolCard(schoolId){
   renderSchoolCards();
 }
 
+function showSchoolWeekVisit(schoolId, weekNum){
+  const resultEl = document.getElementById('weekResult-' + schoolId);
+  if(!resultEl) return;
+  if(!weekNum){ resultEl.innerHTML = ''; return; }
+  const visits = (SUPERVISOR_VISITS[weekNum] || []).filter(v => v.schoolId === schoolId);
+  if(!visits.length){
+    resultEl.innerHTML = 'No visit recorded for Week ' + weekNum + '.';
+    return;
+  }
+  resultEl.innerHTML = visits.map(v => `
+    <div style="margin-bottom:6px;">
+      <b>${v.date} (${v.day})</b> — <span class="visit-pill ${v.visited?'yes':'no'}">${v.visited?'✓ Visited':'✗ Missed'}</span><br/>
+      <span style="color:var(--text-muted);">${v.feedback}</span>
+    </div>`).join('');
+}
+
 /* =========================================================
-   Sidebar accordion — schools + assigned supervisor. Visit
-   history/reports live in Supervisor Visits only, not here —
-   this tab is strictly Schools & Teachers information.
+   Sidebar accordion — schools + assigned supervisor + "View report"
    ========================================================= */
 
 function renderSchoolAccordion(){
@@ -1086,6 +645,7 @@ function renderSchoolAccordion(){
         ${isOpen ? `<div class="school-accordion-body">
           <div class="school-supervisor-row">
             <span>👤 ${sv ? sv.name : 'Unassigned'}</span>
+            <button class="btn-view-report-sm" onclick="event.stopPropagation(); viewSchoolReport('${sc.id}')">View report →</button>
           </div>
         </div>` : ''}
       </div>`;
@@ -1099,35 +659,55 @@ function toggleSchoolAccordion(schoolId){
   renderSchoolAccordion();
 }
 
+function viewSchoolReport(schoolId){
+  document.getElementById('adminSubheading').textContent = 'Visit report — ' + schoolName(schoolId);
+  renderSchoolVisitReport(schoolId);
+  closeSidebar();
+}
+
+function renderSchoolVisitReport(schoolId){
+  const sc = SCHOOLS.find(s => s.id === schoolId);
+  const sv = SUPERVISORS_LIST.find(s => s.schools.includes(schoolId));
+
+  const allVisits = [];
+  Object.keys(SUPERVISOR_VISITS).forEach(w => {
+    SUPERVISOR_VISITS[w].forEach(v => { if(v.schoolId === schoolId) allVisits.push(Object.assign({week:w}, v)); });
+  });
+
+  const rows = allVisits.length ? allVisits.map(v => `
+    <tr>
+      <td>Week ${v.week}</td>
+      <td>${v.date} (${v.day})</td>
+      <td><span class="visit-pill ${v.visited?'yes':'no'}">${v.visited ? '✓ Visited' : '✗ Missed'}</span></td>
+      <td>${v.feedback}</td>
+    </tr>`).join('') : `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No visit records logged for this school yet.</td></tr>`;
+
+  const visitedCount = allVisits.filter(v => v.visited).length;
+  const visitRate = allVisits.length ? Math.round((visitedCount / allVisits.length) * 100) : 0;
+
+  document.getElementById('admin-body').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><p class="label">School</p><p class="value" style="font-size:15px;">${sc.name}</p></div>
+      <div class="stat-card"><p class="label">Assigned supervisor</p><p class="value" style="font-size:15px;">${sv ? sv.name : 'Unassigned'}</p></div>
+      <div class="stat-card"><p class="label">Visit rate</p><p class="value" style="color:${visitRate>=70?'var(--success)':'var(--danger)'}">${visitRate}%</p></div>
+      <div class="stat-card"><p class="label">Total visits logged</p><p class="value">${allVisits.length}</p></div>
+    </div>
+    <h3 class="report-h3">Visit history — Ward ${sc.ward} · ${sc.classes.map(c => c.name + ': ' + (c.teacher || 'Unassigned')).join(', ')}</h3>
+    <div class="report-table-wrap"><table class="report-table">
+      <thead><tr><th>Week</th><th>Date</th><th>Status</th><th>Feedback</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  `;
+}
+
 /* =========================================================
    Add User — creates a real login without touching any code.
    Reads unlinked classes from the server so a teacher can be
    linked to a real class right at creation time.
    ========================================================= */
 
-let addUserPageView = 'user'; // 'user' | 'school'
-
-function setAddUserPageView(view){
-  addUserPageView = view;
-  renderAddUserForm();
-}
-
-function addUserPageToggleHtml(){
-  return `
-    <div class="adm-seg" role="group" aria-label="Add user or school" style="margin-bottom:18px;">
-      <button class="adm-seg-btn ${addUserPageView==='user'?'active':''}" onclick="setAddUserPageView('user')">Add user</button>
-      <button class="adm-seg-btn ${addUserPageView==='school'?'active':''}" onclick="setAddUserPageView('school')">Add school</button>
-    </div>`;
-}
-
 function renderAddUserForm(){
-  if(addUserPageView === 'school'){
-    renderAddSchoolForm();
-    return;
-  }
-
   document.getElementById('admin-body').innerHTML = `
-    ${addUserPageToggleHtml()}
     <div class="add-user-card">
       <div id="addUserResult"></div>
       <form id="addUserForm" onsubmit="return submitAddUser(event)">
@@ -1159,89 +739,6 @@ function renderAddUserForm(){
     </div>
   `;
   loadUnlinkedClassesIntoDropdown();
-}
-
-// A school is the actual unit of classification here — classes (and the
-// teachers linked to them) belong to a school, not the other way round.
-// So a brand new school needs to exist BEFORE there's anything for
-// Add User's "assign to class" dropdown to offer. This creates the
-// school plus its two starting classes (Jr KG, Sr KG), both unassigned —
-// they show up in that dropdown immediately afterward, no other change
-// needed there.
-function renderAddSchoolForm(){
-  document.getElementById('admin-body').innerHTML = `
-    ${addUserPageToggleHtml()}
-    <div class="add-user-card">
-      <div id="addSchoolResult"></div>
-      <form id="addSchoolForm" onsubmit="return submitAddSchool(event)">
-        <label class="field-label-admin">School name</label>
-        <input type="text" id="asName" placeholder="e.g. Andheri MPS" required />
-
-        <label class="field-label-admin">Ward</label>
-        <input type="text" id="asWard" placeholder="e.g. F/S, H/E, K/W, L, N, S, T" list="wardSuggestions" required />
-        <datalist id="wardSuggestions">
-          ${getWards().map(w => `<option value="${w}"></option>`).join('')}
-        </datalist>
-
-        <label class="field-label-admin">Address (optional)</label>
-        <input type="text" id="asAddress" placeholder="e.g. J.P. Road, Andheri West, Mumbai" />
-
-        <p style="font-size:12px; color:var(--text-muted); margin:10px 0 4px;">
-          Jr KG and Sr KG classes are created automatically, unassigned — link a teacher to either one from <b>Add user</b> right after.
-        </p>
-
-        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">
-          Create school
-        </button>
-      </form>
-    </div>
-  `;
-}
-
-async function submitAddSchool(event){
-  event.preventDefault();
-  const name = document.getElementById('asName').value.trim();
-  const ward = document.getElementById('asWard').value.trim();
-  const address = document.getElementById('asAddress').value.trim();
-  const resultEl = document.getElementById('addSchoolResult');
-  resultEl.innerHTML = '';
-
-  try{
-    const res = await fetch('backend/add_school.php', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name, ward, address })
-    });
-    const data = await res.json();
-
-    if(data.status !== 'success'){
-      resultEl.innerHTML = `<div class="au-error">${data.message}</div>`;
-      return false;
-    }
-
-    // Optimistic local update so the new school shows up immediately in
-    // Schools & Teachers etc. without a reload — it's already safely
-    // saved server-side by this point. (SCHOOLS itself is still loaded
-    // once at page load from a hardcoded seed, not re-fetched from the
-    // server, so this in-memory push is what keeps this session's view
-    // in sync until that gets switched over to a real fetch.)
-    SCHOOLS.push({
-      id: 's' + data.school_id,
-      name: data.name,
-      ward: data.ward,
-      address: data.address,
-      classes: [
-        {name: 'Jr KG', teacher: null},
-        {name: 'Sr KG', teacher: null}
-      ]
-    });
-
-    resultEl.innerHTML = `<div class="au-success"><strong>${data.name}</strong> added to Ward ${data.ward}, with Jr KG and Sr KG ready to be assigned a teacher.</div>`;
-    document.getElementById('addSchoolForm').reset();
-  }catch(err){
-    resultEl.innerHTML = `<div class="au-error">Could not reach the server. Check your connection and try again.</div>`;
-  }
-  return false;
 }
 
 function toggleAddUserClassField(){

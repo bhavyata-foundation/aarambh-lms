@@ -126,6 +126,7 @@ let selectedRole = 'teacher';
   }
 
   const SAMPLE_STUDENTS = ['Aarav Sharma','Priya Patil','Rohan Desai','Ananya Joshi','Kabir Mehta'];
+  const RATING_LEVELS = ['Emerging','Progressing','Achieving','Exceeding'];
 
   function selectRole(role, el){
     selectedRole = role;
@@ -398,6 +399,18 @@ let selectedRole = 'teacher';
     openWeek(currentWeekNum);
   }
 
+// Wrapping the real login() logic in a form submit handler — rather
+// than a bare button onclick — is what lets the browser's own
+// password manager recognize this as a genuine login and offer to
+// save the credentials, then auto-fill them on future visits. The
+// preventDefault stops an actual page reload; login() still runs via
+// fetch() exactly as before.
+function handleLoginSubmit(event){
+  event.preventDefault();
+  login();
+  return false;
+}
+
 async function login(){
   const emailEl = document.getElementById('loginEmail');
   const passwordEl = document.getElementById('loginPassword');
@@ -476,41 +489,6 @@ function logout(){
   document.getElementById('view-login').classList.remove('hidden');
   // Deliberately NOT clearing today's saved attendance record here —
   // logging back in the same day should still recognise it's already marked.
-}
-
-/* =========================================================
-   DEV MODE — skip login entirely while iterating on the frontend.
-
-   NOTE: the actual auto-run trigger for this now lives at the very
-   END of this file, not here — it has to run AFTER every other
-   variable in this file is declared (expandedWeek, attendanceRecords,
-   etc.), otherwise it fires too early and hits a "cannot access
-   before initialization" error. See the bottom of the file.
-
-   On localhost, this runs AUTOMATICALLY on every page load — no
-   click needed, so a reload during frontend work drops you straight
-   onto the dashboard instead of back at the login screen.
-
-   Defaults to the teacher dashboard. To test a different role:
-     index.html?dev_role=supervisor
-     index.html?dev_role=superadmin
-     index.html?dev_role=parent
-   To see the REAL login screen on localhost, add ?no_dev=1 to the
-   URL — that one flag turns the auto-bypass off for that page load.
-   ========================================================= */
-
-function devSkipLogin(){
-  // Respects whichever role tab is currently selected on the login card.
-  document.getElementById('view-login').classList.add('hidden');
-  if(selectedRole === 'teacher'){
-    enterTeacherFlow();
-  } else if(selectedRole === 'supervisor'){
-    window.location.href = 'supervisor.html?dev_role=supervisor';
-  } else if(selectedRole === 'superadmin'){
-    window.location.href = 'superadmin.html?dev_role=superadmin';
-  } else if(selectedRole === 'parent'){
-    window.location.href = 'parent.html?dev_role=parent';
-  }
 }
 
   function toggleSidebar(){
@@ -624,105 +602,33 @@ function devSkipLogin(){
   // identical rather than three separate implementations drifting apart.
 
   function renderSchoolEvents(){
-    initEventsCalendar('events-body', 'backend/get_events.php' + window.location.search);
+    initEventsCalendar('events-body', 'backend/get_events.php');
   }
-
-  // ===== Activity photo uploads — one dropdown listing today's
-  // actual scheduled activities (same 8 rows shown in the Weekly
-  // Activities table above), rather than a single generic upload.
-  // Picking an activity reveals its own upload form; today's status
-  // per activity is remembered in localStorage (same "frontend-only
-  // until backend catches up" pattern as Materials and textbook
-  // progress) so refreshing the page doesn't lose the checkmarks. =====
-
-  function getPhotoUploadsToday(){
-    try{
-      const raw = localStorage.getItem('photoUploads_' + todayKey());
-      return raw ? JSON.parse(raw) : {};
-    }catch(e){
-      return {};
-    }
-  }
-
-  function savePhotoUploadsToday(record){
-    try{
-      localStorage.setItem('photoUploads_' + todayKey(), JSON.stringify(record));
-    }catch(e){ /* localStorage unavailable — status just won't persist this session */ }
-  }
-
-  let uploadPhotoSelectedActivity = null;
 
   function renderUploadPhotoForm(){
     const container = document.getElementById('upload-photo-body');
-    const uploaded = getPhotoUploadsToday();
-    const doneCount = DOMAINS.filter(d => uploaded[d.key]).length;
-
-    const statusRows = DOMAINS.map(d => {
-      const entry = uploaded[d.key];
-      const isSelected = uploadPhotoSelectedActivity === d.key;
-      const time = entry ? new Date(entry.uploadedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : null;
-      return `
-        <div class="material-row ${isSelected ? 'active' : ''}" style="cursor:pointer;" onclick="selectUploadPhotoActivity('${d.key}')">
-          <div>
-            <div class="material-name">${entry ? '✓ ' : ''}${pickLang(d.label)} <span class="stage-time" style="font-weight:normal;">${d.time}</span></div>
-            <div class="material-meta">${entry ? (entry.note ? entry.note + ' · ' : '') + 'uploaded ' + time : 'Not uploaded yet'}</div>
-          </div>
-        </div>`;
-    }).join('');
-
     container.innerHTML = `
       <div class="visit-banner" style="margin-bottom:20px;">
-        <div><strong>Upload today's activity photos</strong><br/>${doneCount} of ${DOMAINS.length} activities uploaded today · goes straight to your class's Google Drive — nothing kept on this app's servers.</div>
+        <div><strong>Upload a photo of today's activity</strong><br/>This goes straight to your class's own Google Drive — nothing is kept on this app's servers.</div>
       </div>
 
-      <label class="field-label-admin">Select activity</label>
-      <select id="uploadPhotoActivitySelect" onchange="selectUploadPhotoActivity(this.value)" style="max-width:420px;">
-        <option value="">— Choose today's activity —</option>
-        ${DOMAINS.map(d => `<option value="${d.key}" ${uploadPhotoSelectedActivity===d.key?'selected':''}>${uploaded[d.key] ? '✓ ' : ''}${pickLang(d.label)} (${d.time})</option>`).join('')}
-      </select>
-
-      <div id="uploadPhotoActiveForm" style="margin-top:14px;"></div>
-
-      <h3 class="report-h3" style="margin-top:26px;">Today's upload status</h3>
-      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px 16px;">
-        ${statusRows}
-      </div>
-    `;
-
-    if(uploadPhotoSelectedActivity) renderUploadPhotoActiveForm();
-  }
-
-  function selectUploadPhotoActivity(activityKey){
-    uploadPhotoSelectedActivity = activityKey || null;
-    renderUploadPhotoForm();
-  }
-
-  function renderUploadPhotoActiveForm(){
-    const domain = DOMAINS.find(d => d.key === uploadPhotoSelectedActivity);
-    const wrap = document.getElementById('uploadPhotoActiveForm');
-    if(!domain || !wrap) return;
-    const uploaded = getPhotoUploadsToday();
-    const entry = uploaded[domain.key];
-
-    wrap.innerHTML = `
-      <form onsubmit="return submitActivityPhoto(event, '${domain.key}')" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:420px;">
-        <label class="field-label-admin">Photo — ${pickLang(domain.label)}</label>
-        <input type="file" id="photoFile-${domain.key}" accept="image/jpeg,image/png,image/webp" capture="environment" required />
+      <form id="uploadPhotoForm" onsubmit="return submitActivityPhoto(event)" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:420px;">
+        <label class="field-label-admin">Photo</label>
+        <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" capture="environment" required />
 
         <label class="field-label-admin">Note (optional — becomes part of the filename)</label>
-        <input type="text" id="photoNote-${domain.key}" placeholder="e.g. ${pickLang(domain.label)} activity" value="${entry ? (entry.note || '') : ''}" />
+        <input type="text" id="photoNote" placeholder="e.g. Numeracy sorting activity" />
 
-        <div id="uploadPhotoResult-${domain.key}" style="margin-top:10px;"></div>
-        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">${entry ? 'Replace photo' : 'Upload photo'}</button>
+        <div id="uploadPhotoResult" style="margin-top:10px;"></div>
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">Upload photo</button>
       </form>
     `;
   }
 
-  async function submitActivityPhoto(event, activityKey){
+  async function submitActivityPhoto(event){
     event.preventDefault();
-    const domain = DOMAINS.find(d => d.key === activityKey);
-    const fileInput = document.getElementById('photoFile-' + activityKey);
-    const resultEl = document.getElementById('uploadPhotoResult-' + activityKey);
+    const fileInput = document.getElementById('photoFile');
+    const resultEl = document.getElementById('uploadPhotoResult');
     resultEl.innerHTML = '';
 
     if(!fileInput.files.length){
@@ -730,22 +636,14 @@ function devSkipLogin(){
       return false;
     }
 
-    const note = document.getElementById('photoNote-' + activityKey).value.trim();
-
     const formData = new FormData();
     formData.append('photo', fileInput.files[0]);
-    formData.append('note', note);
-    // activity + activity_label tell the backend which of today's
-    // scheduled activities this belongs to, so it can be routed into
-    // that activity's own subfolder in the class's Google Drive once
-    // that routing is wired up on the backend.
-    formData.append('activity', activityKey);
-    formData.append('activity_label', pickLang(domain.label));
+    formData.append('note', document.getElementById('photoNote').value.trim());
 
     resultEl.innerHTML = `<p class="sub">Uploading…</p>`;
 
     try{
-      const res = await fetch('backend/upload_activity_photo.php' + window.location.search, {
+      const res = await fetch('backend/upload_activity_photo.php', {
         method: 'POST',
         body: formData
       });
@@ -756,10 +654,8 @@ function devSkipLogin(){
         return false;
       }
 
-      const uploaded = getPhotoUploadsToday();
-      uploaded[activityKey] = { note, uploadedAt: Date.now() };
-      savePhotoUploadsToday(uploaded);
-      renderUploadPhotoForm();
+      resultEl.innerHTML = `<div class="au-success">${data.message}</div>`;
+      document.getElementById('uploadPhotoForm').reset();
     }catch(err){
       resultEl.innerHTML = `<div class="au-error">Could not reach the server.</div>`;
     }
@@ -1029,56 +925,19 @@ function devSkipLogin(){
     const body = document.getElementById('week-body');
     body.innerHTML = `
       <div class="value-banner" id="value-banner"></div>
-      <div id="festival-banner"></div>
       <div id="day-summary"></div>
+      <div id="rating-panel-container"></div>
       <div class="domain-grid" id="domain-grid"></div>
     `;
     renderDailyView();
   }
 
   const domainDone = {};   // key: day-domain -> true/false
+  const dayRatings = {};   // key: day-domain -> {studentName: rating}
 
   function renderDailyView(){
     const day = DAYS.find(d => d.key === currentDay);
     document.getElementById('value-banner').innerHTML = `<strong>Value:</strong> ${alwaysEnglish(day.value)} &nbsp;·&nbsp; <strong>Link:</strong> ${alwaysEnglish(day.link)}`;
-
-    // Festival banner — shows above the regular domain cards on
-    // days that have one (see js/weeks/festivals.js), never in
-    // place of them.
-    const festivalKey = 'wk' + currentWeekNum + '-' + currentDay;
-    const festival = (typeof FESTIVALS !== 'undefined') ? FESTIVALS[festivalKey] : undefined;
-    document.getElementById('festival-banner').innerHTML = festival ? `
-      <div class="festival-card">
-        <div class="festival-photo-wrap">
-          <img src="${festival.image}" alt="${festival.title}" class="festival-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-          <div class="festival-photo-fallback" style="display:none;">Add a photo at<br>${festival.image}</div>
-        </div>
-        <div class="festival-body">
-          <div class="festival-tag">Festival</div>
-          <div class="festival-title">${festival.title}</div>
-          <div class="festival-subtitle">${festival.subtitle}</div>
-          <div class="festival-activity">${festival.activity}</div>
-          ${festival.colouringActivity ? '<div id="festival-colouring-mount" class="festival-colouring-mount"></div>' : ''}
-          ${festival.significance ? `
-            <div class="festival-significance">
-              <div class="festival-significance-title">What each part means</div>
-              ${festival.significance.map(s => `
-                <div class="festival-significance-row">
-                  <span class="festival-significance-part">${s.part}</span>
-                  <span class="festival-significance-meaning">${s.meaning}</span>
-                </div>`).join('')}
-            </div>` : ''}
-        </div>
-      </div>` : '';
-
-    // Mount the flag/chakra colouring activity, if this festival has
-    // one — reuses the same colour-fill engine every other week's
-    // colouring activities use, called directly since this isn't
-    // tied to a domain/day lookup like the 8 cards below it.
-    if(festival && festival.colouringActivity && typeof GENERIC_TYPE_RENDERERS !== 'undefined'){
-      const mountEl = document.getElementById('festival-colouring-mount');
-      if(mountEl) GENERIC_TYPE_RENDERERS['colour-fill'](mountEl, function(){}, festival.colouringActivity);
-    }
 
     let doneCount = 0;
     let cardsHtml = '';
@@ -1104,7 +963,7 @@ function devSkipLogin(){
             <span class="stage-tag ${done?'done':''}">${done ? 'Done' : 'Not done'}</span>
           </div>
           <div class="materials-line">Planned activity: ${activity}</div>
-          <div class="competency-tag">Covers: ${competencyFor(dom.key)} <span class="cg-tag">${dom.cg}</span></div>
+          <div class="competency-tag">Covers: ${competencyFor(dom.key)}</div>
           <div class="stage-foot">
             <label class="mark-taught">
               <input type="checkbox" ${done?'checked':''} onchange="toggleDomainDone('${dom.key}', this)" />
@@ -1122,7 +981,7 @@ function devSkipLogin(){
           <span class="stage-tag ${done?'done':''}">${done ? 'Done today' : 'Pending'}</span>
         </div>
         <div class="materials-line">Planned activity: ${activity}</div>
-        <div class="competency-tag">Covers: ${competencyFor(dom.key)} <span class="cg-tag">${dom.cg}</span></div>
+        <div class="competency-tag">Covers: ${competencyFor(dom.key)}</div>
         <div class="h5p-block">
           <div class="h5p-frame" id="${mountId(key)}">${done ? '<div class="h5p-done-msg">✓ Practised — nice work!</div>' : ''}</div>
         </div>
@@ -1131,6 +990,7 @@ function devSkipLogin(){
             <input type="checkbox" ${done?'checked':''} onchange="toggleDomainDone('${dom.key}', this)" />
             Mark as done today
           </label>
+          <button class="btn-rate-open small" onclick="openRatingPanel('${dom.key}')">Enter proficiency</button>
         </div>
       </div>`;
     });
@@ -1197,46 +1057,92 @@ function devSkipLogin(){
     }
   }
 
+  function openRatingPanel(domainKey){
+    const key = currentDay + '-' + domainKey;
+    const existing = dayRatings[key] || {};
+    const domainLabel = DOMAINS.find(d=>d.key===domainKey).label;
+    const dayLabel = DAYS.find(d=>d.key===currentDay).label;
+    const competencyText = competencyFor(domainKey);
+
+    let html = `<div class="rating-panel">
+      <p class="rp-title">Enter proficiency — ${domainLabel}, ${dayLabel}</p>
+      <p class="rp-competency"><strong>Covers:</strong> ${competencyText}</p>`;
+    SAMPLE_STUDENTS.forEach(name => {
+      const current = existing[name] || '';
+      html += `<div class="rp-row"><span>${name}</span>
+        <select id="rate-${name.replace(/\s/g,'_')}">
+          <option value="">— Select —</option>
+          ${RATING_LEVELS.map(l => `<option value="${l}" ${current===l?'selected':''}>${l}</option>`).join('')}
+        </select></div>`;
+    });
+    html += `<div class="rp-actions">
+        <button class="btn-save" onclick="saveRatings('${domainKey}')">Save ratings</button>
+        <button class="btn-cancel" onclick="closeRatingPanel()">Cancel</button>
+      </div></div>`;
+    document.getElementById('rating-panel-container').innerHTML = html;
+    document.getElementById('rating-panel-container').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function saveRatings(domainKey){
+    const key = currentDay + '-' + domainKey;
+    const ratings = {};
+    SAMPLE_STUDENTS.forEach(name => {
+      const sel = document.getElementById(`rate-${name.replace(/\s/g,'_')}`);
+      if(sel && sel.value) ratings[name] = sel.value;
+    });
+    dayRatings[key] = ratings;
+    closeRatingPanel();
+  }
+
+  function closeRatingPanel(){
+    document.getElementById('rating-panel-container').innerHTML = '';
+  }
+
 /* =========================================================
-   DEV MODE — the actual trigger (moved here deliberately).
-   Runs last, after every let/const in this file is initialized —
-   see the note near devSkipLogin() above for why this had to move.
+   SESSION RESUME — on page load, check whether there's already a
+   real logged-in session (e.g. after clicking "Preview as Teacher"
+   from Super Admin, or simply reloading this page while logged in)
+   and skip straight to the dashboard instead of showing the login
+   form again. If not logged in, the login form just stays visible,
+   same as before this existed.
 
-   Also activates on the GitHub Pages demo URL
-   (bhavyata-foundation.github.io) — deliberately, for showing
-   officials the frontend without needing real credentials.
-   This is SAFE specifically because GitHub Pages serves static
-   files only (no PHP, no database) — there is no real student
-   or teacher data behind this URL for a bypass to expose. This
-   check must NEVER be widened to include the real live domain
-   (bhavyatafoundation.com), since that one IS connected to a
-   real database.
+   Runs last, after every function/variable it calls is already
+   defined — same ordering reason the old dev-bypass trigger used
+   to need this position.
    ========================================================= */
-(function autoDevBypassOnLoad(){
-  const DEMO_HOSTNAMES = ['localhost', '127.0.0.1', 'bhavyata-foundation.github.io'];
-  const isLocal = DEMO_HOSTNAMES.includes(window.location.hostname);
-  const params = new URLSearchParams(window.location.search);
-
-  if(isLocal){
-    const wrap = document.getElementById('devSkipLoginWrap');
-    if(wrap) wrap.classList.remove('hidden');
-  }
-
-  if(!isLocal || params.has('no_dev')) return;
-
-  const role = params.get('dev_role') || 'teacher';
-  selectedRole = role;
-
-  // Without this, window.location.search stays genuinely empty when
-  // someone visits index.html with no query string at all — meaning
-  // any fetch call that forwards window.location.search (like the
-  // School Events calendar) never actually sends ?dev_role=teacher
-  // to the backend, even though the dashboard itself defaults to
-  // teacher correctly. This keeps the visible URL honest about which
-  // role is actually active, fixing every downstream fetch at once.
-  if(!params.has('dev_role')){
-    history.replaceState(null, '', window.location.pathname + '?dev_role=' + role);
-  }
-
-  devSkipLogin();
+(function checkExistingSession(){
+  fetch('backend/session_check.php')
+    .then(r => r.json())
+    .then(data => {
+      if(data.status !== 'logged_in' || data.role !== 'teacher') return;
+      selectedRole = 'teacher';
+      document.getElementById('view-login').classList.add('hidden');
+      enterTeacherFlow();
+      renderPreviewBanner(data.is_previewing);
+    })
+    .catch(() => { /* not logged in, or server unreachable — just show the login form */ });
 })();
+
+// -------------------------------------------------------------------------
+// PREVIEW BANNER — shown only when a superadmin is currently previewing
+// the teacher role (see backend/preview_as.php). Lets them get back to
+// their real superadmin session with one click, no re-login needed.
+// -------------------------------------------------------------------------
+function renderPreviewBanner(isPreviewing){
+  const el = document.getElementById('preview-banner');
+  if(!el) return;
+  el.innerHTML = isPreviewing ? `
+    <div class="preview-banner">
+      <span>👁️ Previewing as this role</span>
+      <button onclick="returnToSuperAdmin()">Return to Super Admin</button>
+    </div>` : '';
+}
+
+function returnToSuperAdmin(){
+  fetch('backend/return_to_admin.php', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if(data.status === 'success') window.location.href = 'superadmin.html';
+    })
+    .catch(() => {});
+}

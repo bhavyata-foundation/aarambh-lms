@@ -29,9 +29,7 @@ ini_set('display_errors', '0');
 session_start();
 header('Content-Type: application/json');
 
-$isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80', '127.0.0.1:80']);
-$devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
-$effectiveRole = $_SESSION['role'] ?? $devRole;
+$effectiveRole = $_SESSION['role'] ?? null;
 
 if (!in_array($effectiveRole, ['supervisor', 'superadmin'], true)) {
     http_response_code(401);

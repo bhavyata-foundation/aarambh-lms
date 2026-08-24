@@ -5,21 +5,24 @@
 // created through the "Add User" screen inside superadmin.html instead,
 // once you're logged in.
 //
-// Note: `users` no longer has a school_id column — that link now lives
-// on `classes` (for teachers) and `schools` (for supervisors), so this
-// file is simpler than the earlier version.
+// Note: the real `users` table also has contact_no, blood_group,
+// leaves_pending, status, and created_at columns beyond the 4 the
+// original version of this file assumed — all filled in below with
+// safe defaults (NULL, NULL, 0, 'active', NOW()), the same values
+// confirmed to work via a manual test insert.
 //
 // HOW TO USE:
-// 1. Fill in the 4 values below.
+// 1. The 4 values below are already filled in with your real login.
+//    Change them first if you'd rather use a different email/password.
 // 2. Visit this file in your browser.
 // 3. Check for the green success message.
 // 4. DELETE THIS FILE immediately after — same rule as every other
 //    one-time tool in this project.
 // =========================================================================
 
-$new_name     = 'Admin User';
-$new_email    = 'admin@bhavyata.org';
-$new_password = 'ChangeThisPassword123';
+$new_name     = 'Super Admin';
+$new_email    = 'admin@bhavyatafoundation.com';
+$new_password = 'Bhavyata413@1';
 $new_role     = 'superadmin'; // one of: teacher, supervisor, superadmin, parent
 
 // =========================================================================
@@ -55,7 +58,7 @@ $check->close();
 
 $hash = password_hash($new_password, PASSWORD_BCRYPT);
 
-$stmt = $conn->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
+$stmt = $conn->prepare('INSERT INTO users (name, email, password_hash, role, contact_no, blood_group, leaves_pending, status, created_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, \'active\', NOW())');
 $stmt->bind_param('ssss', $new_name, $new_email, $hash, $new_role);
 
 if ($stmt->execute()) {

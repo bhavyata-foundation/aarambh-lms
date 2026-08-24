@@ -8,6 +8,8 @@
 </head>
 <body>
 
+<div id="preview-banner"></div>
+
 <div id="google_translate_element" style="position:fixed; top:10px; right:10px; z-index:9999; background:#fff; border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:12px;"></div>
 
 <div id="view-login">
@@ -25,19 +27,16 @@
         <div class="role-btn" data-role="parent" onclick="selectRole('parent', this)"><span class="icon">👪</span><span>Parent</span></div>
         <div class="role-btn" data-role="superadmin" onclick="selectRole('superadmin', this)"><span class="icon">🛡️</span><span>Super Admin</span></div>
       </div>
-      <label>Email address</label>
-      <input type="email" id="loginEmail" placeholder="name@bhavyata.org" />
-      <label>Password</label>
-      <input type="password" id="loginPassword" placeholder="Enter password" />
-      <div id="loginError" class="login-error hidden"></div>
-      <button class="btn-primary" id="loginBtn" onclick="login()">Sign in</button>
+      <form id="loginForm" onsubmit="return handleLoginSubmit(event)" autocomplete="on">
+        <label>Email address</label>
+        <input type="email" id="loginEmail" name="email" placeholder="name@bhavyata.org" autocomplete="username" required />
+        <label>Password</label>
+        <input type="password" id="loginPassword" name="password" placeholder="Enter password" autocomplete="current-password" required />
+        <div id="loginError" class="login-error hidden"></div>
+        <button type="submit" class="btn-primary" id="loginBtn">Sign in</button>
+      </form>
       <div class="forgot">Forgot password?</div>
       <div class="login-footer">🛟 <span>New here? Contact your school admin for access.</span></div>
-      <div id="devSkipLoginWrap" class="hidden" style="text-align:center; margin-top:10px;">
-        <a href="#" onclick="devSkipLogin(); return false;" style="font-size:12px; color:var(--text-muted); text-decoration:underline;">
-          Skip login (dev mode)
-        </a>
-      </div>
     </div>
   </div>
 </div>
@@ -132,7 +131,6 @@
      below adds its own content into. Add a new week's <script> tag
      here, after weeks-core.js, once its file exists. -->
 <script src="js/weeks/weeks-core.js" defer></script>
-<script src="js/weeks/festivals.js" defer></script>
 <script src="js/weeks/week1.js" defer></script>
 <script src="js/weeks/week2.js" defer></script>
 <script src="js/weeks/week3.js" defer></script>
@@ -142,7 +140,6 @@
 <script src="js/weeks/week7.js" defer></script>
 <script src="js/weeks/week8.js" defer></script>
 <script src="js/weeks/week9.js" defer></script>
-<script src="js/weeks/week11.js" defer></script>
 <script src="js/events-calendar.js" defer></script>
 <script src="js/main.js" defer></script>
 <!-- Must load AFTER main.js — see activity-renderers.js for why. -->
