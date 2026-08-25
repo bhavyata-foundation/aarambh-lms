@@ -9,18 +9,31 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 ini_set('display_errors', '0');
 
 // =========================================================================
-// GET MATERIALS — returns the logged-in teacher's own materials list,
-// newest first.
+// ADD MATERIAL — a teacher logs an item that's actually arrived. Adding
+// the row IS the received-status record; there's no separate step.
 // =========================================================================
 
 session_start();
 header('Content-Type: application/json');
 
-$effectiveRole = $_SESSION['role'] ?? null;
+$isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80', '127.0.0.1:80']);
+$devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
+$effectiveRole = $_SESSION['role'] ?? $devRole;
 
 if ($effectiveRole !== 'teacher') {
     http_response_code(401);
     echo json_encode(['status' => 'error', 'message' => 'Not authorized.']);
+    exit;
+}
+
+$input = json_decode(file_get_contents('php://input'), true);
+$itemName = trim($input['item_name'] ?? '');
+$quantity = trim($input['quantity'] ?? '');
+$receivedDate = $input['received_date'] ?? '';
+
+if ($itemName === '' || $receivedDate === '') {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Item name and received date are both required.']);
     exit;
 }
 
@@ -33,30 +46,38 @@ if (isset($_SESSION['user_id'])) {
     $lookup = $conn->query("SELECT id FROM users WHERE role = 'teacher' ORDER BY id LIMIT 1");
     $row = $lookup ? $lookup->fetch_assoc() : null;
     if (!$row) {
-        echo json_encode(['status' => 'success', 'materials' => []]);
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'No teacher account exists yet to attribute this to.']);
         exit;
     }
     $teacherId = $row['id'];
 }
 
-$stmt = $conn->prepare("
-    SELECT m.id, m.item_name, m.quantity, m.received_date, m.distributed
-    FROM materials m
-    JOIN classes c ON c.id = m.class_id
-    WHERE c.teacher_user_id = ?
-    ORDER BY m.received_date DESC, m.id DESC
-");
-$stmt->bind_param('i', $teacherId);
-$stmt->execute();
-$result = $stmt->get_result();
+$classStmt = $conn->prepare("SELECT id FROM classes WHERE teacher_user_id = ? LIMIT 1");
+$classStmt->bind_param('i', $teacherId);
+$classStmt->execute();
+$classRow = $classStmt->get_result()->fetch_assoc();
+$classStmt->close();
 
-$materials = [];
-while ($row = $result->fetch_assoc()) {
-    $row['distributed'] = (bool) $row['distributed'];
-    $materials[] = $row;
+if (!$classRow) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Your account is not linked to a class yet — ask your admin to link it.']);
+    exit;
+}
+
+$stmt = $conn->prepare("
+    INSERT INTO materials (class_id, item_name, quantity, received_date, added_by)
+    VALUES (?, ?, ?, ?, ?)
+");
+$stmt->bind_param('isssi', $classRow['id'], $itemName, $quantity, $receivedDate, $teacherId);
+
+if ($stmt->execute()) {
+    echo json_encode(['status' => 'success', 'material_id' => $conn->insert_id]);
+} else {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => $stmt->error]);
 }
 
 $stmt->close();
 $conn->close();
-echo json_encode(['status' => 'success', 'materials' => $materials]);
 ?>

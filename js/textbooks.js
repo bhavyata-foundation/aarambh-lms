@@ -1,422 +1,189 @@
-// =========================================================================
-// SESSION GUARD — same check every other teacher page already has. This
-// page previously had none at all, meaning it could be reached directly
-// by URL with no login whatsoever — fixed here alongside the sidebar
-// consistency fix, since both touch the same page shell.
-// =========================================================================
-fetch('backend/session_check.php' + window.location.search)
-  .then(r => r.json())
-  .then(data => {
-    if(data.status !== 'logged_in' || data.role !== 'teacher'){
-      window.location.href = 'index.html';
-      return;
-    }
-    renderPreviewBanner(data.is_previewing);
-  })
-  .catch(() => { window.location.href = 'index.html'; });
+/* =========================================================================
+   PARENT COMMITTEE — shared data model, scoring, and storage used by both
+   parent.js (the application form) and main.js (the teacher's view).
 
-function renderPreviewBanner(isPreviewing){
-  const el = document.getElementById('preview-banner');
-  if(!el) return;
-  el.innerHTML = isPreviewing ? `
-    <div class="preview-banner">
-      <span>👁️ Previewing as this role</span>
-      <button onclick="returnToSuperAdmin()">Return to Super Admin</button>
-    </div>` : '';
-}
+   FRONTEND-ONLY FOR NOW: uses localStorage as a stand-in for a real
+   backend table, specifically so the parent-side form and the
+   teacher-side list genuinely reflect the same data right now, not just
+   in theory. Swapping this for real backend/get_volunteer_applications.php
+   and add_volunteer_application.php calls later is a drop-in replacement
+   for the load()/save() functions below — nothing else needs to change.
+   ========================================================================= */
 
-function returnToSuperAdmin(){
-  fetch('backend/return_to_admin.php', { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if(data.status === 'success') window.location.href = 'superadmin.html';
-    })
-    .catch(() => {});
-}
+const EDUCATION_LEVELS = [
+  {value:'below10th',    label:'Below 10th',                      points:0.5},
+  {value:'tenth12th',    label:'10th or 12th pass',                points:1.0},
+  {value:'graduate',     label:'Graduate',                         points:1.5},
+  {value:'postgraduate', label:'Postgraduate',                     points:1.8},
+  {value:'professional', label:'Professional (doctor, engineer, etc.)', points:2.0}
+];
 
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarBackdrop').classList.toggle('show');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarBackdrop').classList.remove('show');
-}
+const ACTIVITY_OPTIONS = [
+  {value:'taught',    label:'Taught or tutored children'},
+  {value:'ngo',       label:'Volunteered with an NGO or community group'},
+  {value:'organized', label:'Organized or run a school or community event'},
+  {value:'none',      label:'None of these yet'}
+];
 
-function toggleUserMenu(){
-  document.getElementById('userDropdown').classList.toggle('hidden');
-}
-function closeUserMenu(){
-  document.getElementById('userDropdown').classList.add('hidden');
-}
-document.addEventListener('click', function(e){
-  const menu = document.getElementById('userMenu');
-  if(menu && !menu.contains(e.target)) closeUserMenu();
-});
+const INTEREST_OPTIONS = [
+  {value:'storytelling', label:'Storytelling'},
+  {value:'art',          label:'Art and craft'},
+  {value:'health',       label:'Health talks'},
+  {value:'music',        label:'Music'},
+  {value:'outdoor',      label:'Outdoor play'}
+];
 
-function logout(){
-  fetch('backend/logout.php').catch(() => {});
-  window.location.href = 'index.html';
-}
+const DAY_OPTIONS = [
+  {value:'mon', label:'Mon'}, {value:'tue', label:'Tue'}, {value:'wed', label:'Wed'},
+  {value:'thu', label:'Thu'}, {value:'fri', label:'Fri'}
+];
 
-// ===== Textbook data =====
-const TEXTBOOKS = {
-  'jrkg': [
-    { id:'vaani-jr-alphabets',   title:'Vaani — Alphabets',        subject:'Language', color:'#1d9e75', file:'assets/textbooks/vaani-jr-alphabets.pdf' },
-    { id:'vaani-jr-phonics',   title:'Vaani — Phonics & Alphabets',        subject:'Language', color:'#2C8FC4', file:'assets/textbooks/vaani-jr-phonics.pdf' },
-    { id:'khelika-jrkg', title:'Khelika Activity Book', subject:'Activity', color:'#EE8F35', file:'assets/textbooks/khelika-activity-jrkg.pdf' }
-  ],
-  'srkg': [
-    { id:'sopanika-srkg',       title:'Sopanika — All Activity', subject:'Activity', color:'#1d9e75', file:'assets/textbooks/sopanika-activity-srkg.pdf' },
-    { id:'uvach-alphabets-srkg', title:'Uvach — Alphabets',      subject:'Language', color:'#EE8F35', file:'assets/textbooks/uvach-alphabets-srkg.pdf' },
-    { id:'uvach-phonics-srkg',   title:'Uvach — Phonics',        subject:'Language', color:'#2C8FC4', file:'assets/textbooks/uvach-phonics-srkg.pdf' }
-  ]
+// Which activities plausibly demonstrate which interests, for the
+// "demonstrated activity match" score component.
+const ACTIVITY_INTEREST_MAP = {
+  taught:    ['storytelling', 'music'],
+  organized: ['art', 'health'],
+  ngo:       ['health', 'outdoor']
 };
 
-const DIVISION_LABELS = { jrkg:'Jr KG', srkg:'Sr KG' };
-let activeDivision = 'jrkg';
-let currentBook = null;
-let currentPageIdx = 0;
-let currentNumPages = 1;
-let isFlipping = false;
-let completedPagesForCurrentBook = [];
+// Loose occupation-to-interest keyword matching, for the "occupation to
+// need match" score component. Deliberately simple substring matching —
+// a real backend version could use an LLM call here instead, but the
+// score should stay just as explainable either way.
+const OCCUPATION_INTEREST_KEYWORDS = {
+  nurse: ['health'], doctor: ['health'], health: ['health'],
+  artist: ['art'], craft: ['art'], design: ['art'],
+  teacher: ['storytelling'], tutor: ['storytelling'], librarian: ['storytelling'],
+  music: ['music'], singer: ['music'], musician: ['music'],
+  coach: ['outdoor'], sports: ['outdoor'], trainer: ['outdoor']
+};
 
-const pdfCache = {};
-const pageImageCache = {};
+/* -------------------------------------------------------------------------
+   SCORING — four components, each capped, always summing to a score out
+   of 10. Every component is stored alongside the total so the UI can show
+   *why* someone scored what they did, not just the number.
+   ------------------------------------------------------------------------- */
+function calculateSuitabilityScore(app, existingCommitteeForClass){
+  // 1. Education (max 2)
+  const eduMatch = EDUCATION_LEVELS.find(e => e.value === app.education);
+  const educationScore = eduMatch ? eduMatch.points : 0;
 
-// ===== PDF loading & rendering =====
-async function loadPdf(bookId){
-  if(pdfCache[bookId]) return pdfCache[bookId];
-  const book = findBook(bookId);
-  const pdf = await pdfjsLib.getDocument(book.file).promise;
-  pdfCache[bookId] = pdf;
-  return pdf;
-}
-
-async function renderPageToImage(bookId, pageNum){
-  const cacheKey = bookId + '-' + pageNum;
-  if(pageImageCache[cacheKey]) return pageImageCache[cacheKey];
-  const pdf = await loadPdf(bookId);
-  const page = await pdf.getPage(pageNum);
-  const viewport = page.getViewport({ scale: 1.5 });
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const ctx = canvas.getContext('2d');
-  await page.render({ canvasContext: ctx, viewport }).promise;
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  pageImageCache[cacheKey] = dataUrl;
-  return dataUrl;
-}
-
-function prefetchNeighbours(bookId, pageIdx, numPages){
-  if(pageIdx + 1 < numPages) renderPageToImage(bookId, pageIdx + 2).catch(()=>{});
-  if(pageIdx - 1 >= 0) renderPageToImage(bookId, pageIdx).catch(()=>{});
-}
-
-// ===== Flip sound (synthesized — no audio file needed) =====
-let flipAudioCtx = null;
-let flipSoundEnabled = true;
-function playFlipSound(){
-  if(!flipSoundEnabled) return;
-  try{
-    if(!flipAudioCtx) flipAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const ctx = flipAudioCtx;
-    if(ctx.state === 'suspended') ctx.resume();
-    const now = ctx.currentTime;
-
-    // --- Part 1: the swish — smoothed ("pinkish") noise instead of raw white noise,
-    // which is what made the old version sound harsh/staticky rather than soft.
-    const swishDuration = 0.26;
-    const bufferSize = Math.floor(ctx.sampleRate * swishDuration);
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let prev = 0;
-    for(let i = 0; i < bufferSize; i++){
-      const white = Math.random() * 2 - 1;
-      // Simple leaky-integrator smoothing turns sharp white noise into a
-      // softer, breathier texture — closer to fabric/paper than radio static.
-      prev = prev * 0.92 + white * 0.08;
-      data[i] = prev * (1 - i / bufferSize);
+  // 2. Demonstrated activity match (max 4) — base credit for having done
+  // anything at all, plus a bonus when a checked activity plausibly
+  // demonstrates one of their stated interests.
+  const realActivities = (app.activities || []).filter(a => a !== 'none');
+  let activityScore = Math.min(1, realActivities.length * 0.5);
+  realActivities.forEach(act => {
+    const mapped = ACTIVITY_INTEREST_MAP[act] || [];
+    if(mapped.some(i => (app.interests || []).includes(i))){
+      activityScore += 1.5;
     }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
+  });
+  activityScore = Math.min(4, activityScore);
 
-    const bandpass = ctx.createBiquadFilter();
-    bandpass.type = 'bandpass';
-    bandpass.frequency.setValueAtTime(900, now);
-    bandpass.frequency.linearRampToValueAtTime(1400, now + swishDuration * 0.5);
-    bandpass.frequency.linearRampToValueAtTime(600, now + swishDuration);
-    bandpass.Q.value = 0.4;
+  // 3. Availability fills a gap (max 2) — compares against days already
+  // covered by this class's EXISTING selected committee members.
+  const coveredDays = new Set();
+  (existingCommitteeForClass || []).forEach(member => {
+    (member.availableDays || []).forEach(d => coveredDays.add(d));
+  });
+  const appDays = app.availableDays || [];
+  const newDaysCovered = appDays.filter(d => !coveredDays.has(d)).length;
+  const availabilityScore = appDays.length === 0 ? 0
+    : Math.min(2, (newDaysCovered / appDays.length) * 2);
 
-    const swishGain = ctx.createGain();
-    swishGain.gain.setValueAtTime(0, now);
-    swishGain.gain.linearRampToValueAtTime(0.11, now + 0.06);
-    swishGain.gain.exponentialRampToValueAtTime(0.001, now + swishDuration);
-
-    noise.connect(bandpass).connect(swishGain).connect(ctx.destination);
-    noise.start(now);
-    noise.stop(now + swishDuration + 0.02);
-
-    // --- Part 2: a soft landing "thump" as the page settles, like a fingertip
-    // pressing a page flat — gives the ear a sense of completion instead of
-    // the sound just trailing off into nothing.
-    const thumpStart = now + swishDuration * 0.75;
-    const thump = ctx.createOscillator();
-    thump.type = 'sine';
-    thump.frequency.setValueAtTime(160, thumpStart);
-    thump.frequency.exponentialRampToValueAtTime(70, thumpStart + 0.09);
-
-    const thumpGain = ctx.createGain();
-    thumpGain.gain.setValueAtTime(0, thumpStart);
-    thumpGain.gain.linearRampToValueAtTime(0.05, thumpStart + 0.015);
-    thumpGain.gain.exponentialRampToValueAtTime(0.001, thumpStart + 0.1);
-
-    thump.connect(thumpGain).connect(ctx.destination);
-    thump.start(thumpStart);
-    thump.stop(thumpStart + 0.12);
-  } catch(e){
-    // Web Audio unsupported or blocked — flip just proceeds silently.
-  }
-}
-
-// ===== Division tabs & grid =====
-function switchTextbookDivision(div){
-  activeDivision = div;
-  renderDivisionTabs();
-  renderBookGrid();
-}
-
-function renderDivisionTabs(){
-  const el = document.getElementById('division-tabs');
-  if(!el) return;
-  el.innerHTML = Object.keys(DIVISION_LABELS).map(d => `
-    <button class="division-tab ${d===activeDivision?'active':''}" onclick="switchTextbookDivision('${d}')">${DIVISION_LABELS[d]}</button>
-  `).join('');
-}
-
-function renderBookGrid(){
-  const el = document.getElementById('textbook-body');
-  if(!el) return;
-  const books = TEXTBOOKS[activeDivision] || [];
-  el.innerHTML = `
-    <h1>${DIVISION_LABELS[activeDivision]} Textbooks</h1>
-    <p class="sub">${books.length} book${books.length===1?'':'s'} available</p>
-    <div class="book-grid">
-      ${books.map(b => `
-        <div class="book-card" onclick="openBookReader('${b.id}')">
-          <div class="book-cover" id="book-cover-${b.id}" style="background-color:${b.color};">
-            <span class="book-cover-emoji">📖</span>
-          </div>
-          <div class="book-info">
-            <div class="book-title">${b.title}</div>
-            <div class="book-subject">${b.subject}</div>
-            <div class="book-pagecount">Tap to open</div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-
-  books.forEach(b => {
-    renderPageToImage(b.id, 1).then(url => {
-      const coverEl = document.getElementById(`book-cover-${b.id}`);
-      if(coverEl){
-        coverEl.style.backgroundImage = `url(${url})`;
-        coverEl.querySelector('.book-cover-emoji').style.display = 'none';
+  // 4. Occupation to need match (max 2)
+  const occLower = (app.occupation || '').toLowerCase().trim();
+  let occupationScore = occLower ? 0.5 : 0; // small baseline for stating any occupation at all
+  Object.keys(OCCUPATION_INTEREST_KEYWORDS).forEach(keyword => {
+    if(occLower.includes(keyword)){
+      const mapped = OCCUPATION_INTEREST_KEYWORDS[keyword];
+      if(mapped.some(i => (app.interests || []).includes(i))){
+        occupationScore = 2;
       }
-    }).catch(() => {});
-  });
-}
-
-function findBook(id){
-  for(const div in TEXTBOOKS){
-    const found = TEXTBOOKS[div].find(b => b.id === id);
-    if(found) return found;
-  }
-  return null;
-}
-
-// ===== Progress tracking — localStorage for now, not the database.
-// Same reasoning as "My Attendance": this is personal to the teacher
-// using this specific browser, not something another role needs to
-// see yet. Keyed per book, so each book tracks its own bookmark and
-// completed pages independently. =====
-function getBookProgress(bookId){
-  try{
-    const raw = localStorage.getItem('textbookProgress_' + bookId);
-    return raw ? JSON.parse(raw) : { lastViewedPage: 1, completedPages: [] };
-  }catch(e){
-    return { lastViewedPage: 1, completedPages: [] };
-  }
-}
-
-function saveBookProgress(bookId, progress){
-  try{
-    localStorage.setItem('textbookProgress_' + bookId, JSON.stringify(progress));
-  }catch(e){ /* localStorage unavailable — progress just won't persist this session */ }
-}
-
-// ===== Reader overlay =====
-async function openBookReader(bookId){
-  currentBook = findBook(bookId);
-  if(!currentBook) return;
-  currentPageIdx = 0;
-  document.getElementById('book-reader-overlay').classList.remove('hidden');
-  document.getElementById('page-complete-toggle').classList.remove('hidden');
-  document.getElementById('reader-title').textContent = currentBook.title;
-  document.getElementById('reader-page-count').textContent = 'Loading…';
-  showStatus('Loading book…');
-
-  try{
-    const pdf = await loadPdf(bookId);
-    currentNumPages = pdf.numPages;
-
-    // Resume from wherever this teacher last left off, rather than
-    // always starting at page 1 — the same behaviour as a phone's
-    // reading apps.
-    const progress = getBookProgress(bookId);
-    const resumePage = Math.min(Math.max(progress.lastViewedPage || 1, 1), currentNumPages);
-    completedPagesForCurrentBook = progress.completedPages || [];
-
-    currentPageIdx = resumePage - 1;
-    const url = await renderPageToImage(bookId, resumePage);
-    hideStatus();
-    document.getElementById('page-base-img').src = url;
-    document.getElementById('page-leaf-img').src = url;
-    resetLeaf();
-    updateReaderChrome();
-    prefetchNeighbours(bookId, currentPageIdx, currentNumPages);
-    saveBookProgress(bookId, { lastViewedPage: resumePage, completedPages: completedPagesForCurrentBook });
-  } catch(err){
-    showStatus(`Couldn't load this PDF. Check that <code>${currentBook.file}</code> exists in your assets folder.`);
-    document.getElementById('reader-page-count').textContent = '';
-  }
-}
-
-function closeBookReader(){
-  if(document.fullscreenElement) document.exitFullscreen();
-  document.getElementById('book-reader-overlay').classList.add('hidden');
-  document.getElementById('page-complete-toggle').classList.add('hidden');
-  currentBook = null;
-}
-
-function showStatus(html){
-  const el = document.getElementById('page-status');
-  el.innerHTML = html;
-  el.classList.remove('hidden');
-}
-function hideStatus(){
-  document.getElementById('page-status').classList.add('hidden');
-}
-
-function resetLeaf(){
-  const leaf = document.getElementById('page-leaf');
-  leaf.classList.remove('flip-fwd', 'flip-back');
-  leaf.style.transform = 'rotateY(0deg)';
-}
-
-function updateReaderChrome(){
-  const pageNum = currentPageIdx + 1;
-  const isDone = completedPagesForCurrentBook.includes(pageNum);
-  document.getElementById('reader-page-count').innerHTML =
-    `Page ${pageNum} of ${currentNumPages} · ${completedPagesForCurrentBook.length} page${completedPagesForCurrentBook.length===1?'':'s'} completed`;
-  document.getElementById('reader-prev').disabled = currentPageIdx === 0;
-  document.getElementById('reader-next').disabled = currentPageIdx === currentNumPages - 1;
-
-  const toggleEl = document.getElementById('page-complete-toggle');
-  if(toggleEl){
-    toggleEl.classList.toggle('is-done', isDone);
-    toggleEl.querySelector('.pct-label').textContent = isDone ? 'Marked as completed' : 'Mark this page as completed';
-  }
-}
-
-function saveProgress(payload){
-  if(!currentBook) return;
-  const progress = getBookProgress(currentBook.id);
-  if(payload.last_viewed_page !== undefined) progress.lastViewedPage = payload.last_viewed_page;
-  progress.completedPages = completedPagesForCurrentBook;
-  saveBookProgress(currentBook.id, progress);
-}
-
-function toggleCurrentPageComplete(){
-  const pageNum = currentPageIdx + 1;
-  if(completedPagesForCurrentBook.includes(pageNum)){
-    completedPagesForCurrentBook = completedPagesForCurrentBook.filter(p => p !== pageNum);
-  } else {
-    completedPagesForCurrentBook.push(pageNum);
-  }
-  updateReaderChrome();
-  saveProgress({});
-}
-
-// ===== The actual page-turn: leaf (current page) rotates away on top of the
-// base layer (which already holds the destination page underneath) =====
-async function flipPage(direction){
-  if(isFlipping || !currentBook) return;
-  const nextIdx = currentPageIdx + direction;
-  if(nextIdx < 0 || nextIdx >= currentNumPages) return;
-
-  isFlipping = true;
-  playFlipSound();
-
-  const leaf = document.getElementById('page-leaf');
-  const baseImg = document.getElementById('page-base-img');
-
-  let destUrl;
-  try{
-    destUrl = await renderPageToImage(currentBook.id, nextIdx + 1);
-  } catch(e){
-    isFlipping = false;
-    return;
-  }
-
-  baseImg.src = destUrl;
-  leaf.style.transformOrigin = direction > 0 ? 'left center' : 'right center';
-  resetLeaf();
-
-  requestAnimationFrame(() => {
-    leaf.classList.add(direction > 0 ? 'flip-fwd' : 'flip-back');
+    }
   });
 
-  setTimeout(() => {
-    currentPageIdx = nextIdx;
-    document.getElementById('page-leaf-img').src = destUrl;
-    resetLeaf();
-    updateReaderChrome();
-    prefetchNeighbours(currentBook.id, currentPageIdx, currentNumPages);
-    saveProgress({ last_viewed_page: currentPageIdx + 1 });
-    isFlipping = false;
-  }, 620);
+  const total = educationScore + activityScore + availabilityScore + occupationScore;
+
+  return {
+    total: Math.round(total * 10) / 10,
+    breakdown: {
+      education:    { score: Math.round(educationScore * 10) / 10, max: 2 },
+      activity:     { score: Math.round(activityScore * 10) / 10, max: 4 },
+      availability: { score: Math.round(availabilityScore * 10) / 10, max: 2 },
+      occupation:   { score: Math.round(occupationScore * 10) / 10, max: 2 }
+    }
+  };
 }
 
-function toggleFlipSound(){
-  flipSoundEnabled = !flipSoundEnabled;
-  const btn = document.getElementById('soundToggleBtn');
-  if(btn) btn.textContent = flipSoundEnabled ? '🔊' : '🔇';
+/* -------------------------------------------------------------------------
+   STORAGE — localStorage-backed for now (see file header). Seed data
+   ships with a few realistic applications so the teacher view isn't
+   empty on first load.
+   ------------------------------------------------------------------------- */
+const PARENT_COMMITTEE_STORAGE_KEY = 'parentCommitteeApplications_v1';
+
+function seedParentCommitteeApplications(){
+  return [
+    {
+      id: 'seed-1',
+      parentName: 'Sunita Rao',
+      childName: 'Aarav Rao',
+      school: 'Triveni Sangam Municipal School',
+      className: 'Jr KG',
+      occupation: 'Nurse',
+      education: 'postgraduate',
+      activities: ['taught', 'organized'],
+      availableDays: ['tue', 'thu'],
+      interests: ['storytelling', 'health'],
+      notes: '',
+      status: 'selected',
+      submittedDate: '2026-08-05'
+    },
+    {
+      id: 'seed-2',
+      parentName: 'Farah Sheikh',
+      childName: 'Zara Sheikh',
+      school: 'Triveni Sangam Municipal School',
+      className: 'Jr KG',
+      occupation: 'Artist',
+      education: 'graduate',
+      activities: ['none'],
+      availableDays: ['mon', 'wed', 'fri'],
+      interests: ['art', 'music'],
+      notes: '',
+      status: 'applied',
+      submittedDate: '2026-08-12'
+    }
+  ];
 }
 
-// ===== Fullscreen =====
-function toggleFullscreen(){
-  const overlay = document.getElementById('book-reader-overlay');
-  if(!document.fullscreenElement){
-    overlay.requestFullscreen().catch(() => {});
-  } else {
-    document.exitFullscreen();
-  }
+function loadParentCommitteeApplications(){
+  try{
+    const raw = localStorage.getItem(PARENT_COMMITTEE_STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){ /* fall through to reseed */ }
+  const seeded = seedParentCommitteeApplications();
+  saveParentCommitteeApplications(seeded);
+  return seeded;
 }
-document.addEventListener('fullscreenchange', () => {
-  const btn = document.getElementById('fullscreenBtn');
-  if(btn) btn.textContent = document.fullscreenElement ? '⤢' : '⛶';
-});
 
-document.addEventListener('keydown', (e) => {
-  const overlay = document.getElementById('book-reader-overlay');
-  if(!overlay || overlay.classList.contains('hidden')) return;
-  if(e.key === 'ArrowRight') flipPage(1);
-  if(e.key === 'ArrowLeft') flipPage(-1);
-  if(e.key === 'Escape') closeBookReader();
-});
+function saveParentCommitteeApplications(apps){
+  try{
+    localStorage.setItem(PARENT_COMMITTEE_STORAGE_KEY, JSON.stringify(apps));
+  } catch(e){ /* localStorage unavailable — data just won't persist across reloads */ }
+}
 
-renderDivisionTabs();
-renderBookGrid();
+function addParentCommitteeApplication(app){
+  const apps = loadParentCommitteeApplications();
+  apps.push(app);
+  saveParentCommitteeApplications(apps);
+}
+
+function updateParentCommitteeApplicationStatus(id, newStatus){
+  const apps = loadParentCommitteeApplications();
+  const target = apps.find(a => a.id === id);
+  if(target) target.status = newStatus;
+  saveParentCommitteeApplications(apps);
+}

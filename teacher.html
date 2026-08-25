@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bhavyata Portal — Teacher</title>
+<link rel="stylesheet" href="css/style-legacy.css" />
+<link rel="stylesheet" href="css/style-new-design.css" />
+</head>
+<body>
+
+<div id="preview-banner"></div>
+
+<div id="google_translate_element" style="position:fixed; top:10px; right:10px; z-index:9999; background:#fff; border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:12px;"></div>
+
+<div id="view-attendance" class="hidden">
+  <div class="topbar">
+    <div class="topbar-left"><span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span><span class="tag">Teacher</span></div>
+    <button onclick="logout()">Log out</button>
+  </div>
+  <div class="attend-wrap">
+    <div class="attend-card">
+      <div class="icon-big">🗓️</div>
+      <h2>Mark today's attendance</h2>
+      <p id="attendGateMessage">It's past 12:30 PM — please mark today's attendance to continue.</p>
+      <button class="btn-present" onclick="markAttendance('present')">Mark myself present</button>
+      <button class="btn-absent" onclick="markAttendance('absent')">Mark leave / absent</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-dashboard" class="hidden">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+      <span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span>
+      <span class="page-label" id="pageLabel">Weekly Activities</span>
+    </div>
+    <div class="user-menu" id="userMenu">
+      <button class="user-menu-trigger" onclick="toggleUserMenu()">
+        <span class="user-avatar">MS</span>
+        <span class="user-name-block">
+          <span class="user-name">Mrs. Sharma</span>
+          <span class="tag">Teacher</span>
+        </span>
+        <span class="user-caret">▾</span>
+      </button>
+      <div class="user-dropdown hidden" id="userDropdown">
+        <button onclick="logout()">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-nav">
+      <div class="grp">Teaching</div>
+      <button class="sidebar-nav-btn" id="navMyDay" onclick="switchSidebarSection('myday')">▦ <span>My Day</span></button>
+      <button class="sidebar-nav-btn active" id="navWorkbook" onclick="switchSidebarSection('workbook')">📘 <span>Weekly Activities</span></button>
+
+      <div class="grp">Enter</div>
+      <button class="sidebar-nav-btn" id="navDailyPlan" onclick="switchSidebarSection('dailyplan')">✏️ <span>Daily Plan</span></button>
+      <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ <span>Attendance</span></button>
+      <button class="sidebar-nav-btn" id="navUploadPhoto" onclick="switchSidebarSection('uploadphoto')">📷 <span>Upload Activity Photo</span></button>
+
+      <div class="grp">Records</div>
+      <button class="sidebar-nav-btn" id="navCalendar" onclick="switchSidebarSection('calendar')">📅 <span>My Attendance</span></button>
+      <button class="sidebar-nav-btn" id="navEvents" onclick="switchSidebarSection('events')">📌 <span>School Events</span></button>
+      <button class="sidebar-nav-btn" id="navMaterials" onclick="switchSidebarSection('materials')">📦 <span>Materials</span></button>
+
+      <div class="grp">Community</div>
+      <button class="sidebar-nav-btn" id="navVolunteers" onclick="switchSidebarSection('volunteers')">🤝 <span>Parent Volunteers</span></button>
+      <button class="sidebar-nav-btn" onclick="location.href='textbooks.html'">📚 <span>Textbooks</span></button>
+    </div>
+    <div id="sidebar-workbook-section">
+      <div class="sidebar-label">Term 1 · June–Sept</div>
+      <div id="week-list"></div>
+    </div>
+  </div>
+
+  <div class="dash">
+    <div class="banner-success">
+      <span>✓ Attendance marked for today — Present</span>
+      <span id="attend-time">9:02 AM</span>
+    </div>
+
+    <h1>Mrs. Sharma — Jr KG B</h1>
+    <p class="sub" id="week-subheading">Week 1 · Term 1 · Theme: My Classroom</p>
+
+    <div id="today-overview" class="today-overview"></div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><p class="label">My attendance (term)</p><p class="value notranslate">96%</p></div>
+      <div class="stat-card"><p class="label">Class attendance today</p><p class="value notranslate" id="classAttendanceValue">26/28</p></div>
+      <div class="stat-card"><p class="label">Tasks pending today</p><p class="value warn notranslate" id="pending-count">0</p></div>
+      <div class="stat-card"><p class="label">Supervisor rating</p><p class="value notranslate">4.6</p></div>
+    </div>
+
+    <div id="week-body"></div>
+    <div id="attendance-body" class="hidden"></div>
+    <div id="calendar-body" class="hidden"></div>
+    <div id="events-body" class="hidden"></div>
+    <div id="upload-photo-body" class="hidden"></div>
+    <div id="myday-body" class="hidden"></div>
+    <div id="dailyplan-body" class="hidden"></div>
+    <div id="materials-body" class="hidden"></div>
+    <div id="volunteers-body" class="hidden"></div>
+  </div>
+  </div>
+</div>
+
+<script src="js/i18n.js" defer></script>
+<!-- Weeks core must load first — it declares the shared containers
+     (WEEKLY_PLAN, INTERACTIVE_ACTIVITIES, etc.) that each week file
+     below adds its own content into. Add a new week's <script> tag
+     here, after weeks-core.js, once its file exists.
+     Week 10 doesn't exist yet — weeksWithContent correctly skips it. -->
+<script src="js/weeks/weeks-core.js" defer></script>
+<script src="js/weeks/week1.js" defer></script>
+<script src="js/weeks/week2.js" defer></script>
+<script src="js/weeks/week3.js" defer></script>
+<script src="js/weeks/week4.js" defer></script>
+<script src="js/weeks/week5.js" defer></script>
+<script src="js/weeks/week6.js" defer></script>
+<script src="js/weeks/week7.js" defer></script>
+<script src="js/weeks/week8.js" defer></script>
+<script src="js/weeks/week9.js" defer></script>
+<script src="js/weeks/week11.js" defer></script>
+<script src="js/events-calendar.js" defer></script>
+<script src="js/parent-committee.js" defer></script>
+<script src="js/teacher.js" defer></script>
+<!-- Must load AFTER teacher.js — see activity-renderers.js for why. -->
+<script src="js/weeks/activity-renderers.js" defer></script>
+
+<!-- ===========================================================
+     GOOGLE TRANSLATE — auto-translates the whole page.
+     includedLanguages restricts the dropdown to only these 3
+     extra languages (English is always the original/default,
+     so the dropdown effectively offers 4 total).
+     If this ever stops working (Google could withdraw the free
+     script without notice), the real fallback is the paid
+     Google Cloud Translation API, called from the backend —
+     a bigger change, not a drop-in replacement.
+     =========================================================== -->
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({
+      pageLanguage: 'en',
+      includedLanguages: 'hi,mr,gu',
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+      autoDisplay: false
+    }, 'google_translate_element');
+  }
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="js/digit-convert.js" defer></script>
+
+</body>
+</html>

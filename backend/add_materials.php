@@ -16,7 +16,8 @@ ini_set('display_errors', '0');
 session_start();
 header('Content-Type: application/json');
 
-$isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80', '127.0.0.1:80']);
+$requestHost = strtok($_SERVER['HTTP_HOST'] ?? '', ':');
+$isLocalRequest = in_array($requestHost, ['localhost', '127.0.0.1']);
 $devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
 $effectiveRole = $_SESSION['role'] ?? $devRole;
 
