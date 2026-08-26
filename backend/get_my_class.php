@@ -7,12 +7,24 @@
 //
 // A teacher can own more than one class (e.g. Jr KG + Sr KG) — this
 // returns ALL classes linked to her account, not just one.
+//
+// DEV BYPASS — same pattern as session_check.php, add_materials.php,
+// toggle_material.php etc. ?dev_role=teacher on localhost has no real
+// $_SESSION['user_id'] to look up a class for, so this falls back to
+// whatever real teacher account happens to be first — a testing
+// convenience only, never real per-teacher scoping. Does nothing
+// outside localhost.
 // =========================================================================
 
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+$requestHost = strtok($_SERVER['HTTP_HOST'] ?? '', ':');
+$isLocalRequest = in_array($requestHost, ['localhost', '127.0.0.1']);
+$devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
+$effectiveRole = $_SESSION['role'] ?? $devRole;
+
+if ($effectiveRole !== 'teacher') {
     http_response_code(401);
     echo json_encode(['status' => 'error', 'message' => 'Not authorized.']);
     exit;
@@ -21,13 +33,28 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 require_once __DIR__ . '/db_config.php';
 $conn = get_db_connection();
 
+if (isset($_SESSION['user_id'])) {
+    $teacherId = $_SESSION['user_id'];
+} else {
+    // Dev-mode bypass has no real user_id — fall back to any real
+    // teacher account, same convention as add_materials.php.
+    $lookup = $conn->query("SELECT id FROM users WHERE role = 'teacher' ORDER BY id LIMIT 1");
+    $row = $lookup ? $lookup->fetch_assoc() : null;
+    if (!$row) {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'No teacher account exists yet.']);
+        exit;
+    }
+    $teacherId = $row['id'];
+}
+
 $stmt = $conn->prepare("
     SELECT c.id AS class_id, c.name AS class_name, c.school_id, s.name AS school_name
     FROM classes c
     JOIN schools s ON s.id = c.school_id
     WHERE c.teacher_user_id = ?
 ");
-$stmt->bind_param('i', $_SESSION['user_id']);
+$stmt->bind_param('i', $teacherId);
 $stmt->execute();
 $result = $stmt->get_result();
 

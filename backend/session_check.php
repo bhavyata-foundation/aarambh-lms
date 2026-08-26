@@ -30,7 +30,7 @@ $isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1
 
 if ($isLocalRequest && isset($_GET['dev_role'])) {
     $devRole = $_GET['dev_role'];
-    if (in_array($devRole, ['teacher', 'supervisor', 'superadmin', 'parent'], true)) {
+    if (in_array($devRole, ['teacher', 'supervisor', 'superadmin', 'parent', 'principal'], true)) {
         echo json_encode([
             'status' => 'logged_in',
             'name'   => 'Dev Preview (' . $devRole . ')',

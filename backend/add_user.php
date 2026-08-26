@@ -25,6 +25,7 @@ $name = trim($input['name'] ?? '');
 $email = trim($input['email'] ?? '');
 $role = $input['role'] ?? '';
 $classId = $input['class_id'] ?? null;
+$schoolId = $input['school_id'] ?? null; // used for the principal role
 
 if ($name === '' || $email === '') {
     http_response_code(400);
@@ -32,7 +33,7 @@ if ($name === '' || $email === '') {
     exit;
 }
 
-if (!in_array($role, ['teacher', 'supervisor', 'superadmin', 'parent'], true)) {
+if (!in_array($role, ['teacher', 'supervisor', 'superadmin', 'parent', 'principal'], true)) {
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Invalid role.']);
     exit;
@@ -68,8 +69,13 @@ $tempPassword = generate_temp_password($name);
 
 $hash = password_hash($tempPassword, PASSWORD_BCRYPT);
 
-$insert = $conn->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-$insert->bind_param('ssss', $name, $email, $hash, $role);
+if ($role === 'principal' && !empty($schoolId)) {
+    $insert = $conn->prepare('INSERT INTO users (name, email, password_hash, role, school_id) VALUES (?, ?, ?, ?, ?)');
+    $insert->bind_param('ssssi', $name, $email, $hash, $role, $schoolId);
+} else {
+    $insert = $conn->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
+    $insert->bind_param('ssss', $name, $email, $hash, $role);
+}
 
 if (!$insert->execute()) {
     http_response_code(500);

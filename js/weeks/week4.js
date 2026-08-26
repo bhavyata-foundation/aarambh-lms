@@ -1,45 +1,42 @@
-/* =========================================================
-   WEEKS CORE — shared containers and the master list of every
-   week (theme, dates). This file must load FIRST, before any
-   individual week file (week1.js, week2.js, ...), since those
-   files ADD to these objects rather than declaring their own.
+/* ============================================================
+   WEEK 4 — "My Family" (Term 1, 6-10 Jul 2026)
 
-   Adding a new week now means:
-     1. Create js/weeks/weekN.js (copy week1.js as a template)
-     2. Add its <script> tag in index.html, after this file
-   No changes needed in main.js for a new week's plain content —
-   only its own interactive activities need designing there.
-   ========================================================= */
+   Requires js/weeks/weeks-core.js loaded first (see index.html).
+   ============================================================ */
 
-const WEEKLY_PLAN = {};
-const ACTIVITY_COMPETENCIES = {};
-const weeksWithContent = [];
+/* ------------------------------------------------------------
+   STOPGAP FILE — the real Week 4 content is missing.
+   ------------------------------------------------------------
+   What was here before was not Week 4's actual data — it was an
+   accidental duplicate of weeks-core.js, complete with its own
+   `const WEEKLY_PLAN = {}` etc. Loading two files that each try
+   to `const`-declare the same globals is what crashed everything
+   after this file (week5.js onward, and anything in teacher.js
+   that runs after the <script> tags), which is why My Day was
+   showing 0 of 8 / 0.0% even for weeks that DO have real content.
 
-// Per-week sidebar day topics — separate from WEEKLY_PLAN (which
-// holds each domain's activity text). This is the short "value"
-// and "link" shown in the sidebar's day checklist.
-const WEEK_DAY_TOPICS = {};
+   This stopgap only removes the crash. It does NOT restore Week
+   4's actual "My Family" activities, competencies, day topics,
+   or interactive activities — none of that data is present here
+   or anywhere else in what's been reviewed so far.
 
-// The actual interactive H5P-style activities (match-pairs,
-// complete-sentence, tap-explore, etc.) — see main.js's generic
-// renderers for what "type" values are supported. Each week file
-// fills in INTERACTIVE_ACTIVITIES.wkN with its own 30 activities
-// (6 domains × 5 days).
-const INTERACTIVE_ACTIVITIES = {};
+   Once the real content is recovered (git history / cPanel /
+   spreadsheet), replace this whole file with the real one,
+   following the exact pattern in week1.js:
 
-const WEEKS = [
-  {w:1, theme:'My Classroom', dates:'15–19 Jun 2026'},
-  {w:2, theme:'My Body and Senses', dates:'22–26 Jun 2026'},
-  {w:3, theme:'Emotions and Feelings', dates:'29 Jun–3 Jul 2026'},
-  {w:4, theme:'My Family', dates:'6–10 Jul 2026'},
-  {w:5, theme:'Nature Patterns', dates:'13–17 Jul 2026'},
-  {w:6, theme:'Beads & Jewellery', dates:'20–24 Jul 2026'},
-  {w:7, theme:'Animals Around Us', dates:'27–31 Jul 2026'},
-  {w:8, theme:'Number, Sound & Movement', dates:'3–7 Aug 2026'},
-  {w:9, theme:'My Body Counts', dates:'10–14 Aug 2026'},
-  {w:10, theme:'Counting Classroom Items', dates:'17–21 Aug 2026'},
-  {w:11, theme:'Food and Snacks Counting', dates:'24–28 Aug 2026'},
-  {w:12, theme:'Counting with Sticks', dates:'31 Aug–4 Sep 2026'},
-  {w:13, theme:'Number Line Walk', dates:'7–11 Sep 2026'},
-  {w:14, theme:'Group Counting', dates:'14–18 Sep 2026'}
-];
+     WEEK_DAY_TOPICS.wk4 = { mon:{value:'...', link:'...'}, ... };
+     WEEKLY_PLAN.wk4 = { welcome:{...}, story:{...}, numeracy:{...},
+                          language:{...}, create:{...}, outdoor:{...},
+                          tidy:{...} };
+     ACTIVITY_COMPETENCIES.wk4 = { ... };
+     weeksWithContent.push(4);
+     INTERACTIVE_ACTIVITIES.wk4 = { ... };
+
+   IMPORTANT: none of those five statements use `const`, `let`, or
+   `var` — they all assign onto the shared objects/array that
+   weeks-core.js already declared. That's the rule this file broke.
+
+   Until that real content is back, Week 4 is deliberately left
+   OUT of weeksWithContent, so it won't appear as a selectable,
+   falsely-"available" week in the My Day / Daily Plan dropdowns.
+   ------------------------------------------------------------ */

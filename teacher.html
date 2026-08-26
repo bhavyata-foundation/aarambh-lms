@@ -11,7 +11,7 @@
 
 <div id="preview-banner"></div>
 
-<div id="google_translate_element" style="position:fixed; top:10px; right:10px; z-index:9999; background:#fff; border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:12px;"></div>
+<div id="google_translate_element" style="position:fixed; top:60px; right:14px; z-index:70; background:#fff; border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:12px;"></div>
 
 <div id="view-attendance" class="hidden">
   <div class="topbar">
@@ -34,7 +34,7 @@
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
       <span class="topbar-brand"><span class="topbar-brand-icon"><img src="assets/logo.png" alt="Bhavyata Foundation logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="brand-fallback-emoji">🌱</span></span><span class="brand">Bhavyata portal</span></span>
-      <span class="page-label" id="pageLabel">Weekly Activities</span>
+      <span class="page-label" id="pageLabel">My Day</span>
     </div>
     <div class="user-menu" id="userMenu">
       <button class="user-menu-trigger" onclick="toggleUserMenu()">
@@ -56,18 +56,30 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-nav">
       <div class="grp">Teaching</div>
-      <button class="sidebar-nav-btn" id="navMyDay" onclick="switchSidebarSection('myday')">▦ <span>My Day</span></button>
-      <button class="sidebar-nav-btn active" id="navWorkbook" onclick="switchSidebarSection('workbook')">📘 <span>Weekly Activities</span></button>
+      <button class="sidebar-nav-btn active" id="navMyDay" onclick="switchSidebarSection('myday')">▦ <span>My Day</span></button>
+      <button class="sidebar-nav-btn" id="navMyClass" onclick="switchSidebarSection('myclass')">☰ <span>My Class</span></button>
+      <button class="sidebar-nav-btn" id="navClassProgress" onclick="switchSidebarSection('classprogress')">◪ <span>Class Progress</span></button>
 
       <div class="grp">Enter</div>
       <button class="sidebar-nav-btn" id="navDailyPlan" onclick="switchSidebarSection('dailyplan')">✏️ <span>Daily Plan</span></button>
       <button class="sidebar-nav-btn" id="navAttendance" onclick="switchSidebarSection('attendance')">🗓️ <span>Attendance</span></button>
-      <button class="sidebar-nav-btn" id="navUploadPhoto" onclick="switchSidebarSection('uploadphoto')">📷 <span>Upload Activity Photo</span></button>
 
       <div class="grp">Records</div>
       <button class="sidebar-nav-btn" id="navCalendar" onclick="switchSidebarSection('calendar')">📅 <span>My Attendance</span></button>
+      <button class="sidebar-nav-btn" id="navAttendanceRegister" onclick="switchSidebarSection('attendanceregister')">🗓️ <span>Attendance Register</span></button>
+      <button class="sidebar-nav-btn" id="navCheckAttendance" onclick="switchSidebarSection('checkattendance')">◍ <span>Check Attendance</span></button>
+      <button class="sidebar-nav-btn" id="navMyCompliance" onclick="switchSidebarSection('mycompliance')">⇧ <span>My Compliance</span></button>
+      <button class="sidebar-nav-btn" id="navFamilyParents" onclick="switchSidebarSection('familyparents')">👪 <span>Family & Parents</span></button>
+      <button class="sidebar-nav-btn" id="navAdmissions" onclick="switchSidebarSection('admissions')">➕ <span>Admissions</span></button>
+      <button class="sidebar-nav-btn" id="navPtm" onclick="switchSidebarSection('ptm')">◎ <span>PTM Schedule & Agenda</span></button>
+      <button class="sidebar-nav-btn" id="navMonthlyEffective" onclick="switchSidebarSection('monthlyeffective')">⇧ <span>Monthly Effective</span></button>
       <button class="sidebar-nav-btn" id="navEvents" onclick="switchSidebarSection('events')">📌 <span>School Events</span></button>
       <button class="sidebar-nav-btn" id="navMaterials" onclick="switchSidebarSection('materials')">📦 <span>Materials</span></button>
+
+      <div class="grp">Assessment</div>
+      <button class="sidebar-nav-btn" id="navMonthlyAssessment" onclick="switchSidebarSection('monthlyassessment')">◪ <span>Monthly Assessment</span></button>
+      <button class="sidebar-nav-btn" id="navChildRecord" onclick="switchSidebarSection('childrecord')">◍ <span>Child Record</span></button>
+      <button class="sidebar-nav-btn" id="navTransition" onclick="switchSidebarSection('transition')">△ <span>Transition</span></button>
 
       <div class="grp">Community</div>
       <button class="sidebar-nav-btn" id="navVolunteers" onclick="switchSidebarSection('volunteers')">🤝 <span>Parent Volunteers</span></button>
@@ -101,9 +113,20 @@
     <div id="attendance-body" class="hidden"></div>
     <div id="calendar-body" class="hidden"></div>
     <div id="events-body" class="hidden"></div>
-    <div id="upload-photo-body" class="hidden"></div>
     <div id="myday-body" class="hidden"></div>
     <div id="dailyplan-body" class="hidden"></div>
+    <div id="ptm-body" class="hidden"></div>
+    <div id="myclass-body" class="hidden"></div>
+    <div id="classprogress-body" class="hidden"></div>
+    <div id="attendanceregister-body" class="hidden"></div>
+    <div id="mycompliance-body" class="hidden"></div>
+    <div id="familyparents-body" class="hidden"></div>
+    <div id="checkattendance-body" class="hidden"></div>
+    <div id="admissions-body" class="hidden"></div>
+    <div id="monthlyeffective-body" class="hidden"></div>
+    <div id="monthlyassessment-body" class="hidden"></div>
+    <div id="childrecord-body" class="hidden"></div>
+    <div id="transition-body" class="hidden"></div>
     <div id="materials-body" class="hidden"></div>
     <div id="volunteers-body" class="hidden"></div>
   </div>
@@ -129,6 +152,7 @@
 <script src="js/weeks/week11.js" defer></script>
 <script src="js/events-calendar.js" defer></script>
 <script src="js/parent-committee.js" defer></script>
+<script src="js/ptm-view.js" defer></script>
 <script src="js/teacher.js" defer></script>
 <!-- Must load AFTER teacher.js — see activity-renderers.js for why. -->
 <script src="js/weeks/activity-renderers.js" defer></script>

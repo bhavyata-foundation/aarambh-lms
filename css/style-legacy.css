@@ -68,7 +68,7 @@
   .brand-logo-img{width:100%; height:100%; object-fit:contain; display:block;}
   .brand-fallback-emoji{display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:17px; background:rgba(255,255,255,0.15); border-radius:8px;}
   .page-label{font-size:12px; opacity:0.85; padding-left:10px; border-left:1px solid rgba(255,255,255,0.35); display:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  @media (max-width:760px){ .page-label{display:inline-block;} }
+  @media (max-width:1024px){ .page-label{display:inline-block;} }
 
   .user-menu{position:relative; flex-shrink:0;}
   .user-menu-trigger{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.15); border:none; border-radius:20px; padding:5px 12px 5px 5px; cursor:pointer; color:#fff;}
@@ -123,7 +123,7 @@
 
 .attendance-row.filtered-out{display:none;}
 
-  @media (max-width:760px){
+  @media (max-width:1024px){
     .topbar button.menu-toggle{display:inline-block;}
     .sidebar{
       position:fixed; top:52px; left:0; bottom:0; width:82%; max-width:300px;
@@ -137,6 +137,8 @@
     }
     .sidebar-backdrop.show{display:block;}
     .dash{padding:16px 14px; max-width:100%;}
+  }
+  @media (max-width:760px){
     .stat-grid{grid-template-columns:repeat(2,1fr);}
     .day-tabs, .domain-tabs{overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; padding-bottom:4px;}
     .day-tab, .domain-tab{flex-shrink:0;}
@@ -580,6 +582,15 @@
 .report-table th{background:var(--bg); text-align:left; padding:10px 12px; font-size:11px; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); white-space:nowrap;}
 .report-table td{padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
 .report-table tr:last-child td{border-bottom:none;}
+/* First column (the identifying one — child's name, etc.) stays visible
+   no matter how far the table scrolls horizontally. Without this, a
+   wide table on a normal laptop screen can leave the one column that
+   tells you WHICH ROW this is scrolled out of view. */
+.report-table th:first-child, .report-table td:first-child{
+  position:sticky; left:0; background:var(--card); z-index:1;
+  box-shadow:1px 0 0 var(--border);
+}
+.report-table th:first-child{background:var(--bg);}
 
 .visit-pill{font-size:11px; font-weight:bold; padding:3px 9px; border-radius:12px; white-space:nowrap;}
 .visit-pill.yes{background:var(--success-bg); color:var(--success);}

@@ -386,12 +386,24 @@ fetch('backend/session_check.php' + window.location.search)
     if(timeEl) timeEl.textContent = '';
   }
 
+  // ---------------------------------------------------------
+  // Plain placeholder values for the filter bar — deliberately NOT
+  // wired to the database for now. Wiring this to real per-teacher
+  // data (backend/get_my_class.php) needs a real teacher-to-class
+  // link in the `classes` table first, which doesn't exist yet in
+  // this environment. Revisit once that data gap is closed.
+  // ---------------------------------------------------------
+  const myClassInfo = {
+    school_name: 'Triveni Sangam Municipal School',
+    class_name: 'Jr KG'
+  };
+
   function enterTeacherFlow(){
     const existing = getTodayAttendanceRecord();
     if(existing){
       showDashboardAfterAttendance(existing);
       renderSidebar();
-      openWeek(currentWeekNum);
+      switchSidebarSection('myday');
       return;
     }
     if(isPastGateTime()){
@@ -400,7 +412,7 @@ fetch('backend/session_check.php' + window.location.search)
       document.getElementById('view-dashboard').classList.remove('hidden');
       updateAttendanceBannerPending();
       renderSidebar();
-      openWeek(currentWeekNum);
+      switchSidebarSection('myday');
       scheduleAttendanceGate();
     }
   }
@@ -434,7 +446,7 @@ fetch('backend/session_check.php' + window.location.search)
     }
 
     renderSidebar();
-    openWeek(currentWeekNum);
+    switchSidebarSection('myday');
   }
 
 // Wrapping the real login() logic in a form submit handler — rather
@@ -501,11 +513,21 @@ fetch('backend/session_check.php' + window.location.search)
   function switchSidebarSection(section){
     document.getElementById('navMyDay').classList.toggle('active', section === 'myday');
     document.getElementById('navDailyPlan').classList.toggle('active', section === 'dailyplan');
-    document.getElementById('navWorkbook').classList.toggle('active', section === 'workbook');
+    document.getElementById('navPtm').classList.toggle('active', section === 'ptm');
+    document.getElementById('navMyClass').classList.toggle('active', section === 'myclass');
+    document.getElementById('navClassProgress').classList.toggle('active', section === 'classprogress');
+    document.getElementById('navAttendanceRegister').classList.toggle('active', section === 'attendanceregister');
+    document.getElementById('navMyCompliance').classList.toggle('active', section === 'mycompliance');
+    document.getElementById('navFamilyParents').classList.toggle('active', section === 'familyparents');
+    document.getElementById('navCheckAttendance').classList.toggle('active', section === 'checkattendance');
+    document.getElementById('navAdmissions').classList.toggle('active', section === 'admissions');
+    document.getElementById('navMonthlyEffective').classList.toggle('active', section === 'monthlyeffective');
+    document.getElementById('navMonthlyAssessment').classList.toggle('active', section === 'monthlyassessment');
+    document.getElementById('navChildRecord').classList.toggle('active', section === 'childrecord');
+    document.getElementById('navTransition').classList.toggle('active', section === 'transition');
     document.getElementById('navAttendance').classList.toggle('active', section === 'attendance');
     document.getElementById('navCalendar').classList.toggle('active', section === 'calendar');
     document.getElementById('navEvents').classList.toggle('active', section === 'events');
-    document.getElementById('navUploadPhoto').classList.toggle('active', section === 'uploadphoto');
     document.getElementById('navMaterials').classList.toggle('active', section === 'materials');
     document.getElementById('navVolunteers').classList.toggle('active', section === 'volunteers');
     document.getElementById('sidebar-workbook-section').classList.toggle('hidden', section !== 'workbook');
@@ -514,22 +536,44 @@ fetch('backend/session_check.php' + window.location.search)
     if(labelEl){
       labelEl.textContent = section === 'myday' ? 'My Day'
         : section === 'dailyplan' ? 'Daily Plan'
+        : section === 'ptm' ? 'PTM Schedule & Agenda'
+        : section === 'myclass' ? 'My Class'
+        : section === 'classprogress' ? 'Class Progress'
+        : section === 'attendanceregister' ? 'Attendance Register'
+        : section === 'mycompliance' ? 'My Compliance'
+        : section === 'familyparents' ? 'Family & Parents'
+        : section === 'checkattendance' ? 'Check Attendance'
+        : section === 'admissions' ? 'Admissions'
+        : section === 'monthlyeffective' ? 'Monthly Effective'
+        : section === 'monthlyassessment' ? 'Monthly Assessment'
+        : section === 'childrecord' ? 'Child Record'
+        : section === 'transition' ? 'Transition'
         : section === 'attendance' ? 'Attendance'
         : section === 'calendar' ? 'My Attendance'
         : section === 'events' ? 'School Events'
-        : section === 'uploadphoto' ? 'Upload Activity Photo'
         : section === 'materials' ? 'Materials'
         : section === 'volunteers' ? 'Parent Volunteers'
-        : 'Weekly Activities';
+        : 'My Day';
     }
 
     document.getElementById('week-body').classList.add('hidden');
     document.getElementById('attendance-body').classList.add('hidden');
     document.getElementById('calendar-body').classList.add('hidden');
     document.getElementById('events-body').classList.add('hidden');
-    document.getElementById('upload-photo-body').classList.add('hidden');
     document.getElementById('myday-body').classList.add('hidden');
     document.getElementById('dailyplan-body').classList.add('hidden');
+    document.getElementById('ptm-body').classList.add('hidden');
+    document.getElementById('myclass-body').classList.add('hidden');
+    document.getElementById('classprogress-body').classList.add('hidden');
+    document.getElementById('attendanceregister-body').classList.add('hidden');
+    document.getElementById('mycompliance-body').classList.add('hidden');
+    document.getElementById('familyparents-body').classList.add('hidden');
+    document.getElementById('checkattendance-body').classList.add('hidden');
+    document.getElementById('admissions-body').classList.add('hidden');
+    document.getElementById('monthlyeffective-body').classList.add('hidden');
+    document.getElementById('monthlyassessment-body').classList.add('hidden');
+    document.getElementById('childrecord-body').classList.add('hidden');
+    document.getElementById('transition-body').classList.add('hidden');
     document.getElementById('materials-body').classList.add('hidden');
     document.getElementById('volunteers-body').classList.add('hidden');
     document.getElementById('today-overview').classList.add('hidden');
@@ -549,10 +593,6 @@ fetch('backend/session_check.php' + window.location.search)
       document.getElementById('events-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'PTMs, trainings, and other school events';
       renderSchoolEvents();
-    } else if(section === 'uploadphoto'){
-      document.getElementById('upload-photo-body').classList.remove('hidden');
-      document.getElementById('week-subheading').textContent = 'Photos go straight to your class\'s Google Drive';
-      renderUploadPhotoForm();
     } else if(section === 'dailyplan'){
       document.getElementById('dailyplan-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Plan today\'s sessions — start from a suggestion or write your own';
@@ -561,6 +601,54 @@ fetch('backend/session_check.php' + window.location.search)
       document.getElementById('myday-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Today\'s sessions, attendance, and materials at a glance';
       renderMyDay();
+    } else if(section === 'ptm'){
+      document.getElementById('ptm-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'When is the meeting, what is on the agenda, and am I ready for it?';
+      renderTeacherPTM();
+    } else if(section === 'myclass'){
+      document.getElementById('myclass-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Every child in your class, at a glance';
+      renderMyClass();
+    } else if(section === 'classprogress'){
+      document.getElementById('classprogress-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'How the class is doing, domain by domain';
+      renderClassProgress();
+    } else if(section === 'attendanceregister'){
+      document.getElementById('attendanceregister-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'The last 10 school days, one row per child';
+      renderAttendanceRegister();
+    } else if(section === 'mycompliance'){
+      document.getElementById('mycompliance-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Your own SOP compliance, rolled up';
+      renderMyCompliance();
+    } else if(section === 'familyparents'){
+      document.getElementById('familyparents-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Who to call for each child';
+      renderFamilyParents();
+    } else if(section === 'checkattendance'){
+      document.getElementById('checkattendance-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'A read-only review of what has been marked';
+      renderCheckAttendance();
+    } else if(section === 'admissions'){
+      document.getElementById('admissions-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Children admitted mid-year, and their entitlement status';
+      renderAdmissions();
+    } else if(section === 'monthlyeffective'){
+      document.getElementById('monthlyeffective-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'The monthly return: what it says, and have you signed it?';
+      renderMonthlyEffective();
+    } else if(section === 'monthlyassessment'){
+      document.getElementById('monthlyassessment-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Rate every child on every domain, once a month';
+      renderMonthlyAssessment();
+    } else if(section === 'childrecord'){
+      document.getElementById('childrecord-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'One child\'s full picture in one place';
+      renderChildRecord();
+    } else if(section === 'transition'){
+      document.getElementById('transition-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Readiness for the move to the next grade';
+      renderTransition();
     } else if(section === 'materials'){
       document.getElementById('materials-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Items received from BMC, and whether they\'ve reached your class';
@@ -589,44 +677,58 @@ fetch('backend/session_check.php' + window.location.search)
     initEventsCalendar('events-body', 'backend/get_events.php' + window.location.search);
   }
 
-  /* ===================== SECTION 6: UPLOAD ACTIVITY PHOTO ===================== */
-
-  function renderUploadPhotoForm(){
-    const container = document.getElementById('upload-photo-body');
-    container.innerHTML = `
-      <div class="visit-banner" style="margin-bottom:20px;">
-        <div><strong>Upload a photo of today's activity</strong><br/>This goes straight to your class's own Google Drive — nothing is kept on this app's servers.</div>
-      </div>
-
-      <form id="uploadPhotoForm" onsubmit="return submitActivityPhoto(event)" style="background:var(--card); border-radius:10px; padding:18px 20px; max-width:420px;">
-        <label class="field-label-admin">Photo</label>
-        <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" capture="environment" required />
-
-        <label class="field-label-admin">Note (optional — becomes part of the filename)</label>
-        <input type="text" id="photoNote" placeholder="e.g. Numeracy sorting activity" />
-
-        <div id="uploadPhotoResult" style="margin-top:10px;"></div>
-        <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px; margin-top:10px;">Upload photo</button>
-      </form>
-    `;
+  /* ===================== SECTION 5b: PTM SCHEDULE & AGENDA ===================== */
+  // Uses backend/get_my_class.php for a REAL school_id/class_id — unlike
+  // the My Day filter bar (deliberately left as placeholder text, see
+  // that section's comment), the PTM view genuinely needs to know which
+  // school/class it's asking about, since the data actually lives in
+  // the database now (ptm_meetings etc.). Falls back to a clear message
+  // rather than guessing if the teacher isn't linked to a class yet.
+  async function renderTeacherPTM(){
+    const container = document.getElementById('ptm-body');
+    container.innerHTML = '<p class="sub">Loading…</p>';
+    try{
+      const res = await fetch('backend/get_my_class.php' + window.location.search);
+      const data = await res.json();
+      if(data.status !== 'success' || !data.classes || !data.classes.length){
+        container.innerHTML = '<p class="sub">Your account isn\'t linked to a class yet — ask your admin to link it.</p>';
+        return;
+      }
+      const myClass = data.classes[0]; // multi-class teachers: first one, same simplification used elsewhere
+      renderPTMView('ptm-body', {
+        schoolId: myClass.school_id,
+        classId: myClass.class_id,
+        role: 'teacher',
+        canSchedule: false,
+        canToggleTeacherPrep: true,
+        canToggleSupervisorPrep: false,
+        querySuffix: window.location.search
+      });
+    } catch(err){
+      container.innerHTML = '<p class="sub">Could not reach the server.</p>';
+    }
   }
 
-  async function submitActivityPhoto(event){
-    event.preventDefault();
-    const fileInput = document.getElementById('photoFile');
-    const resultEl = document.getElementById('uploadPhotoResult');
-    resultEl.innerHTML = '';
+  /* ===================== SECTION 6: ACTIVITY PHOTO UPLOAD ===================== */
+  // Lives directly on each Weekly Activities session card now — no more
+  // separate "Upload Activity Photo" sidebar page. Selecting a file
+  // uploads immediately (no separate submit step), tagged with exactly
+  // which domain/day/week it belongs to, so a photo is always tied to
+  // a specific session rather than just "today, some activity."
 
-    if(!fileInput.files.length){
-      resultEl.innerHTML = `<div class="au-error">Choose a photo first.</div>`;
-      return false;
-    }
+  async function uploadSessionActivityPhoto(domainKey, dayKey, inputEl){
+    const statusEl = document.getElementById('sessionPhotoStatus-' + domainKey + '-' + dayKey);
+    if(!inputEl.files.length) return;
 
+    const d = DOMAINS.find(x => x.key === domainKey);
     const formData = new FormData();
-    formData.append('photo', fileInput.files[0]);
-    formData.append('note', document.getElementById('photoNote').value.trim());
+    formData.append('photo', inputEl.files[0]);
+    formData.append('week', currentWeekNum);
+    formData.append('day', dayKey);
+    formData.append('domain', domainKey);
+    formData.append('note', d ? d.label : domainKey);
 
-    resultEl.innerHTML = `<p class="sub">Uploading…</p>`;
+    if(statusEl) statusEl.textContent = 'Uploading…';
 
     try{
       const res = await fetch('backend/upload_activity_photo.php' + window.location.search, {
@@ -634,18 +736,17 @@ fetch('backend/session_check.php' + window.location.search)
         body: formData
       });
       const data = await res.json();
-
-      if(data.status !== 'success'){
-        resultEl.innerHTML = `<div class="au-error">${data.message}</div>`;
-        return false;
+      if(statusEl){
+        statusEl.textContent = data.status === 'success' ? '✓ Uploaded' : (data.message || 'Upload failed');
+        statusEl.style.color = data.status === 'success' ? 'var(--good, #0ca30c)' : 'var(--danger, #c8433f)';
       }
-
-      resultEl.innerHTML = `<div class="au-success">${data.message}</div>`;
-      document.getElementById('uploadPhotoForm').reset();
-    }catch(err){
-      resultEl.innerHTML = `<div class="au-error">Could not reach the server.</div>`;
+    } catch(err){
+      if(statusEl){
+        statusEl.textContent = 'Could not reach the server.';
+        statusEl.style.color = 'var(--danger, #c8433f)';
+      }
     }
-    return false;
+    inputEl.value = ''; // allow uploading another photo to the same session afterward
   }
 
   // ===== Materials — localStorage for now, not the database. Same
@@ -905,6 +1006,94 @@ fetch('backend/session_check.php' + window.location.search)
     return list;
   }
 
+  // ---------------------------------------------------------
+  // SHARED FILTER BAR — School/Division/Academic Year/Week, the same
+  // chrome the real prototype shows at the top of every teacher screen.
+  // Previously this only existed inside renderMyDay() — an oversight,
+  // not a deliberate choice, since every other screen built afterward
+  // never got it. Now every screen calls this the same way.
+  //
+  // School/Division/Academic Year are read-only (a real teacher only
+  // ever has the one they're assigned to); Week is real and functional
+  // — changing it re-renders whichever screen is currently open via
+  // onWeekChange, so switching weeks works consistently everywhere,
+  // not just on My Day/Daily Plan.
+  // ---------------------------------------------------------
+  const SELECT_STYLE = "padding:6px 28px 6px 10px !important; border:1px solid #0b0b0b33 !important; border-radius:6px !important; background-color:#fff !important; background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M1 1l4 4 4-4%22 stroke=%22%2352514e%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>') !important; background-repeat:no-repeat !important; background-position:right 10px center !important; background-size:10px 6px !important; -webkit-appearance:none !important; -moz-appearance:none !important; appearance:none !important; cursor:pointer !important; font-size:13px !important; color:#0b0b0b !important; display:inline-block !important;";
+
+  // The real 23 BMC schools this programme serves, pulled straight from
+  // the prototype's own SCHOOLS list — used ONLY to populate this
+  // dropdown for show. Selecting a different one does not change any
+  // data on screen: a real teacher only ever has the one school she's
+  // actually assigned to (myClassInfo.school_name), same as before.
+  const ALL_SCHOOLS = [
+    'Triveni Sangam Municipal School', 'South Sewri MPS', 'Shastri Nagar MPS', 'Khernagar MPS',
+    'Juhu Gandhigram MPS', 'Jogeshwari MPS', 'Andheri MPS',
+    'Nehru Nagar MPS (L)', 'Mohili Village MPS', 'Kajupada MPS', 'S.G Barve Marg MPS', 'Chunabhatti MPS',
+    'Vikhroli Park Site MPS', 'Maneklal Mehta Municipal School', 'Barve Nagar Municipal School No 3', 'Sainath nagar MPS', 'Rajawadi MPS',
+    'Bhandup Tank Road', 'Nehru Nagar MPS (S)',
+    'Goshala MPS', 'D D Upadhyay MPS', 'P.K.Road MPS', 'Mithagar MPS'
+  ];
+
+  // Same treatment as ALL_SCHOOLS above — Division and Academic Year
+  // now list every real option too, cosmetic only (no onchange, no
+  // re-render). Week is different on purpose: it's genuinely
+  // functional (curriculum content actually varies by week), so it
+  // keeps its onWeekChange wiring — just broadened to list every week
+  // 1–14, not only the ones with authored content yet. Picking an
+  // unauthored week already falls back gracefully everywhere ("Not
+  // planned yet" per session) since that fallback was built in from
+  // the start — nothing new needed there.
+  const DIVS = ['Jr KG', 'Sr KG'];
+  const ACADEMIC_YEARS = ['Term 1, 2026', 'Term 2, 2026'];
+
+  function renderTeacherFilterBar(container, onWeekChange){
+    const filterBar = document.createElement('div'); filterBar.className = 'fbar';
+    filterBar.innerHTML = `
+      <div class="ctl"><label>School</label><select id="filterBarSchoolSelect" style="${SELECT_STYLE} min-width:220px !important;"></select></div>
+      <div class="ctl"><label>Division</label><select id="filterBarDivisionSelect" style="${SELECT_STYLE} min-width:100px !important;"></select></div>
+      <div class="ctl"><label>Academic Year</label><select id="filterBarYearSelect" style="${SELECT_STYLE} min-width:140px !important;"></select></div>
+      <div class="ctl"><label>Week</label><select id="filterBarWeekSelect" style="${SELECT_STYLE} min-width:220px !important;"></select></div>
+    `;
+    container.appendChild(filterBar);
+
+    const schoolSel = filterBar.querySelector('#filterBarSchoolSelect');
+    ALL_SCHOOLS.forEach(name => {
+      const opt = document.createElement('option'); opt.textContent = name;
+      if(name === myClassInfo.school_name) opt.selected = true;
+      schoolSel.appendChild(opt);
+    });
+    // Deliberately no onchange handler — cosmetic only, per the comment
+    // on ALL_SCHOOLS above. The selection stays wherever you leave it;
+    // it never triggers a re-render or changes any data on screen.
+
+    const divisionSel = filterBar.querySelector('#filterBarDivisionSelect');
+    DIVS.forEach(name => {
+      const opt = document.createElement('option'); opt.textContent = name;
+      if(name === myClassInfo.class_name) opt.selected = true;
+      divisionSel.appendChild(opt);
+    });
+    // Cosmetic only, same reasoning as School.
+
+    const yearSel = filterBar.querySelector('#filterBarYearSelect');
+    ACADEMIC_YEARS.forEach(name => {
+      const opt = document.createElement('option'); opt.textContent = name;
+      if(name === ACADEMIC_YEARS[0]) opt.selected = true;
+      yearSel.appendChild(opt);
+    });
+    // Cosmetic only, same reasoning as School.
+
+    const weekSel = filterBar.querySelector('#filterBarWeekSelect');
+    WEEKS.forEach(wk => {
+      const opt = document.createElement('option');
+      opt.value = wk.w; opt.textContent = 'Week ' + wk.w + ' — ' + wk.theme;
+      if(wk.w === currentWeekNum) opt.selected = true;
+      weekSel.appendChild(opt);
+    });
+    weekSel.onchange = () => { currentWeekNum = parseInt(weekSel.value, 10); onWeekChange(); };
+    return filterBar;
+  }
+
   function renderMyDay(){
     const container = document.getElementById('myday-body');
     container.innerHTML = '';
@@ -924,26 +1113,7 @@ fetch('backend/session_check.php' + window.location.search)
     heading.innerHTML = `<h2 style="margin:0; font-family:var(--disp);">My Day</h2><span class="reqs">LPC · TLM · AIR</span>`;
     container.appendChild(heading);
 
-    // Filter bar — School/Division/Academic Year are read-only (a real
-    // teacher only ever has the one they're assigned to); Week is a real,
-    // functional selector across the weeks actually built so far.
-    const filterBar = document.createElement('div'); filterBar.className = 'fbar';
-    filterBar.innerHTML = `
-      <div class="ctl"><label>School</label><div style="padding:6px 0; font-size:13px;">Triveni Sangam Municipal School</div></div>
-      <div class="ctl"><label>Division</label><div style="padding:6px 0; font-size:13px;">Jr KG</div></div>
-      <div class="ctl"><label>Academic Year</label><div style="padding:6px 0; font-size:13px;">Term 1, 2026</div></div>
-      <div class="ctl"><label>Week</label><select id="mdWeekSelect" style="padding:5px 8px;"></select></div>
-    `;
-    container.appendChild(filterBar);
-    const weekSel = filterBar.querySelector('#mdWeekSelect');
-    weeksWithContent.forEach(wn => {
-      const wk = WEEKS.find(x => x.w === wn);
-      const opt = document.createElement('option');
-      opt.value = wn; opt.textContent = 'Week ' + wn + ' — ' + wk.theme;
-      if(wn === currentWeekNum) opt.selected = true;
-      weekSel.appendChild(opt);
-    });
-    weekSel.onchange = () => { currentWeekNum = parseInt(weekSel.value, 10); renderMyDay(); };
+    renderTeacherFilterBar(container, renderMyDay);
 
     container.appendChild(mdGrid('g4', [
       mdTile('Sessions confirmed', done + ' of ' + DOMAINS.length, '',
@@ -957,13 +1127,6 @@ fetch('backend/session_check.php' + window.location.search)
       mdTile('My attendance', myAttendancePct, '%',
         mdPill('Marked present 9:04 AM', 'good'), 'Gate at first class start')
     ]));
-
-    const startBtn = document.createElement('button');
-    startBtn.className = 'btn-primary';
-    startBtn.style.cssText = 'width:auto; padding:10px 20px; margin:14px 0 0;';
-    startBtn.textContent = '▶ Start today\u2019s activities';
-    startBtn.onclick = goToTodaysActivities;
-    container.appendChild(startBtn);
 
     const dayBar = document.createElement('div'); dayBar.className = 'fbar';
     dayBar.innerHTML = '<div class="ctl"><label>Teaching day</label><div style="display:flex;gap:5px" id="mdDayChips"></div></div>';
@@ -1007,6 +1170,14 @@ fetch('backend/session_check.php' + window.location.search)
         <div class="pf">
           <span class="chip ${hasPlan ? 'gd' : ''}">${hasPlan ? (usedSuggestion ? '✓ Using suggestion' : '✓ Your own plan') : '○ Not planned yet'}</span>
           ${material ? `<span class="chip">${esc(material)}</span>` : ''}
+        </div>
+        <div class="pf" style="margin-top:6px; align-items:center;">
+          <label class="chip" style="cursor:pointer;">
+            📷 Add photo
+            <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment"
+              style="display:none;" onchange="uploadSessionActivityPhoto('${d.key}', '${dayKey}', this)" />
+          </label>
+          <span id="sessionPhotoStatus-${d.key}-${dayKey}" style="font-size:12px; color:var(--ink-3);"></span>
         </div>`;
       sessionsGrid.appendChild(c);
     });
@@ -1040,15 +1211,24 @@ fetch('backend/session_check.php' + window.location.search)
       <p class="cap" style="margin:8px 0 0">Rejection reason is stored — AIR-07.</p>`;
     sg.appendChild(mdCard('Protect a dropped session', 'Rule: a session not delivered in 3 or more of the last 10 school days.', c2));
     container.appendChild(sg);
-  }
 
-  // Takes the day currently selected in My Day (myDayIndex) straight into
-  // Weekly Activities, opened to that exact same day — one tap, no
-  // duplicated activity content living in two places at once.
-  function goToTodaysActivities(){
-    const dayKeyForIndex = ['mon','tue','wed','thu','fri'][myDayIndex];
-    currentDay = dayKeyForIndex;
-    switchSidebarSection('workbook');
+    // Reference-info legend — static, non-personal glossary/benchmark data
+    // straight from the SOP (not per-teacher, doesn't change day to day).
+    // Matches the prototype's .ftr bar; built with inline styles rather
+    // than relying on a .ftr class that may not exist yet in
+    // style-new-design.css.
+    const footerLegend = document.createElement('div');
+    footerLegend.style.cssText = 'display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; padding-top:10px; border-top:1px solid var(--line, #0b0b0b1a); font-size:12px; color:var(--ink-3, #6d6b67);';
+    footerLegend.innerHTML = [
+      '<span><b>Scale</b> E/P/A three-tier · weights 1 · 2 · 3</span>',
+      '<span><b>DSI</b> 0–200 · benchmark 133.3</span>',
+      '<span><b>Domains</b> 10 → 5 koshas → 6 HPC domains → 13 curricular goals</span>',
+      '<span><b>Year</b> June to April · May vacation · <b>210</b> computed teaching days</span>',
+      '<span><b>Teacher days</b> 246 · Saturdays are teacher-only, last Saturday off</span>',
+      '<span><b>Built to</b> BRD v3.3 · SOP · calendar · principal · Effective cycle</span>',
+      '<span>Bhavyata Foundation × MCGM</span>'
+    ].join('');
+    container.appendChild(footerLegend);
   }
 
   /* =========================================================
@@ -1204,6 +1384,92 @@ fetch('backend/session_check.php' + window.location.search)
       msg.textContent = '✓ Saved — synced to My Day';
       setTimeout(() => { msg.textContent = ''; }, 2500);
     }
+    // Fires the moment an activity is saved/confirmed — the closest
+    // thing this screen has to a "submit" action.
+    checkActivityMatch(domainKey);
+  }
+
+  // ---------------------------------------------------------------
+  // Activity match check — asks an AI agent whether what the teacher
+  // actually wrote matches the suggested activity + domain (yes/no).
+  //
+  // Deliberately NOT wired to the database: matchCheckResults lives
+  // only in this tab's memory, and backend/check_activity_match.php
+  // (see that file) never reads or writes any table either. Refreshing
+  // the page or switching devices loses the result — that's intentional
+  // until this is redesigned as a persisted feature.
+  //
+  // The endpoint itself is currently a stub (no real agent call yet —
+  // that's the "pocket" left for wiring one in later).
+  // ---------------------------------------------------------------
+  const matchCheckResults = {}; // key -> {status, match, reason} — in-memory only
+
+  function renderMatchBadge(domainKey){
+    const dayKey = ['mon','tue','wed','thu','fri'][dailyPlanDayIndex];
+    const key = dailyPlanKey(currentWeekNum, dayKey, domainKey);
+    const badge = document.getElementById('matchBadge-' + domainKey);
+    if(!badge) return;
+    const result = matchCheckResults[key];
+
+    if(!result){
+      badge.style.display = 'none';
+      badge.textContent = '';
+      badge.className = 'pill';
+      return;
+    }
+
+    badge.style.display = 'inline-block';
+    if(result.status === 'checking'){
+      badge.textContent = 'Checking match…';
+      badge.className = 'pill info';
+    } else if(result.match === true){
+      badge.textContent = '✓ Matches suggestion/domain';
+      badge.className = 'pill good';
+    } else if(result.match === false){
+      badge.textContent = '✕ Doesn\u2019t match suggestion/domain';
+      badge.className = 'pill warn';
+    } else {
+      badge.textContent = 'Match check: pending (agent not wired yet)';
+      badge.className = 'pill';
+    }
+  }
+
+  async function checkActivityMatch(domainKey){
+    const dayKey = ['mon','tue','wed','thu','fri'][dailyPlanDayIndex];
+    const key = dailyPlanKey(currentWeekNum, dayKey, domainKey);
+    const entry = dailyPlanEntries[key];
+    if(!entry || !entry.text.trim()){
+      delete matchCheckResults[key];
+      renderMatchBadge(domainKey);
+      return;
+    }
+
+    matchCheckResults[key] = { status: 'checking', match: null, reason: '' };
+    renderMatchBadge(domainKey);
+
+    const suggested = getSuggestedActivity(domainKey, dayKey);
+    const d = DOMAINS.find(x => x.key === domainKey);
+
+    try {
+      const res = await fetch('backend/check_activity_match.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain: d ? d.label : domainKey,
+          suggested_activity: suggested,
+          actual_activity: entry.text
+        })
+      });
+      const data = await res.json();
+      matchCheckResults[key] = {
+        status: data.status || 'pending',
+        match: (typeof data.match === 'boolean') ? data.match : null,
+        reason: data.reason || ''
+      };
+    } catch (err) {
+      matchCheckResults[key] = { status: 'pending', match: null, reason: 'Could not reach match-check service.' };
+    }
+    renderMatchBadge(domainKey);
   }
 
   function useSuggestionForSession(domainKey){
@@ -1322,6 +1588,7 @@ fetch('backend/session_check.php' + window.location.search)
           <button class="chip" style="background:var(--fill-accent, var(--brand)); color:#fff; border-color:transparent;" onclick="saveActivityWithConfirmation('${d.key}')">✓ Save activity</button>
           <button class="chip" onclick="clearPlanText('${d.key}')">Clear</button>
           <span id="planSaveMsg-${d.key}" style="font-size:12px; color:var(--good, #0ca30c);"></span>
+          <span id="matchBadge-${d.key}" class="pill" style="display:none;"></span>
         </div>
         <label style="font-size:12px; color:var(--ink-3); display:block; margin-bottom:4px;">Materials needed</label>
         <div id="planMaterials-${d.key}" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
@@ -1339,7 +1606,7 @@ fetch('backend/session_check.php' + window.location.search)
     });
 
     // Populate material chips and badges now that all DOM nodes exist.
-    DOMAINS.forEach(d => { renderMaterialChips(d.key); updatePlanBadge(d.key); });
+    DOMAINS.forEach(d => { renderMaterialChips(d.key); updatePlanBadge(d.key); renderMatchBadge(d.key); });
 
     // ---- Collapsed-by-default insights section ----
     const insightsToggle = document.createElement('button');
@@ -1780,7 +2047,632 @@ fetch('backend/session_check.php' + window.location.search)
 // the teacher role (see backend/preview_as.php). Lets them get back to
 // their real superadmin session with one click, no re-login needed.
 // -------------------------------------------------------------------------
-  /* ===================== SECTION 13: PREVIEW MODE ===================== */
+  /* ===================== SECTION 12: REMAINING SIDEBAR SCREENS ===================== */
+  // All 11 of these are deliberately frontend-only placeholder views —
+  // sample/computed data, no new backend endpoints, same "frontend
+  // first" pattern used everywhere else in this app so far. The 5
+  // student-dependent ones (My Class, Class Progress, Attendance
+  // Register, Admissions, Monthly Assessment, Child Record, Transition)
+  // are blocked on a real `students` table — this reuses the existing
+  // SAMPLE_STUDENTS list as a stand-in until that table exists.
+  //
+  // Deterministic pseudo-random helper — same purpose as the old
+  // prototype's rng(): stable sample numbers that don't re-shuffle on
+  // every render, without needing a real backend or true randomness.
+  function sampleHash(str){
+    let h = 2166136261;
+    for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0);
+  }
+  function sampleRand(seed){ return (sampleHash(seed) % 1000) / 1000; }
+  function samplePick(seed, arr){ return arr[Math.floor(sampleRand(seed) * arr.length)]; }
+
+  // ---------- 1. MY CLASS ----------
+  // Matches the real prototype's vTeacherClass exactly: same tiles, same
+  // table columns, same wording/req codes — pulled directly from the
+  // prototype's source rather than guessed at from a screenshot.
+  const OCCUPATIONS = ['Daily wage labour','Auto / taxi driver','Domestic work','Tailoring','Homemaker','Unemployed','Self-employed / small trade','Salaried'];
+  const LANGUAGES_AT_HOME = ['Hindi','Marathi','Telugu','Bhojpuri','Gujarati'];
+  const INCOME_BANDS = ['Under ₹5,000','₹5,000–10,000','₹15,000–25,000','Prefer not to say'];
+
+  function sampleFamily(name){
+    const occA = samplePick(name + 'occA', OCCUPATIONS);
+    const occB = samplePick(name + 'occB', OCCUPATIONS);
+    const langCount = 1 + Math.floor(sampleRand(name + 'langn') * 2);
+    const langs = [samplePick(name + 'lang1', LANGUAGES_AT_HOME)];
+    if(langCount > 1){
+      const second = samplePick(name + 'lang2', LANGUAGES_AT_HOME);
+      if(!langs.includes(second)) langs.push(second);
+    }
+    return {
+      guardians: [{occ: occA}, {occ: occB}],
+      langs,
+      reads: sampleRand(name + 'reads') > 0.3,
+      income: samplePick(name + 'inc', INCOME_BANDS),
+      complete: Math.round(40 + sampleRand(name + 'complete') * 60),
+      consent: sampleRand(name + 'consent') > 0.15,
+      photoConsent: sampleRand(name + 'photoconsent') > 0.35
+    };
+  }
+  function sampleHomeActStatus(name){
+    return samplePick(name + 'homeact', ['done', 'partly done', 'not done', 'not asked']);
+  }
+
+  function renderMyClass(){
+    const container = document.getElementById('myclass-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderMyClass);
+
+    const fams = SAMPLE_STUDENTS.map(sampleFamily);
+    const profDone = fams.filter(f => f.complete >= 80).length;
+    const presentToday = SAMPLE_STUDENTS.filter(name => sampleRand(name + 'today') > 0.1).length;
+
+    container.appendChild(mdGrid('g4', [
+      mdTile('Enrolled', SAMPLE_STUDENTS.length, 'children', mdPill('Jr KG', 'info'), 'DAT-03 · pupil entity'),
+      mdTile('Present today', presentToday, 'of ' + SAMPLE_STUDENTS.length,
+        mdPill(mdStatusBand(presentToday/SAMPLE_STUDENTS.length*100).l, mdStatusBand(presentToday/SAMPLE_STUDENTS.length*100).c),
+        'TCH-07 · mark all present in one action', mdMeter(presentToday/SAMPLE_STUDENTS.length*100)),
+      mdTile('Family profiles 80%+', profDone, 'of ' + SAMPLE_STUDENTS.length,
+        mdPill(mdStatusBand(profDone/SAMPLE_STUDENTS.length*100, 80, 60).l, mdStatusBand(profDone/SAMPLE_STUDENTS.length*100, 80, 60).c),
+        'FAM-12 · completeness per child', mdMeter(profDone/SAMPLE_STUDENTS.length*100)),
+      mdTile('Consent recorded', fams.filter(f => f.consent).length, 'of ' + SAMPLE_STUDENTS.length,
+        mdPill(fams.filter(f => f.photoConsent).length + ' photo consent', 'info'), 'FAM-11 · withdrawable')
+    ]));
+
+    container.appendChild(mdSec('Class roster', '<span class="reqs">TCH-06/07 · FAM-01…12 · PTC-06</span>'));
+
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr>' +
+      '<th>Child</th><th>Today</th><th>Att %</th><th>Guardian occupation</th><th>Languages at home</th>' +
+      '<th>Income band</th><th>Home activity</th><th>Profile</th></tr></thead><tbody>';
+
+    SAMPLE_STUDENTS.forEach((name, i) => {
+      const f = fams[i];
+      const present = sampleRand(name + 'today') > 0.1;
+      const attPct = Math.round(70 + sampleRand(name + 'att') * 28);
+      const homeStatus = sampleHomeActStatus(name);
+      const homePill = homeStatus === 'done' ? mdPill('Done', 'good')
+        : homeStatus === 'partly done' ? mdPill('Partly', 'warn')
+        : homeStatus === 'not done' ? mdPill('Not done', 'crit')
+        : mdPill('Not asked', 'neu');
+      table += `<tr style="cursor:pointer;" onclick="switchSidebarSection('familyparents')">
+        <td><b>${esc(name)}</b></td>
+        <td>${present ? mdPill('Present', 'good') : mdPill('Absent', 'crit')}</td>
+        <td>${attPct}</td>
+        <td class="dim">${esc(f.guardians[0].occ)} / ${esc(f.guardians[1].occ)}</td>
+        <td>${esc(f.langs.join(', '))}${f.reads ? '' : ' <span class="pill warn">no literate adult</span>'}</td>
+        <td class="dim">${esc(f.income)}</td>
+        <td>${homePill}</td>
+        <td><div class="meter" style="width:52px"><i style="width:${f.complete}%"></i></div></td>
+      </tr>`;
+    });
+    table += '</tbody></table></div>';
+
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard(null, 'Household income and full address are suppressed from exports by default (DAT-36). Tap a row to open the family profile.', wrap));
+  }
+
+
+  // ---------- 2. CLASS PROGRESS ----------
+  // Matches the real prototype's vTeacherProgress structure — same
+  // tile set and the same E/P/A tier grid per child per domain. The
+  // underlying SRI/CPI/ARI formulas and dumbbell/stack charts from the
+  // original are NOT reproduced (they depend on a full assessment
+  // history this app doesn't have yet) — tile numbers here are sample
+  // data shaped to look the same, not the real formula output.
+  const TIER_INFO = { E: {n:'Emerging', c:'crit'}, P: {n:'Proficient', c:'warn'}, A: {n:'Advanced', c:'good'} };
+  // The real assessment domains (ASM screens) — 10 developmental
+  // domains, DIFFERENT from the app's existing DOMAINS array (which is
+  // the 8 time-of-day session slots for My Day/Daily Plan). Matches
+  // the prototype's own column headers exactly: HEAL PHYS SENS ENVI
+  // EMOT PART LOGI MATH LANG ARTS.
+  const ASSESSMENT_DOMAINS = [
+    {key:'heal', label:'HEAL', full:'Health'},
+    {key:'phys', label:'PHYS', full:'Physical'},
+    {key:'sens', label:'SENS', full:'Sensory'},
+    {key:'envi', label:'ENVI', full:'Environmental awareness'},
+    {key:'emot', label:'EMOT', full:'Emotional'},
+    {key:'part', label:'PART', full:'Participation'},
+    {key:'logi', label:'LOGI', full:'Logical / cognitive'},
+    {key:'math', label:'MATH', full:'Numeracy'},
+    {key:'lang', label:'LANG', full:'Language'},
+    {key:'arts', label:'ARTS', full:'Creative arts'}
+  ];
+  // Tap-to-open-popup grading: tapping a domain cell's badge opens a
+  // small popup with 3 direct buttons (E/P/A) — 2 taps total, but the
+  // cell itself stays compact (matters here since each row has 10 of
+  // these). openAssessmentPopupKey tracks which single cell's popup is
+  // open at a time; the whole table re-renders on every interaction,
+  // same pattern as the rest of this screen.
+  let openAssessmentPopupKey = null; // 'studentName|domainKey', or null
+  function assessmentTierCell(name, domainKey, recorded, tier){
+    const cellKey = name + '|' + domainKey;
+    const isOpen = openAssessmentPopupKey === cellKey;
+    const badgeHtml = recorded
+      ? `<span onclick="toggleAssessmentPopup('${name}','${domainKey}')" class="pill ${TIER_INFO[tier].c}" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; font-size:12px; font-weight:600;" title="${TIER_INFO[tier].n} — tap to change">${tier}</span>`
+      : `<span onclick="toggleAssessmentPopup('${name}','${domainKey}')" class="dim" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; border:1px dashed #0b0b0b55;" title="Not observed — tap to record">·</span>`;
+    const popupHtml = isOpen ? `
+      <div style="position:absolute; top:30px; left:50%; transform:translateX(-50%); z-index:20; background:#fff; border:1px solid #0b0b0b33; border-radius:8px; padding:4px; display:flex; gap:4px; box-shadow:0 4px 12px rgba(0,0,0,0.15); white-space:nowrap;">
+        ${['E','P','A'].map(t => `<span onclick="setAssessmentTier('${name}','${domainKey}','${t}')" class="pill ${TIER_INFO[t].c}" style="cursor:pointer; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; font-weight:600;" title="${TIER_INFO[t].n}">${t}</span>`).join('')}
+      </div>` : '';
+    return `<td style="text-align:center; position:relative;">${badgeHtml}${popupHtml}</td>`;
+  }
+  function toggleAssessmentPopup(name, domainKey){
+    const cellKey = name + '|' + domainKey;
+    openAssessmentPopupKey = (openAssessmentPopupKey === cellKey) ? null : cellKey;
+    renderMonthlyAssessment();
+  }
+  function setAssessmentTier(name, domainKey, tier){
+    monthlyAssessmentEntries[name][domainKey] = tier;
+    openAssessmentPopupKey = null;
+    renderMonthlyAssessment();
+  }
+
+  function sampleTier(seed){ return samplePick(seed, ['E','P','A']); }
+
+  function renderClassProgress(){
+    const container = document.getElementById('classprogress-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderClassProgress);
+
+    const classSRI = Math.round((72 + sampleRand('sri') * 20) * 10) / 10;
+    const classCPI = Math.round((110 + sampleRand('cpi') * 60) * 10) / 10;
+    const advancedPct = Math.round((18 + sampleRand('ari') * 30) * 10) / 10;
+    const epConversion = Math.round((30 + sampleRand('ep') * 40) * 10) / 10;
+    const paConversion = Math.round((20 + sampleRand('pa') * 30) * 10) / 10;
+    const assessmentComplete = Math.round(60 + sampleRand('asmc') * 35);
+
+    container.appendChild(mdSec('Class Progress', '<span class="reqs">ASM-02…04 · WBK-02</span>'));
+    container.appendChild(mdGrid('g4', [
+      mdTile('Class SRI', classSRI, '%', mdPill(mdStatusBand(classSRI).l, mdStatusBand(classSRI).c), 'SRI = (P+A) ÷ N × 100', mdMeter(classSRI)),
+      mdTile('Class CPI', classCPI, '/200', mdPill(mdStatusBand(classCPI/2).l, mdStatusBand(classCPI/2).c), 'Σ Domain DSI ÷ 10', mdMeter(classCPI/2)),
+      mdTile('Advanced', advancedPct, '%', mdPill('sample', 'info'), 'ARI = A ÷ N × 100', mdMeter(advancedPct)),
+      mdTile('E → P conversion', epConversion, '%', mdPill('P→A ' + paConversion + '%', 'neu'), 'x ÷ E(SEM I) × 100', mdMeter(epConversion))
+    ]));
+    container.appendChild(mdGrid('g4', [
+      mdTile('Assessment complete', assessmentComplete, '%', mdPill(mdStatusBand(assessmentComplete).l, mdStatusBand(assessmentComplete).c), 'ASM-03 · children × domains', mdMeter(assessmentComplete))
+    ]));
+
+    container.appendChild(mdSec('Child by domain', '<span class="reqs">ASM-02…04 · WBK-02</span>'));
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr><th>Child</th>' +
+      ASSESSMENT_DOMAINS.map(d => `<th title="${esc(d.full)}">${esc(d.label)}</th>`).join('') + '<th>P+A</th><th>Band</th></tr></thead><tbody>';
+    SAMPLE_STUDENTS.forEach(name => {
+      const tiers = ASSESSMENT_DOMAINS.map(d => sampleTier(name + d.key + 'tier'));
+      const paCount = tiers.filter(t => t !== 'E').length;
+      const cells = ASSESSMENT_DOMAINS.map((d, j) => {
+        const tier = tiers[j];
+        return `<td><span class="pill ${TIER_INFO[tier].c}" title="${TIER_INFO[tier].n}">${tier}</span></td>`;
+      }).join('');
+      table += `<tr><td><b>${esc(name)}</b></td>${cells}<td>${paCount}/${ASSESSMENT_DOMAINS.length}</td><td>${mdPill(mdStatusBand(paCount/ASSESSMENT_DOMAINS.length*100).l, mdStatusBand(paCount/ASSESSMENT_DOMAINS.length*100).c)}</td></tr>`;
+    });
+    table += '</tbody></table></div>';
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard(null, 'E Emerging · P Proficient · A Advanced. Sample data — the real dumbbell/stack charts from the prototype need a full assessment history this app doesn\'t track yet.', wrap));
+  }
+
+
+  // ---------- 3. ATTENDANCE REGISTER ----------
+  // Matches the real prototype's vTeacherRegister: same 4 tiles, same
+  // day-by-day register table (P/A marks + totals), same caption.
+  // Sample data — real streak/threshold detection needs a real
+  // attendance history this app doesn't store long-term yet.
+  function renderAttendanceRegister(){
+    const container = document.getElementById('attendanceregister-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderAttendanceRegister);
+    const teachingDays = 22;
+    const rows = SAMPLE_STUDENTS.map(name => {
+      const marks = Array.from({length: teachingDays}, (_, i) => sampleRand(name + 'reg' + i) > 0.12 ? 'P' : 'A');
+      const pres = marks.filter(m => m === 'P').length;
+      let run = 0, maxRun = 0;
+      marks.forEach(m => { run = m === 'A' ? run + 1 : 0; maxRun = Math.max(maxRun, run); });
+      return { name, marks, pres, pct: Math.round(pres / teachingDays * 100), maxRun };
+    });
+    const classAvg = Math.round(rows.reduce((a, r) => a + r.pct, 0) / rows.length * 10) / 10;
+    const below60 = rows.filter(r => r.pct < 60).length;
+    const threeOrMore = rows.filter(r => r.maxRun >= 3).length;
+
+    container.appendChild(mdSec('Attendance Register — this month', '<span class="reqs">REG-01…04 · printable</span>'));
+    container.appendChild(mdGrid('g4', [
+      mdTile('Class attendance', classAvg, '%', mdPill(mdStatusBand(classAvg).l, mdStatusBand(classAvg).c), 'month average', mdMeter(classAvg)),
+      mdTile('Teaching days', teachingDays, 'this month', mdPill('holidays excluded', 'info'), 'LPC-11 · holiday calendar'),
+      mdTile('Children below 60%', below60, 'flagged', mdPill('follow-up required', 'warn'), 'REG-06'),
+      mdTile('Three or more absences', threeOrMore, 'children', mdPill('consecutive', 'crit'), 'REG-06 · early warning')
+    ]));
+
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr><th>Child</th>' +
+      Array.from({length: teachingDays}, (_, i) => `<th>${i+1}</th>`).join('') + '<th>P</th><th>A</th><th>%</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      const cells = r.marks.map(m => `<td style="text-align:center;">${m === 'P' ? '<span class="pill good">P</span>' : '<span class="pill crit">A</span>'}</td>`).join('');
+      table += `<tr><td><b>${esc(r.name)}</b></td>${cells}<td>${r.pres}</td><td>${teachingDays - r.pres}</td><td><b>${r.pct}</b></td></tr>`;
+    });
+    table += '</tbody></table></div>';
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard(null, 'Laid out as an education officer would expect: school, class, teacher, month and totals in the header when printed (REG-04).', wrap));
+  }
+
+  // ---------- 4. MY COMPLIANCE ----------
+  // Matches vTeacherCompliance: the same ten compliance dimensions
+  // shown separately (never combined into one score), plus data
+  // freshness / training record / open supervisor actions cards.
+  // The real chBars bar-chart widget isn't reproduced — shown as tiles
+  // + a simple list instead, same numbers, simpler chrome.
+  const COMPLIANCE_DIMENSIONS = ['Daily plan', 'TLM plan', 'Attendance register', 'Assessment', 'Home activity', 'PTM prep', 'Monthly Effective', 'Photo evidence', 'Materials logged', 'Training attendance'];
+  function renderMyCompliance(){
+    const container = document.getElementById('mycompliance-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderMyCompliance);
+    const dims = COMPLIANCE_DIMENSIONS.map(k => ({ k, v: Math.round(55 + sampleRand(k + 'comp') * 42) }));
+
+    container.appendChild(mdSec('What my supervisor sees', '<span class="reqs">TCM-01…12</span>'));
+    container.appendChild(mdCard(null, 'The same ten dimensions as the supervisor\u2019s view. Deliberately shown as dimensions, never combined into one ranked score \u2014 the dimensions are not equally within a teacher\u2019s control (RPT-15).',
+      (() => { const d = document.createElement('div'); d.className = 'list';
+        d.innerHTML = dims.map(x => `<div class="row"><div class="t"><b>${esc(x.k)}</b></div><div>${mdPill(x.v + '%', mdStatusBand(x.v).c)}</div></div>`).join('');
+        return d; })()));
+
+    container.appendChild(mdGrid('g4', dims.slice(0, 4).map(d => mdTile(d.k, d.v, '%', mdPill(mdStatusBand(d.v).l, mdStatusBand(d.v).c), '', mdMeter(d.v, mdStatusBand(d.v).c)))));
+
+    container.appendChild(mdGrid('g3', [
+      mdCard('Data freshness', 'TCM-11 · an unrecorded value is never shown as a zero.',
+        (() => { const d = document.createElement('div'); d.className = 'list';
+          d.innerHTML = ['Daily plan — updated today', 'Assessment — updated 3 days ago', 'Workbooks — updated 6 days ago', 'Home activity — updated today']
+            .map(x => `<div class="row"><div class="t"><b>${esc(x.split(' — ')[0])}</b><span>${esc(x.split(' — ')[1])}</span></div></div>`).join('');
+          return d; })()),
+      mdCard('My training record', 'TRN-08 · forms a professional development record.',
+        (() => { const d = document.createElement('div'); d.className = 'list';
+          d.innerHTML = [['Classroom management basics', 'Attended'], ['Using the Jadui Pitara kit', 'Attended'], ['Parent engagement techniques', 'Did not attend']]
+            .map(([topic, status]) => `<div class="row"><div class="t"><b>${esc(topic)}</b></div><div>${mdPill(status, status === 'Attended' ? 'good' : 'warn')}</div></div>`).join('');
+          return d; })()),
+      mdCard('Open actions from my last visit', 'SVR-14 · reviewed at the next visit.',
+        (() => { const d = document.createElement('div'); d.className = 'list';
+          d.innerHTML = [['Display the weekly plan where parents can see it', 'Due in 4 days'], ['Use the number cards in every numeracy session', 'Due in 11 days']]
+            .map(([a, b]) => `<div class="row"><div class="t"><b>${esc(a)}</b><span>${esc(b)}</span></div><div>${mdPill('Open', 'warn')}</div></div>`).join('');
+          return d; })())
+    ]));
+  }
+
+  // ---------- 5. FAMILY & PARENTS ----------
+  // Matches vTeacherFamily: a child picker, a "Household" card (kv
+  // list) and a "Parents and guardians" card, plus consent pills.
+  const HOUSEHOLD_SKILLS = ['Tailoring', 'Cooking', 'Driving', 'Masonry', 'Farming'];
+  const HOME_RESOURCES = ['Smartphone', 'Radio', 'Television', 'Books at home', 'None of these'];
+  function sampleHousehold(name){
+    const f = sampleFamily(name);
+    return Object.assign(f, {
+      locality: samplePick(name + 'loc', ['Ambedkar Nagar', 'Kamgar Vasahat', 'Shanti Nagar', 'Ganesh Nagar']),
+      walk: 5 + Math.floor(sampleRand(name + 'walk') * 20),
+      skills: [samplePick(name + 'sk1', HOUSEHOLD_SKILLS), samplePick(name + 'sk2', HOUSEHOLD_SKILLS)],
+      res: [samplePick(name + 'res1', HOME_RESOURCES)],
+      siblings: Math.floor(sampleRand(name + 'sib') * 3),
+      guardianNames: [{name: 'Mrs. ' + name.split(' ')[1], rel: 'Mother', edu: samplePick(name+'edu1', ['No formal education','Primary school','Secondary school']), phone: '98'+String(Math.floor(sampleRand(name+'ph1')*90000000)+10000000), smart: sampleRand(name+'sm1')>0.4, primary: true},
+                      {name: 'Mr. ' + name.split(' ')[1], rel: 'Father', edu: samplePick(name+'edu2', ['No formal education','Primary school','Secondary school']), phone: '98'+String(Math.floor(sampleRand(name+'ph2')*90000000)+10000000), smart: sampleRand(name+'sm2')>0.4, primary: false}]
+    });
+  }
+  function renderFamilyParents(selectedName){
+    const container = document.getElementById('familyparents-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderFamilyParents);
+    const name = selectedName || SAMPLE_STUDENTS[0];
+    const f = sampleHousehold(name);
+
+    const pick = document.createElement('div'); pick.className = 'fbar';
+    pick.innerHTML = `<div class="ctl"><label>Child</label><select id="famChildSel" style="padding:6px 10px; border:1px solid #0b0b0b33; border-radius:6px;"></select></div>
+      <div class="grow" style="flex:1;"></div>
+      <div>${f.consent ? mdPill('Consent recorded', 'good') : mdPill('Consent not recorded', 'crit')}
+      ${f.photoConsent ? mdPill('Photo consent', 'good') : mdPill('No photo consent', 'warn')}</div>`;
+    container.appendChild(pick);
+    const sel = pick.querySelector('#famChildSel');
+    SAMPLE_STUDENTS.forEach(n => {
+      const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+      if(n === name) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => renderFamilyParents(sel.value);
+
+    const g = document.createElement('div'); g.className = 'g g2';
+    const householdBody = document.createElement('dl'); householdBody.className = 'kv';
+    householdBody.innerHTML = `
+      <dt>Locality</dt><dd>${esc(f.locality)}</dd>
+      <dt>Walk to school</dt><dd>${f.walk} minutes</dd>
+      <dt>Income band</dt><dd>${esc(f.income)} <span class="pill neu">band, not exact — FAM-05</span></dd>
+      <dt>Languages at home</dt><dd>${esc(f.langs.join(', '))}</dd>
+      <dt>Adult reads programme language</dt><dd>${f.reads ? 'Yes' : '<b>No</b> — guidance must be audio or pictorial (PTC-05)'}</dd>
+      <dt>Household skills</dt><dd>${esc(f.skills.join(', '))}</dd>
+      <dt>Home resources</dt><dd>${esc(f.res.join(', '))}</dd>
+      <dt>Siblings in programme</dt><dd>${f.siblings}</dd>
+      <dt>Profile completeness</dt><dd>${f.complete}%</dd>`;
+    g.appendChild(mdCard('Household — ' + name, 'FAM-01 · one household per child; siblings share it.', householdBody));
+
+    const guardianList = document.createElement('div'); guardianList.className = 'list';
+    guardianList.innerHTML = f.guardianNames.map(gd => `<div class="row"><div class="t"><b>${esc(gd.name)} · ${esc(gd.rel)}</b><span>${esc(gd.edu)} · ${esc(gd.phone)}</span></div>
+      <div>${gd.smart ? mdPill('Smartphone', 'good') : mdPill('Basic phone', 'warn')} ${gd.primary ? mdPill('Primary', 'info') : ''}</div></div>`).join('');
+    g.appendChild(mdCard('Parents and guardians', 'FAM-02…04 · occupation and education on controlled lists.', guardianList));
+    container.appendChild(g);
+  }
+
+  // ---------- 6. CHECK ATTENDANCE ----------
+  // Matches vTeacherAttCheck: a fuller monthly register than the plain
+  // Attendance Register — distinguishes "not yet admitted" (dot) from
+  // "no register taken yet" (dash) from actual P/A marks, plus a
+  // footer row of daily present-of-roll totals.
+  function renderCheckAttendance(){
+    const container = document.getElementById('checkattendance-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderCheckAttendance);
+    const teachingDays = 22;
+    const enrolled = SAMPLE_STUDENTS.length;
+    const rows = SAMPLE_STUDENTS.map((name, i) => {
+      const admittedFrom = (i === SAMPLE_STUDENTS.length - 1) ? Math.floor(teachingDays * 0.4) : 0; // last child = a mid-month admission, for realism
+      const marks = Array.from({length: teachingDays}, (_, d) => {
+        if(d < admittedFrom) return '·';
+        return sampleRand(name + 'chk' + d) > 0.1 ? 'P' : 'A';
+      });
+      const markedDays = marks.filter(m => m !== '·').length;
+      const pres = marks.filter(m => m === 'P').length;
+      return { name, marks, pres, markedDays, pct: markedDays ? Math.round(pres / markedDays * 100) : null };
+    });
+    const ada = Math.round(rows.reduce((a, r) => a + r.pres, 0) / teachingDays * 10) / 10;
+    const overallPct = Math.round(rows.reduce((a, r) => a + (r.pct || 0), 0) / rows.length);
+    const below70 = rows.filter(r => r.pct !== null && r.pct < 70).length;
+
+    container.appendChild(mdSec('Check Attendance — this month', '<span class="reqs">REG-15 · CAL-13</span>'));
+    container.appendChild(mdGrid('g4', [
+      mdTile('On roll', enrolled, 'end of month', mdPill('+1 this month', 'info'), 'ADB-12'),
+      mdTile('Average daily attendance', ada, 'children', mdPill('the effective strength', 'good'), 'ADB-14', mdMeter(ada / enrolled * 100)),
+      mdTile('Attendance', overallPct, '% present', mdPill(mdStatusBand(overallPct).l, mdStatusBand(overallPct).c), 'REG-05', mdMeter(overallPct)),
+      mdTile('Below 70%', below70, 'children', mdPill('follow-up list', 'warn'), 'REG-06')
+    ]));
+
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr><th>Child</th>' +
+      Array.from({length: teachingDays}, (_, i) => `<th>${i+1}</th>`).join('') + '<th>%</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      const cells = r.marks.map(m => {
+        if(m === '·') return '<td style="text-align:center;" title="not yet admitted"><span class="dim">·</span></td>';
+        return `<td style="text-align:center;">${m === 'P' ? '<span class="pill good">P</span>' : '<span class="pill crit">A</span>'}</td>`;
+      }).join('');
+      table += `<tr><td><b>${esc(r.name)}</b></td>${cells}<td><b>${r.pct === null ? '—' : r.pct + '%'}</b></td></tr>`;
+    });
+    table += '</tbody></table></div>';
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard(null, 'A dot is a day before that child was admitted — not an absence, and excluded from her denominator (ADB-13).', wrap));
+  }
+
+  // ---------- 7. ADMISSIONS ----------
+  // Matches vTeacherAdmissions: on-roll/June-start/mid-year/no-baseline
+  // tiles, an explanatory note, a month-by-month roll curve (as a
+  // simple list, not the real bar chart), and the every-admission table.
+  function renderAdmissions(){
+    const container = document.getElementById('admissions-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderAdmissions);
+    const juneStart = SAMPLE_STUDENTS.length - 1;
+    const midYear = [{ name: 'Meher Khan', month: 'Aug 2026', baseline: false, how: 'Family moved into the area' }];
+    const total = juneStart + midYear.length;
+    const noBaseline = midYear.filter(a => !a.baseline);
+
+    container.appendChild(mdSec('Admissions', '<span class="reqs">ADB-11…16</span>'));
+    container.appendChild(mdGrid('g4', [
+      mdTile('On roll now', total, 'children', mdPill('Jr KG', 'neu'), 'ADB-11'),
+      mdTile('Admitted at the start', juneStart, 'in June', mdPill(mdStatusBand(juneStart/total*100, 70, 50).l, mdStatusBand(juneStart/total*100, 70, 50).c), 'ADB-11', mdMeter(juneStart/total*100)),
+      mdTile('Admitted during the year', midYear.length, 'after June', mdPill(Math.round(midYear.length/total*100) + '% of the class', 'info'), 'ADB-12', mdMeter(midYear.length/total*100)),
+      mdTile('Without a baseline', noBaseline.length, 'mid-year admissions', noBaseline.length ? mdPill('ADB-15 breached', 'crit') : mdPill('All baselined', 'good'), 'ADB-15')
+    ]));
+
+    container.appendChild(mdCard('Why this screen exists',
+      'The roll is not a number set in June. Children arrive all year — families move into the area, a child turns four, an anganwadi refers one across. Every attendance, assessment and curriculum figure has a denominator that changes underneath it, and a portal that stores one enrolment count will report all of them wrongly for the rest of the year.', null));
+
+    container.appendChild(mdSec('Every admission', '<span class="reqs">ADB-16 · REG-16</span>'));
+    const admList = document.createElement('div'); admList.className = 'list';
+    const allAdmissions = SAMPLE_STUDENTS.slice(0, juneStart).map(n => ({ name: n, month: 'Jun 2026', baseline: true, how: 'Start of year' })).concat(midYear);
+    admList.innerHTML = allAdmissions.map(a => `<div class="row"><div class="t"><b>${esc(a.name)}</b><span>${esc(a.month)} · ${esc(a.how)}</span></div>
+      <div>${a.baseline ? mdPill('Baseline done', 'good') : mdPill('Baseline pending', 'warn')}</div></div>`).join('');
+    container.appendChild(mdCard(null, 'Workbooks and TLM entitlement follow the child\'s own admission date, not the June headcount.', admList));
+  }
+
+  // ---------- 8. MONTHLY EFFECTIVE ----------
+  // Matches vTeacherEffective: reporting-month tiles, an incomplete-
+  // register warning, and "the return" as a computed line-item table
+  // rather than a form to fill in by hand.
+  function renderMonthlyEffective(){
+    const container = document.getElementById('monthlyeffective-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderMonthlyEffective);
+    const dueDay = 25;
+    const today = new Date().getDate();
+    const registerMarked = 19, studentDays = 22;
+    const unmarkedDays = studentDays - registerMarked;
+    const enrolled = SAMPLE_STUDENTS.length;
+    const ada = Math.round((enrolled * 0.88) * 10) / 10;
+
+    container.appendChild(mdSec('Monthly Effective Return', '<span class="reqs">EFF-02…06</span>'));
+    container.appendChild(mdGrid('g4', [
+      mdTile('Reporting month', new Date().toLocaleDateString([], {month:'long'}), new Date().getFullYear() + ' · Jr KG', mdPill(dueDay - today > 0 ? 'Not yet due' : 'Overdue', dueDay - today > 0 ? 'neu' : 'crit'), 'EFF-02'),
+      mdTile('Due to my supervisor', dueDay - today > 0 ? (dueDay - today) + ' days left' : 'Overdue', 'the 25th, or the last school day before it', mdPill(dueDay - today > 0 ? 'Not yet due' : 'Overdue', dueDay - today > 0 ? 'neu' : 'crit'), 'EFF-03'),
+      mdTile('Effective strength', Math.round(ada/enrolled*100*10)/10, '%', mdPill(ada + ' of ' + enrolled + ' children', 'neu'), 'ADB-14', mdMeter(ada/enrolled*100)),
+      mdTile('Register complete', registerMarked, 'of ' + studentDays + ' days', unmarkedDays ? mdPill(unmarkedDays + ' days open', 'crit') : mdPill('Complete', 'good'), 'REG-04', mdMeter(registerMarked/studentDays*100))
+    ]));
+
+    if(unmarkedDays){
+      container.appendChild(mdCard('The register for this month is not complete',
+        unmarkedDays + ' of ' + studentDays + ' student days have no register. EFF-06 will not let the Effective be submitted on an incomplete register — every figure below is computed on ' + registerMarked + ' days, and submitting it would put a number on the MCGM file that nobody can reproduce.', null));
+    }
+
+    container.appendChild(mdSec('The return', '<span class="reqs">EFF-05</span>'));
+    const linesWrap = document.createElement('div'); linesWrap.className = 'list';
+    linesWrap.innerHTML = [
+      ['Children on roll at month end', enrolled, ''],
+      ['Average daily attendance', ada, 'children'],
+      ['Workbook completion (class average)', '61', '%'],
+      ['TLM usage verified', 'Yes', '']
+    ].map(([k, v, unit]) => `<div class="row"><div class="t"><b>${esc(k)}</b></div><div>${esc(String(v))} ${esc(unit)}</div></div>`).join('');
+    container.appendChild(mdCard('What the portal will print', 'Every line is computed from what has already been entered this month, and names the requirement it comes from. Nothing here is typed twice — the point of the return is the signature, not the arithmetic.', linesWrap));
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-primary'; btn.style.cssText = 'width:auto; padding:10px 20px; margin-top:14px;';
+    btn.textContent = 'Sign & submit this month\'s return';
+    btn.onclick = () => { btn.textContent = '✓ Submitted (not yet backed by a real endpoint)'; btn.disabled = true; };
+    container.appendChild(btn);
+  }
+
+  // ---------- 9. MONTHLY ASSESSMENT ----------
+  // Matches vClassAssess EXACTLY as screenshotted: Child / Att% / 10
+  // domain columns (HEAL PHYS SENS ENVI EMOT PART LOGI MATH LANG ARTS)
+  // / Rec (x of 10 recorded) / Moved (verdict pill). A blank cell means
+  // "not observed this month" — shown as a dim dot, never as Emerging.
+  const monthlyAssessmentEntries = {}; // studentName -> {domainKey: 'E'|'P'|'A'|null} — in-memory only
+  function renderMonthlyAssessment(){
+    const container = document.getElementById('monthlyassessment-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderMonthlyAssessment);
+
+    SAMPLE_STUDENTS.forEach(name => {
+      if(!monthlyAssessmentEntries[name]){
+        monthlyAssessmentEntries[name] = {};
+        ASSESSMENT_DOMAINS.forEach(d => {
+          const recorded = sampleRand(name + d.key + 'rec') > 0.1; // ~90% of cells recorded, a few blank
+          monthlyAssessmentEntries[name][d.key] = recorded ? samplePick(name + d.key + 'ma', ['E','P','A']) : null;
+        });
+      }
+    });
+
+    const totalCells = SAMPLE_STUDENTS.length * ASSESSMENT_DOMAINS.length;
+    let recordedCells = 0;
+    const tot = {E:0,P:0,A:0};
+    SAMPLE_STUDENTS.forEach(name => ASSESSMENT_DOMAINS.forEach(d => {
+      const v = monthlyAssessmentEntries[name][d.key];
+      if(v){ recordedCells++; tot[v]++; }
+    }));
+    const completeness = Math.round(recordedCells / totalCells * 100);
+    const dsi = Math.round(((tot.A*3 + tot.P*2 + tot.E*1) / (3 * recordedCells) * 200) * 10) / 10;
+    const sriPct = Math.round((tot.P + tot.A) / recordedCells * 100);
+    const noMovementCount = SAMPLE_STUDENTS.filter(name => {
+      const eCount = ASSESSMENT_DOMAINS.filter(d => monthlyAssessmentEntries[name][d.key] === 'E').length;
+      return eCount < 5;
+    }).length;
+
+    container.appendChild(mdSec('Monthly Assessment', '<span class="reqs">ASM-11…14</span>'));
+    container.appendChild(mdGrid('g5', [
+      mdTile('Month', new Date().toLocaleDateString([], {month:'long'}), new Date().getFullYear() + ' · semester I', mdPill('Open for recording', 'info'), 'ASM-11'),
+      mdTile('Recording complete', completeness, '% of cells', mdPill(mdStatusBand(completeness, 90, 70).l, mdStatusBand(completeness, 90, 70).c), 'ASM-13', mdMeter(completeness)),
+      mdTile('Class DSI', dsi, 'of 200', mdPill(mdStatusBand(dsi/2).l, mdStatusBand(dsi/2).c), 'DSI', mdMeter(dsi/2)),
+      mdTile('At Proficient or above', sriPct, '% SRI', mdPill(mdStatusBand(sriPct).l, mdStatusBand(sriPct).c), 'SRI', mdMeter(sriPct)),
+      mdTile('Children with no movement', noMovementCount, 'of ' + SAMPLE_STUDENTS.length, noMovementCount > SAMPLE_STUDENTS.length/3 ? mdPill('Look at the teaching', 'crit') : mdPill('Expected at this point', 'neu'), 'ASM-17')
+    ]));
+
+    if(completeness < 100){
+      container.appendChild(mdCard((totalCells - recordedCells) + ' of ' + totalCells + ' observations not recorded this month',
+        'ASM-13 asks for them by the 5th of next month. Every figure above is computed only on what is recorded, so an incomplete month reads better than it is.', null));
+    }
+
+    container.appendChild(mdSec('Every child against every domain', '<span class="reqs">ASM-12…14</span>'));
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr><th>Child</th><th>Att %</th>' +
+      ASSESSMENT_DOMAINS.map(d => `<th title="${esc(d.full)}">${esc(d.label)}</th>`).join('') + '<th>Rec</th><th>Moved</th></tr></thead><tbody>';
+    SAMPLE_STUDENTS.forEach(name => {
+      const attPct = Math.round(sampleRand(name + 'asmatt') * 100);
+      const cells = ASSESSMENT_DOMAINS.map(d => {
+        const tier = monthlyAssessmentEntries[name][d.key];
+        return assessmentTierCell(name, d.key, !!tier, tier);
+      }).join('');
+      const recCount = ASSESSMENT_DOMAINS.filter(d => monthlyAssessmentEntries[name][d.key]).length;
+      const eCount = ASSESSMENT_DOMAINS.filter(d => monthlyAssessmentEntries[name][d.key] === 'E').length;
+      const movedPill = eCount >= 5 ? mdPill('Needs support', 'crit') : mdPill('No movement', 'warn');
+      const attBand = mdStatusBand(attPct, 85, 50); // green ≥85, amber ≥50, red below — matches real screenshot's banding, not the app's usual 85/70
+      table += `<tr><td><b>${esc(name)}</b></td><td>${mdPill(String(attPct), attBand.c)}</td>${cells}<td>${recCount}/${ASSESSMENT_DOMAINS.length}</td><td>${movedPill}</td></tr>`;
+    });
+    table += '</tbody></table></div>';
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard(null, 'Tap a cell to open E / P / A and pick the exact tier. A blank cell (·) has not been observed this month and is not counted anywhere — ASM-14 will not let a blank be read as Emerging, because "I have not looked" and "she cannot do it yet" are different findings.', wrap));
+  }
+
+  // ---------- 10. CHILD RECORD ----------
+  // Matches vStudent: a child picker, DSI/SRI/movement/attendance/
+  // stuck-domain tiles, and a domain-by-domain table with an
+  // observation note per domain.
+  function renderChildRecord(selectedName){
+    const container = document.getElementById('childrecord-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderChildRecord);
+    const name = selectedName || SAMPLE_STUDENTS[0];
+
+    const selectWrap = document.createElement('div'); selectWrap.className = 'fbar';
+    selectWrap.innerHTML = `<div class="ctl"><label>Child</label><select id="childRecordSelect" style="padding:6px 10px; border:1px solid #0b0b0b33; border-radius:6px;"></select></div>
+      <div class="grow" style="flex:1;"></div><div class="cap">Roll ${SAMPLE_STUDENTS.indexOf(name)+1} of ${SAMPLE_STUDENTS.length} · Jr KG · Triveni Sangam Municipal School</div>`;
+    container.appendChild(selectWrap);
+    const sel = selectWrap.querySelector('#childRecordSelect');
+    SAMPLE_STUDENTS.forEach(n => {
+      const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+      if(n === name) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => renderChildRecord(sel.value);
+
+    const tiers = ASSESSMENT_DOMAINS.map(d => (monthlyAssessmentEntries[name] && monthlyAssessmentEntries[name][d.key]) || sampleTier(name+d.key+'tier'));
+    const paCount = tiers.filter(t => t !== 'E').length;
+    const dsi = Math.round((tiers.filter(t=>t==='A').length*3 + tiers.filter(t=>t==='P').length*2 + tiers.filter(t=>t==='E').length*1) / (3*ASSESSMENT_DOMAINS.length) * 200 * 10) / 10;
+    const attMean = Math.round(70 + sampleRand(name + 'attmean') * 28);
+    const stuck = tiers.filter(t => t === 'E').length > 2 ? 1 : 0;
+
+    container.appendChild(mdGrid('g5', [
+      mdTile('Domain Strength', dsi, 'of 200', mdPill(mdStatusBand(dsi/2).l, mdStatusBand(dsi/2).c), 'DSI', mdMeter(dsi/2)),
+      mdTile('At Proficient or above', paCount, 'of ' + ASSESSMENT_DOMAINS.length + ' domains', mdPill(mdStatusBand(paCount/ASSESSMENT_DOMAINS.length*100).l, mdStatusBand(paCount/ASSESSMENT_DOMAINS.length*100).c), 'SRI', mdMeter(paCount/ASSESSMENT_DOMAINS.length*100)),
+      mdTile('Moved up this term', stuck ? 0 : 2, 'domains', stuck ? mdPill('No movement', 'warn') : mdPill('Progressing', 'good'), 'ASM-22'),
+      mdTile('Attendance', attMean, '% year to date', mdPill(mdStatusBand(attMean).l, mdStatusBand(attMean).c), 'REG-05', mdMeter(attMean)),
+      mdTile('Still Emerging', tiers.filter(t=>t==='E').length, 'domains', tiers.filter(t=>t==='E').length>=3 ? mdPill('Needs a plan', 'crit') : mdPill('Watch', 'warn'), 'ASM-24')
+    ]));
+
+    container.appendChild(mdSec('Domain by domain', '<span class="reqs">ASM-21…23</span>'));
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr><th>Domain</th><th>Last term</th><th>This term</th><th>Change</th></tr></thead><tbody>';
+    ASSESSMENT_DOMAINS.forEach((d, i) => {
+      const prevTier = sampleTier(name + d.key + 'prevtier');
+      const curTier = tiers[i];
+      const w = {E:1,P:2,A:3};
+      const up = w[curTier] > w[prevTier];
+      table += `<tr><td><b>${esc(d.full)}</b></td>
+        <td><span class="pill ${TIER_INFO[prevTier].c}">${prevTier}</span></td>
+        <td><span class="pill ${TIER_INFO[curTier].c}">${curTier}${up ? ' ↑' : ''}</span></td>
+        <td>${up ? mdPill('Up a tier', 'good') : mdPill('No change', 'neu')}</td></tr>`;
+    });
+    table += '</tbody></table></div>';
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard('Where ' + name.split(' ')[0] + ' is now, and where she was',
+      'An arrow marks a tier gained since last term. E Emerging · P Proficient · A Advanced.', wrap));
+  }
+
+  // ---------- 11. TRANSITION ----------
+  // Matches vTransition: Jr KG → Sr KG promotion tiles + outcome
+  // table, plus a Sr KG → Grade 1 readiness section.
+  function renderTransition(){
+    const container = document.getElementById('transition-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderTransition);
+
+    const jrCount = 3, srCount = 2;
+    const jrOutcomes = { promoted: 3, 'left the area': 0, 'needs tracing': 0 };
+    const jrTotal = Object.values(jrOutcomes).reduce((a,b) => a+b, 0);
+    const jrRate = Math.round(jrOutcomes.promoted / jrTotal * 100);
+    const readyRate = 78, traced = 92;
+
+    container.appendChild(mdSec('Transition — Jr KG to Sr KG', '<span class="reqs">BAL-09…12 · DAT-52</span>'));
+    container.appendChild(mdGrid('g4', [
+      mdTile('Jr KG children', jrCount, 'Balvatika 2', mdPill('1 school', 'neu'), 'BAL-09'),
+      mdTile('Promoted to Sr KG', jrRate, '%', mdPill(mdStatusBand(jrRate, 92, 85).l, mdStatusBand(jrRate, 92, 85).c), 'BAL-10', mdMeter(jrRate)),
+      mdTile('School Ready', readyRate, '% of Sr KG', mdPill(mdStatusBand(readyRate, 70, 50).l, mdStatusBand(readyRate, 70, 50).c), 'BAL-06', mdMeter(readyRate)),
+      mdTile('Destination traced', traced, '% of Sr KG', mdPill(mdStatusBand(traced, 90, 75).l, mdStatusBand(traced, 90, 75).c), 'BAL-12', mdMeter(traced))
+    ]));
+
+    const outcomeList = document.createElement('div'); outcomeList.className = 'list';
+    outcomeList.innerHTML = Object.entries(jrOutcomes).map(([k, v]) => `<div class="row"><div class="t"><b>${esc(k[0].toUpperCase() + k.slice(1))}</b></div>
+      <div>${v} <span class="dim">(${Math.round(v/jrTotal*100)}%)</span> ${k === 'promoted' ? mdPill('Continued', 'good') : (k === 'left the area' ? mdPill('Migration', 'warn') : mdPill('Needs tracing', 'crit'))}</div></div>`).join('');
+    container.appendChild(mdCard('What happened to last year\'s Balvatika 2', 'A child who does not appear in Sr KG has either left the area or been lost track of — migration and a programme failure are kept apart on purpose (BAL-10).', outcomeList));
+
+    container.appendChild(mdSec('Sr KG → Grade 1', '<span class="reqs">BAL-06/12</span>'));
+    container.appendChild(mdCard('Readiness of this year\'s Sr KG', 'Not a gate — records what the Grade 1 teacher is receiving so the transition can be planned, nothing here holds a child back.',
+      (() => { const d = document.createElement('div'); d.className = 'list';
+        d.innerHTML = `<div class="row"><div class="t"><b>Three or fewer domains at Emerging</b></div><div>${Math.round(srCount*readyRate/100)} children</div></div>
+          <div class="row"><div class="t"><b>Four or more at Emerging</b></div><div>${srCount - Math.round(srCount*readyRate/100)} children</div></div>`;
+        return d; })()));
+  }
+
+
 
 function renderPreviewBanner(isPreviewing){
   const el = document.getElementById('preview-banner');
