@@ -15,7 +15,10 @@
    ========================================================================= */
 function logout(){
   fetch('backend/logout.php').catch(() => {});
-  window.location.href = 'index.html';
+  // Plain index.html would immediately re-trigger main.js's auto-dev-
+  // bypass on localhost and bounce straight back into this dashboard —
+  // making logout look broken. ?no_dev=1 shows the real login page.
+  window.location.href = 'index.html?no_dev=1';
 }
 
 fetch('backend/session_check.php' + window.location.search)
@@ -518,6 +521,7 @@ fetch('backend/session_check.php' + window.location.search)
     document.getElementById('navClassProgress').classList.toggle('active', section === 'classprogress');
     document.getElementById('navAttendanceRegister').classList.toggle('active', section === 'attendanceregister');
     document.getElementById('navMyCompliance').classList.toggle('active', section === 'mycompliance');
+    document.getElementById('navTeacherProfile').classList.toggle('active', section === 'teacherprofile');
     document.getElementById('navFamilyParents').classList.toggle('active', section === 'familyparents');
     document.getElementById('navCheckAttendance').classList.toggle('active', section === 'checkattendance');
     document.getElementById('navAdmissions').classList.toggle('active', section === 'admissions');
@@ -527,7 +531,6 @@ fetch('backend/session_check.php' + window.location.search)
     document.getElementById('navTransition').classList.toggle('active', section === 'transition');
     document.getElementById('navAttendance').classList.toggle('active', section === 'attendance');
     document.getElementById('navCalendar').classList.toggle('active', section === 'calendar');
-    document.getElementById('navEvents').classList.toggle('active', section === 'events');
     document.getElementById('navMaterials').classList.toggle('active', section === 'materials');
     document.getElementById('navVolunteers').classList.toggle('active', section === 'volunteers');
     document.getElementById('sidebar-workbook-section').classList.toggle('hidden', section !== 'workbook');
@@ -541,6 +544,7 @@ fetch('backend/session_check.php' + window.location.search)
         : section === 'classprogress' ? 'Class Progress'
         : section === 'attendanceregister' ? 'Attendance Register'
         : section === 'mycompliance' ? 'My Compliance'
+        : section === 'teacherprofile' ? 'Teacher Profile'
         : section === 'familyparents' ? 'Family & Parents'
         : section === 'checkattendance' ? 'Check Attendance'
         : section === 'admissions' ? 'Admissions'
@@ -550,7 +554,6 @@ fetch('backend/session_check.php' + window.location.search)
         : section === 'transition' ? 'Transition'
         : section === 'attendance' ? 'Attendance'
         : section === 'calendar' ? 'My Attendance'
-        : section === 'events' ? 'School Events'
         : section === 'materials' ? 'Materials'
         : section === 'volunteers' ? 'Parent Volunteers'
         : 'My Day';
@@ -559,7 +562,6 @@ fetch('backend/session_check.php' + window.location.search)
     document.getElementById('week-body').classList.add('hidden');
     document.getElementById('attendance-body').classList.add('hidden');
     document.getElementById('calendar-body').classList.add('hidden');
-    document.getElementById('events-body').classList.add('hidden');
     document.getElementById('myday-body').classList.add('hidden');
     document.getElementById('dailyplan-body').classList.add('hidden');
     document.getElementById('ptm-body').classList.add('hidden');
@@ -567,6 +569,7 @@ fetch('backend/session_check.php' + window.location.search)
     document.getElementById('classprogress-body').classList.add('hidden');
     document.getElementById('attendanceregister-body').classList.add('hidden');
     document.getElementById('mycompliance-body').classList.add('hidden');
+    document.getElementById('teacherprofile-body').classList.add('hidden');
     document.getElementById('familyparents-body').classList.add('hidden');
     document.getElementById('checkattendance-body').classList.add('hidden');
     document.getElementById('admissions-body').classList.add('hidden');
@@ -589,10 +592,6 @@ fetch('backend/session_check.php' + window.location.search)
       document.getElementById('calendar-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'My Attendance';
       renderAttendanceCalendar(calendarYear, calendarMonth);
-    } else if(section === 'events'){
-      document.getElementById('events-body').classList.remove('hidden');
-      document.getElementById('week-subheading').textContent = 'PTMs, trainings, and other school events';
-      renderSchoolEvents();
     } else if(section === 'dailyplan'){
       document.getElementById('dailyplan-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Plan today\'s sessions — start from a suggestion or write your own';
@@ -621,6 +620,10 @@ fetch('backend/session_check.php' + window.location.search)
       document.getElementById('mycompliance-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Your own SOP compliance, rolled up';
       renderMyCompliance();
+    } else if(section === 'teacherprofile'){
+      document.getElementById('teacherprofile-body').classList.remove('hidden');
+      document.getElementById('week-subheading').textContent = 'Your qualifications, contact details, and training record';
+      renderTeacherProfile();
     } else if(section === 'familyparents'){
       document.getElementById('familyparents-body').classList.remove('hidden');
       document.getElementById('week-subheading').textContent = 'Who to call for each child';
@@ -758,19 +761,19 @@ fetch('backend/session_check.php' + window.location.search)
 
   /* ===================== SECTION 7: MATERIALS ===================== */
 
-  function getMaterialsList(){
+  // Fetches the real materials list from the database. Previously this
+  // read from localStorage instead — meaning "+ Add material" and the
+  // CSV import were both writing real rows to the real materials
+  // table, while this function kept reading a completely separate,
+  // never-synced local copy. Fixed to actually match.
+  async function getMaterialsList(){
     try{
-      const raw = localStorage.getItem('materialsList');
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){
+      const res = await fetch('backend/get_materials.php' + window.location.search);
+      const data = await res.json();
+      return (data.status === 'success' && data.materials) ? data.materials : [];
+    } catch(err){
       return [];
     }
-  }
-
-  function saveMaterialsList(list){
-    try{
-      localStorage.setItem('materialsList', JSON.stringify(list));
-    }catch(e){ /* localStorage unavailable — list just won't persist this session */ }
   }
 
   function materialRowHtml(m){
@@ -786,13 +789,49 @@ fetch('backend/session_check.php' + window.location.search)
       </div>`;
   }
 
-  function renderMaterials(){
+  // Sample categorized breakdown — TLM/Stationery/Workbooks, matching
+  // the specific fields requested for the demo. Deliberately separate
+  // from the real materials list below (add_materials.php etc.) —
+  // that flow is genuinely backend-driven already; this is a
+  // frontend-only sample summary sitting alongside it.
+  function sampleMaterialsBreakdown(){
+    return {
+      tlmPresentQty: 42,
+      stationery: [
+        { item: 'Chair', qty: 28 },
+        { item: 'Duster', qty: 5 },
+        { item: 'Register', qty: 3 },
+        { item: 'Cleaning supplies', qty: 12 }
+      ],
+      workbookSets: 27
+    };
+  }
+
+  async function renderMaterials(){
     const container = document.getElementById('materials-body');
-    const materials = getMaterialsList().sort((a, b) => b.received_date.localeCompare(a.received_date));
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderMaterials);
+    const b = sampleMaterialsBreakdown();
+
+    const breakdownWrap = document.createElement('div');
+    breakdownWrap.appendChild(mdSec('Materials breakdown', '<span class="reqs">INV-01…08 · sample data</span>'));
+    breakdownWrap.appendChild(mdGrid('g3', [
+      mdTile('TLM present', b.tlmPresentQty, 'quantity', mdPill('In stock', 'good'), 'INV-01'),
+      mdTile('Workbooks', b.workbookSets, 'sets', mdPill('In stock', 'good'), 'INV-03'),
+      mdTile('Stationery & supplies', b.stationery.length, 'item types', mdPill('See breakdown', 'info'), 'INV-02')
+    ]));
+    const stationeryList = document.createElement('div'); stationeryList.className = 'list';
+    stationeryList.innerHTML = b.stationery.map(s => `<div class="row"><div class="t"><b>${esc(s.item)}</b></div><div>${s.qty}</div></div>`).join('');
+    breakdownWrap.appendChild(mdCard('Stationery & supplies — quantity', null, stationeryList));
+    container.appendChild(breakdownWrap);
+
+    const materials = await getMaterialsList();
+    materials.sort((a, b) => b.received_date.localeCompare(a.received_date));
     const distributedCount = materials.filter(m => m.distributed).length;
     const rows = materials.map(materialRowHtml).join('');
 
-    container.innerHTML = `
+    const realWrap = document.createElement('div');
+    realWrap.innerHTML = `
       <div class="visit-banner" style="margin-bottom:16px;">
         <div><strong>Materials received from BMC</strong><br/>${materials.length ? distributedCount + ' of ' + materials.length + ' items distributed' : 'Nothing logged yet'}</div>
         <button class="btn-primary" style="width:auto; padding:9px 16px;" onclick="toggleAddMaterialForm()">+ Add material</button>
@@ -800,6 +839,61 @@ fetch('backend/session_check.php' + window.location.search)
       <div id="addMaterialFormWrap" class="hidden"></div>
       <div id="materialsList">${rows || '<p class="sub">No materials logged yet — tap "+ Add material" once something arrives.</p>'}</div>
     `;
+    container.appendChild(realWrap);
+
+    container.appendChild(renderMaterialsImportCard());
+  }
+
+  // ---------------------------------------------------------
+  // IMPORT MATERIALS FROM CSV — bulk version of "+ Add material".
+  // CSV must have exactly this header: item_name,quantity,received_date
+  // (received_date as YYYY-MM-DD). Real backend (import_materials_csv.php),
+  // writes into the same real materials table as the single-item form.
+  // ---------------------------------------------------------
+  function renderMaterialsImportCard(){
+    const wrap = document.createElement('div');
+    wrap.className = 'card';
+    wrap.style.marginTop = '16px';
+    wrap.innerHTML = `
+      <div class="hd"><div><h3>Import materials from CSV</h3><p class="cap">Header row must be exactly: item_name,quantity,received_date (date as YYYY-MM-DD).</p></div></div>
+      <input type="file" id="materialsCsvInput" accept=".csv" style="margin-top:8px;" />
+      <div id="materialsImportResult" style="margin-top:10px;"></div>
+      <button class="btn-primary" style="width:auto; padding:9px 16px; margin-top:10px;" onclick="importMaterialsCsv()">Import</button>
+    `;
+    return wrap;
+  }
+
+  async function importMaterialsCsv(){
+    const input = document.getElementById('materialsCsvInput');
+    const resultEl = document.getElementById('materialsImportResult');
+    if(!input.files.length){
+      resultEl.innerHTML = '<div class="au-error">Choose a CSV file first.</div>';
+      return;
+    }
+    resultEl.innerHTML = '<p class="sub">Importing…</p>';
+
+    const formData = new FormData();
+    formData.append('csv_file', input.files[0]);
+
+    try{
+      const res = await fetch('backend/import_materials_csv.php' + window.location.search, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if(data.status !== 'success'){
+        resultEl.innerHTML = `<div class="au-error">${esc(data.message || 'Import failed.')}</div>`;
+        return;
+      }
+      let html = `<div class="au-success">✓ Imported ${data.imported} item${data.imported === 1 ? '' : 's'}.</div>`;
+      if(data.skipped_count > 0){
+        html += `<div class="au-error" style="margin-top:6px;">${data.skipped_count} row(s) skipped:<ul style="margin:4px 0 0 18px;">${data.skipped.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>`;
+      }
+      resultEl.innerHTML = html;
+      renderMaterials(); // reload the real list with the newly imported rows
+    } catch(err){
+      resultEl.innerHTML = '<div class="au-error">Could not reach the server.</div>';
+    }
   }
 
   /* =========================================================
@@ -1536,6 +1630,22 @@ fetch('backend/session_check.php' + window.location.search)
     renderDailyPlan();
   }
 
+  // Parses WEEKS[].dates strings like "15–19 Jun 2026" (same month) or
+  // "29 Jun–3 Jul 2026" (crosses a month boundary) into the week's
+  // actual Monday date. Finds the FIRST day-number and FIRST month
+  // abbreviation in the string, which is always the start of the
+  // range in both formats.
+  function parseWeekStartDate(datesStr){
+    const monthNames = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    const yearMatch = datesStr.match(/(\d{4})/);
+    const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
+    const dayMatch = datesStr.match(/^(\d+)/);
+    const startDay = dayMatch ? parseInt(dayMatch[1], 10) : 1;
+    const monthMatch = datesStr.match(/[A-Za-z]{3}/);
+    const startMonth = monthMatch && monthNames[monthMatch[0]] !== undefined ? monthNames[monthMatch[0]] : 0;
+    return new Date(year, startMonth, startDay);
+  }
+
   function renderDailyPlan(){
     const container = document.getElementById('dailyplan-body');
     container.innerHTML = '';
@@ -1558,6 +1668,42 @@ fetch('backend/session_check.php' + window.location.search)
     });
 
     container.appendChild(mdSec('Week ' + w.w + ' · ' + w.theme + ' · ' + dayLabels[dailyPlanDayIndex]));
+
+    // ---------------------------------------------------------
+    // PLANNED SESSIONS CALENDAR — reuses the exact same calendar
+    // renderer as PTM Schedule & Agenda (PTM_calMonth / PTM_buildMonthGrid
+    // from ptm-view.js), so both calendars look and behave identically.
+    // Each day shows how many of the 8 domains have a saved plan.
+    // ---------------------------------------------------------
+    (function renderDailyPlanCalendar(){
+      const startDate = parseWeekStartDate(w.dates);
+      const monthIdx = startDate.getMonth();
+      const monthYear = startDate.getFullYear();
+      const mo = PTM_buildMonthGrid(monthYear, monthIdx);
+      const items = {};
+      const dayKeysArr = ['mon','tue','wed','thu','fri'];
+      let selectedCalDay = null;
+      dayKeysArr.forEach((dk, i) => {
+        const d = new Date(startDate); d.setDate(d.getDate() + i);
+        if(d.getMonth() !== monthIdx) return; // week crosses into next month — only this month's days shown here
+        const dateDay = d.getDate();
+        if(i === dailyPlanDayIndex) selectedCalDay = dateDay;
+        const plannedCount = DOMAINS.filter(dom => {
+          const key = dailyPlanKey(currentWeekNum, dk, dom.key);
+          const entry = dailyPlanEntries[key];
+          return entry && entry.text && entry.text.trim();
+        }).length;
+        if(plannedCount > 0){
+          items[dateDay] = [{
+            label: plannedCount + '/' + DOMAINS.length + ' planned',
+            band: plannedCount === DOMAINS.length ? 'good' : 'warn'
+          }];
+        }
+      });
+      container.appendChild(PTM_sec('Planned sessions this month', '<span class="reqs">LPC-01…04</span>'));
+      container.appendChild(PTM_calMonth(mo, items, selectedCalDay));
+      container.appendChild(PTM_el('p', 'cap', 'A day shows how many of the 8 sessions have a saved plan. Tap a day chip above to plan for it — this calendar is a summary, not editable directly.'));
+    })();
 
     // One card per session
     DOMAINS.forEach(d => {
@@ -1667,7 +1813,7 @@ fetch('backend/session_check.php' + window.location.search)
     document.getElementById('matReceivedDate').value = todayKey();
   }
 
-  function submitNewMaterial(event){
+  async function submitNewMaterial(event){
     event.preventDefault();
     const resultEl = document.getElementById('addMaterialResult');
     resultEl.innerHTML = '';
@@ -1680,25 +1826,37 @@ fetch('backend/session_check.php' + window.location.search)
       return false;
     }
 
-    const materials = getMaterialsList();
-    materials.push({
-      id: Date.now(),
-      item_name: itemName,
-      quantity: document.getElementById('matQuantity').value.trim(),
-      received_date: receivedDate,
-      distributed: false
-    });
-    saveMaterialsList(materials);
-    renderMaterials();
+    resultEl.innerHTML = '<p class="sub">Saving…</p>';
+    try{
+      const res = await fetch('backend/add_materials.php' + window.location.search, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          item_name: itemName,
+          quantity: document.getElementById('matQuantity').value.trim(),
+          received_date: receivedDate
+        })
+      });
+      const data = await res.json();
+      if(data.status !== 'success'){
+        resultEl.innerHTML = `<div class="au-error">${esc(data.message || 'Could not save.')}</div>`;
+        return false;
+      }
+      renderMaterials();
+    } catch(err){
+      resultEl.innerHTML = '<div class="au-error">Could not reach the server.</div>';
+    }
     return false;
   }
 
-  function toggleMaterialDistributed(materialId){
-    const materials = getMaterialsList();
-    const material = materials.find(m => String(m.id) === String(materialId));
-    if(!material) return;
-    material.distributed = !material.distributed;
-    saveMaterialsList(materials);
+  async function toggleMaterialDistributed(materialId){
+    try{
+      await fetch('backend/toggle_material.php' + window.location.search, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ material_id: materialId })
+      });
+    } catch(err){ /* fall through to re-render regardless — shows the real current state */ }
     renderMaterials();
   }
 
@@ -2222,13 +2380,11 @@ fetch('backend/session_check.php' + window.location.search)
     const assessmentComplete = Math.round(60 + sampleRand('asmc') * 35);
 
     container.appendChild(mdSec('Class Progress', '<span class="reqs">ASM-02…04 · WBK-02</span>'));
-    container.appendChild(mdGrid('g4', [
+    container.appendChild(mdGrid('g5', [
       mdTile('Class SRI', classSRI, '%', mdPill(mdStatusBand(classSRI).l, mdStatusBand(classSRI).c), 'SRI = (P+A) ÷ N × 100', mdMeter(classSRI)),
       mdTile('Class CPI', classCPI, '/200', mdPill(mdStatusBand(classCPI/2).l, mdStatusBand(classCPI/2).c), 'Σ Domain DSI ÷ 10', mdMeter(classCPI/2)),
       mdTile('Advanced', advancedPct, '%', mdPill('sample', 'info'), 'ARI = A ÷ N × 100', mdMeter(advancedPct)),
-      mdTile('E → P conversion', epConversion, '%', mdPill('P→A ' + paConversion + '%', 'neu'), 'x ÷ E(SEM I) × 100', mdMeter(epConversion))
-    ]));
-    container.appendChild(mdGrid('g4', [
+      mdTile('E → P conversion', epConversion, '%', mdPill('P→A ' + paConversion + '%', 'neu'), 'x ÷ E(SEM I) × 100', mdMeter(epConversion)),
       mdTile('Assessment complete', assessmentComplete, '%', mdPill(mdStatusBand(assessmentComplete).l, mdStatusBand(assessmentComplete).c), 'ASM-03 · children × domains', mdMeter(assessmentComplete))
     ]));
 
@@ -2337,12 +2493,17 @@ fetch('backend/session_check.php' + window.location.search)
   const HOME_RESOURCES = ['Smartphone', 'Radio', 'Television', 'Books at home', 'None of these'];
   function sampleHousehold(name){
     const f = sampleFamily(name);
+    const familyStructure = samplePick(name + 'fstruct', ['Two parents', 'Single parent', 'Guardian']);
     return Object.assign(f, {
       locality: samplePick(name + 'loc', ['Ambedkar Nagar', 'Kamgar Vasahat', 'Shanti Nagar', 'Ganesh Nagar']),
       walk: 5 + Math.floor(sampleRand(name + 'walk') * 20),
       skills: [samplePick(name + 'sk1', HOUSEHOLD_SKILLS), samplePick(name + 'sk2', HOUSEHOLD_SKILLS)],
       res: [samplePick(name + 'res1', HOME_RESOURCES)],
       siblings: Math.floor(sampleRand(name + 'sib') * 3),
+      familyStructure,
+      maritalStatus: familyStructure === 'Two parents' ? 'Married' : samplePick(name + 'marstat', ['Single', 'Married']),
+      motherTongue: samplePick(name + 'mt', ['Hindi', 'Marathi', 'Telugu', 'Bhojpuri', 'Gujarati']),
+      annualIncome: Math.round((30000 + sampleRand(name + 'annincome') * 150000) / 1000) * 1000,
       guardianNames: [{name: 'Mrs. ' + name.split(' ')[1], rel: 'Mother', edu: samplePick(name+'edu1', ['No formal education','Primary school','Secondary school']), phone: '98'+String(Math.floor(sampleRand(name+'ph1')*90000000)+10000000), smart: sampleRand(name+'sm1')>0.4, primary: true},
                       {name: 'Mr. ' + name.split(' ')[1], rel: 'Father', edu: samplePick(name+'edu2', ['No formal education','Primary school','Secondary school']), phone: '98'+String(Math.floor(sampleRand(name+'ph2')*90000000)+10000000), smart: sampleRand(name+'sm2')>0.4, primary: false}]
     });
@@ -2373,7 +2534,10 @@ fetch('backend/session_check.php' + window.location.search)
     householdBody.innerHTML = `
       <dt>Locality</dt><dd>${esc(f.locality)}</dd>
       <dt>Walk to school</dt><dd>${f.walk} minutes</dd>
-      <dt>Income band</dt><dd>${esc(f.income)} <span class="pill neu">band, not exact — FAM-05</span></dd>
+      <dt>Family structure</dt><dd>${esc(f.familyStructure)}${f.familyStructure !== 'Guardian' ? ' · ' + esc(f.maritalStatus) : ''}</dd>
+      <dt>Mother tongue</dt><dd>${esc(f.motherTongue)}</dd>
+      <dt>Annual income</dt><dd>₹${f.annualIncome.toLocaleString('en-IN')} <span class="pill neu">exact — internal only, DAT-36 suppresses this on exports</span></dd>
+      <dt>Income band</dt><dd>${esc(f.income)} <span class="pill neu">band shown elsewhere — FAM-05</span></dd>
       <dt>Languages at home</dt><dd>${esc(f.langs.join(', '))}</dd>
       <dt>Adult reads programme language</dt><dd>${f.reads ? 'Yes' : '<b>No</b> — guidance must be audio or pictorial (PTC-05)'}</dd>
       <dt>Household skills</dt><dd>${esc(f.skills.join(', '))}</dd>
@@ -2383,7 +2547,7 @@ fetch('backend/session_check.php' + window.location.search)
     g.appendChild(mdCard('Household — ' + name, 'FAM-01 · one household per child; siblings share it.', householdBody));
 
     const guardianList = document.createElement('div'); guardianList.className = 'list';
-    guardianList.innerHTML = f.guardianNames.map(gd => `<div class="row"><div class="t"><b>${esc(gd.name)} · ${esc(gd.rel)}</b><span>${esc(gd.edu)} · ${esc(gd.phone)}</span></div>
+    guardianList.innerHTML = f.guardianNames.map((gd, i) => `<div class="row"><div class="t"><b>${esc(gd.name)} · ${esc(gd.rel)}</b><span>${esc(f.guardians[i].occ)} · ${esc(gd.edu)} · ${esc(gd.phone)}</span></div>
       <div>${gd.smart ? mdPill('Smartphone', 'good') : mdPill('Basic phone', 'warn')} ${gd.primary ? mdPill('Primary', 'info') : ''}</div></div>`).join('');
     g.appendChild(mdCard('Parents and guardians', 'FAM-02…04 · occupation and education on controlled lists.', guardianList));
     container.appendChild(g);
@@ -2440,6 +2604,17 @@ fetch('backend/session_check.php' + window.location.search)
   // Matches vTeacherAdmissions: on-roll/June-start/mid-year/no-baseline
   // tiles, an explanatory note, a month-by-month roll curve (as a
   // simple list, not the real bar chart), and the every-admission table.
+  function sampleAdmissionExtra(name){
+    return {
+      dob: samplePick(name + 'dob', ['12-04-2022', '03-09-2021', '27-01-2022', '18-06-2021', '09-11-2022']),
+      age: 3 + Math.floor(sampleRand(name + 'age') * 2),
+      gender: samplePick(name + 'gender', ['Female', 'Male']),
+      address: samplePick(name + 'addr', ['Ambedkar Nagar, Sion', 'Kamgar Vasahat, Sion', 'Shanti Nagar, Wadala', 'Ganesh Nagar, Wadala']),
+      speciallyAbled: sampleRand(name + 'sabled') > 0.92,
+      previouslyStudied: sampleRand(name + 'prev') > 0.6 ? samplePick(name + 'prevwhere', ['Anganwadi', 'Private preschool']) : 'None'
+    };
+  }
+
   function renderAdmissions(){
     const container = document.getElementById('admissions-body');
     container.innerHTML = '';
@@ -2461,11 +2636,27 @@ fetch('backend/session_check.php' + window.location.search)
       'The roll is not a number set in June. Children arrive all year — families move into the area, a child turns four, an anganwadi refers one across. Every attendance, assessment and curriculum figure has a denominator that changes underneath it, and a portal that stores one enrolment count will report all of them wrongly for the rest of the year.', null));
 
     container.appendChild(mdSec('Every admission', '<span class="reqs">ADB-16 · REG-16</span>'));
-    const admList = document.createElement('div'); admList.className = 'list';
     const allAdmissions = SAMPLE_STUDENTS.slice(0, juneStart).map(n => ({ name: n, month: 'Jun 2026', baseline: true, how: 'Start of year' })).concat(midYear);
-    admList.innerHTML = allAdmissions.map(a => `<div class="row"><div class="t"><b>${esc(a.name)}</b><span>${esc(a.month)} · ${esc(a.how)}</span></div>
-      <div>${a.baseline ? mdPill('Baseline done', 'good') : mdPill('Baseline pending', 'warn')}</div></div>`).join('');
-    container.appendChild(mdCard(null, 'Workbooks and TLM entitlement follow the child\'s own admission date, not the June headcount.', admList));
+
+    let table = '<div class="report-table-wrap"><table class="report-table"><thead><tr>' +
+      '<th>Child</th><th>Admitted</th><th>Standard</th><th>DOB (Age)</th><th>Gender</th><th>Address</th><th>Previously studied</th><th>Specially abled</th><th>Baseline</th></tr></thead><tbody>';
+    allAdmissions.forEach(a => {
+      const extra = sampleAdmissionExtra(a.name);
+      table += `<tr>
+        <td><b>${esc(a.name)}</b></td>
+        <td>${esc(a.month)} · ${esc(a.how)}</td>
+        <td>Jr KG</td>
+        <td>${esc(extra.dob)} (${extra.age})</td>
+        <td>${esc(extra.gender)}</td>
+        <td class="dim">${esc(extra.address)}</td>
+        <td>${esc(extra.previouslyStudied)}</td>
+        <td>${extra.speciallyAbled ? mdPill('Yes', 'info') : 'No'}</td>
+        <td>${a.baseline ? mdPill('Done', 'good') : mdPill('Pending', 'warn')}</td>
+      </tr>`;
+    });
+    table += '</tbody></table></div>';
+    const wrap = document.createElement('div'); wrap.innerHTML = table;
+    container.appendChild(mdCard(null, 'Workbooks and TLM entitlement follow the child\'s own admission date, not the June headcount.', wrap));
   }
 
   // ---------- 8. MONTHLY EFFECTIVE ----------
@@ -2635,6 +2826,69 @@ fetch('backend/session_check.php' + window.location.search)
     const wrap = document.createElement('div'); wrap.innerHTML = table;
     container.appendChild(mdCard('Where ' + name.split(' ')[0] + ' is now, and where she was',
       'An arrow marks a tier gained since last term. E Emerging · P Proficient · A Advanced.', wrap));
+  }
+
+  // ---------- 12. TEACHER PROFILE ----------
+  // New screen — no equivalent existed anywhere in the app before this.
+  // Sample data for the currently logged-in teacher (Mrs. Sharma), same
+  // deterministic-sample pattern as everything else. A real version of
+  // this would read from users.* plus a new teacher_profile table —
+  // neither of which exist yet.
+  function sampleTeacherProfile(){
+    return {
+      name: 'Mrs. Sharma',
+      qualification: 'D.El.Ed (Diploma in Elementary Education)',
+      dob: '14-03-1991',
+      age: 35,
+      gender: 'Female',
+      maritalStatus: 'Married',
+      contactNormal: '98' + String(23456780),
+      contactEmergency: '98' + String(76543210),
+      experience: '6 years',
+      languages: ['Hindi', 'Marathi', 'English'],
+      address: 'Room 12, Kamgar Vasahat, Sion, Mumbai 400022',
+      training: [
+        { name: 'Classroom management basics', date: 'Apr 2026', cert: true },
+        { name: 'Using the Jadui Pitara kit', date: 'Jun 2026', cert: true },
+        { name: 'Parent engagement techniques', date: 'Jul 2026', cert: false }
+      ]
+    };
+  }
+
+  function renderTeacherProfile(){
+    const container = document.getElementById('teacherprofile-body');
+    container.innerHTML = '';
+    renderTeacherFilterBar(container, renderTeacherProfile);
+    const p = sampleTeacherProfile();
+
+    container.appendChild(mdSec('Teacher Profile', '<span class="reqs">STF-01…08 · sample data</span>'));
+
+    const g = document.createElement('div'); g.className = 'g g2';
+
+    const basicsBody = document.createElement('dl'); basicsBody.className = 'kv';
+    basicsBody.innerHTML = `
+      <dt>Qualification</dt><dd>${esc(p.qualification)}</dd>
+      <dt>Date of birth</dt><dd>${esc(p.dob)} (${p.age} years)</dd>
+      <dt>Gender</dt><dd>${esc(p.gender)}</dd>
+      <dt>Marital status</dt><dd>${esc(p.maritalStatus)}</dd>
+      <dt>Experience</dt><dd>${esc(p.experience)}</dd>
+      <dt>Languages spoken</dt><dd>${esc(p.languages.join(', '))}</dd>`;
+    g.appendChild(mdCard('Basics', 'STF-01…04', basicsBody));
+
+    const contactBody = document.createElement('dl'); contactBody.className = 'kv';
+    contactBody.innerHTML = `
+      <dt>Contact number (normal)</dt><dd>${esc(p.contactNormal)}</dd>
+      <dt>Contact number (emergency)</dt><dd>${esc(p.contactEmergency)}</dd>
+      <dt>Address</dt><dd>${esc(p.address)}</dd>`;
+    g.appendChild(mdCard('Contact', 'STF-05', contactBody));
+
+    container.appendChild(g);
+
+    container.appendChild(mdSec('Activities / workshops done till date', '<span class="reqs">STF-06 · training certifications</span>'));
+    const trainingList = document.createElement('div'); trainingList.className = 'list';
+    trainingList.innerHTML = p.training.map(t => `<div class="row"><div class="t"><b>${esc(t.name)}</b><span>${esc(t.date)}</span></div>
+      <div>${t.cert ? mdPill('Certified', 'good') : mdPill('Attended, no certificate', 'warn')}</div></div>`).join('');
+    container.appendChild(mdCard(null, null, trainingList));
   }
 
   // ---------- 11. TRANSITION ----------

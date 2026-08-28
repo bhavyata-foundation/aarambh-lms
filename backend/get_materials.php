@@ -9,14 +9,20 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 ini_set('display_errors', '0');
 
 // =========================================================================
-// ADD MATERIAL — a teacher logs an item that's actually arrived. Adding
-// the row IS the received-status record; there's no separate step.
+// GET MATERIALS — returns every material logged for the teacher's own
+// class. This is the actual SELECT counterpart to add_materials.php —
+// a previous version of this file (uploaded earlier in this project)
+// accidentally contained a copy of add_materials.php's INSERT logic
+// instead, which is why "+ Add material" and CSV import were writing
+// to the real database while the on-screen list kept reading from
+// localStorage instead and never showed any of it.
 // =========================================================================
 
 session_start();
 header('Content-Type: application/json');
 
-$isLocalRequest = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:80', '127.0.0.1:80']);
+$requestHost = strtok($_SERVER['HTTP_HOST'] ?? '', ':');
+$isLocalRequest = in_array($requestHost, ['localhost', '127.0.0.1']);
 $devRole = ($isLocalRequest && isset($_GET['dev_role'])) ? $_GET['dev_role'] : null;
 $effectiveRole = $_SESSION['role'] ?? $devRole;
 
@@ -26,31 +32,18 @@ if ($effectiveRole !== 'teacher') {
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$itemName = trim($input['item_name'] ?? '');
-$quantity = trim($input['quantity'] ?? '');
-$receivedDate = $input['received_date'] ?? '';
-
-if ($itemName === '' || $receivedDate === '') {
-    http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => 'Item name and received date are both required.']);
-    exit;
-}
-
 require_once __DIR__ . '/db_config.php';
 $conn = get_db_connection();
 
+// Same teacher-to-class resolution used everywhere else in this
+// project — including the same fix applied to get_my_class.php and
+// import_materials_csv.php: the dev-bypass fallback is hardcoded to
+// teacher 49, the one real teacher-to-class link that actually exists
+// right now, rather than an unlinked "any teacher" lookup.
 if (isset($_SESSION['user_id'])) {
     $teacherId = $_SESSION['user_id'];
 } else {
-    $lookup = $conn->query("SELECT id FROM users WHERE role = 'teacher' ORDER BY id LIMIT 1");
-    $row = $lookup ? $lookup->fetch_assoc() : null;
-    if (!$row) {
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'No teacher account exists yet to attribute this to.']);
-        exit;
-    }
-    $teacherId = $row['id'];
+    $teacherId = 49;
 }
 
 $classStmt = $conn->prepare("SELECT id FROM classes WHERE teacher_user_id = ? LIMIT 1");
@@ -60,24 +53,29 @@ $classRow = $classStmt->get_result()->fetch_assoc();
 $classStmt->close();
 
 if (!$classRow) {
-    http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => 'Your account is not linked to a class yet — ask your admin to link it.']);
+    echo json_encode(['status' => 'success', 'materials' => []]);
+    $conn->close();
     exit;
 }
 
 $stmt = $conn->prepare("
-    INSERT INTO materials (class_id, item_name, quantity, received_date, added_by)
-    VALUES (?, ?, ?, ?, ?)
+    SELECT id, item_name, quantity, received_date, distributed
+    FROM materials
+    WHERE class_id = ?
+    ORDER BY received_date DESC, id DESC
 ");
-$stmt->bind_param('isssi', $classRow['id'], $itemName, $quantity, $receivedDate, $teacherId);
+$stmt->bind_param('i', $classRow['id']);
+$stmt->execute();
+$result = $stmt->get_result();
 
-if ($stmt->execute()) {
-    echo json_encode(['status' => 'success', 'material_id' => $conn->insert_id]);
-} else {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+$materials = [];
+while ($row = $result->fetch_assoc()) {
+    $row['distributed'] = (bool) $row['distributed'];
+    $materials[] = $row;
 }
 
 $stmt->close();
 $conn->close();
+
+echo json_encode(['status' => 'success', 'materials' => $materials]);
 ?>

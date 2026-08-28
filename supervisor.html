@@ -27,7 +27,7 @@
       <span class="user-caret">▾</span>
     </button>
     <div class="user-dropdown hidden" id="userDropdown">
-      <button onclick="fetch('backend/logout.php').finally(() => location.href='index.html')">Log out</button>
+      <button onclick="fetch('backend/logout.php').finally(() => location.href='index.html?no_dev=1')">Log out</button>
     </div>
   </div>
 </div>
@@ -39,7 +39,7 @@
       <button class="sidebar-nav-btn active" id="navVisits" onclick="switchSection('visits')">📋 Visit Checklist</button>
       <button class="sidebar-nav-btn" id="navHistory" onclick="switchSection('history')">🕓 Visit History</button>
       <button class="sidebar-nav-btn" id="navSchools" onclick="switchSection('schools')">🏫 My Schools</button>
-      <button class="sidebar-nav-btn" id="navEvents" onclick="switchSection('events')">📌 Events</button>
+      <button class="sidebar-nav-btn" id="navEvents" onclick="switchSection('events'); renderSupervisorPTM();">📌 PTM & Training</button>
     </div>
     <div class="sidebar-label">Teachers · This week</div>
     <div id="teacher-list"></div>
@@ -95,12 +95,125 @@
     </div>
 
     <div id="section-events" class="hidden">
-      <div id="events-admin-body"></div>
+      <!-- Hidden on purpose, not removed — supervisor.js may still write
+           into this div by ID when switching to this section, and I
+           don't have that file's content to confirm it's safe to delete
+           outright. -->
+      <div id="events-admin-body" style="display:none;"></div>
+
+      <!-- Top-level context selector — the ONE place School/Class is
+           picked. Changing either reloads the whole dashboard below
+           (tiles, calendar, agenda, and the schedule form all follow
+           this, not a separate picker buried in the form). -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="hd"><div><h3>Viewing</h3><p class="cap">Pick a school and class — everything below (and anything you schedule) is for this one teacher.</p></div></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+          <div><label class="field-label-admin">School</label><select id="ptmTopSchoolSelect" onchange="PTM_onTopSchoolChange()"><option>Loading…</option></select></div>
+          <div><label class="field-label-admin">Class / Teacher</label><select id="ptmTopClassSelect" onchange="PTM_onTopClassChange()"><option>Select a school first</option></select></div>
+        </div>
+      </div>
+
+      <div id="ptm-schedule-body"></div>
     </div>
   </div>
 </div>
 
 <script src="js/events-calendar.js" defer></script>
 <script src="js/supervisor.js" defer></script>
+<script src="js/ptm-view.js" defer></script>
+<script>
+  // Supervisor-side PTM scheduling — the "deciding" screen that never
+  // existed until now. Reuses the same shared renderPTMView() from
+  // ptm-view.js that the Teacher dashboard's read-only view already
+  // uses, just with canSchedule/canToggleSupervisorPrep turned on.
+  //
+  // School/Class is now picked ONCE, at the top of the page (see the
+  // "Viewing" card above), and the whole dashboard — tiles, calendar,
+  // agenda, AND the schedule form — follows that single selection.
+  // Defaults to the one real teacher-to-class link that actually
+  // exists in the database right now (school 1, class 47 — Reena
+  // Chinchankar's class), same starting point as before, but now
+  // genuinely changeable instead of hardcoded everywhere.
+  let ptmCurrentSchoolId = 1;
+  let ptmCurrentClassId = 47;
+
+  function renderSupervisorPTM(){
+    PTM_loadTopSchoolSelector();
+  }
+
+  async function PTM_loadTopSchoolSelector(){
+    const sel = document.getElementById('ptmTopSchoolSelect');
+    try{
+      const res = await fetch('backend/get_schools_list.php' + window.location.search);
+      const data = await res.json();
+      if(data.status !== 'success' || !data.schools){ sel.innerHTML = '<option value="">Could not load schools</option>'; return; }
+      sel.innerHTML = data.schools.map(s => `<option value="${s.id}">${s.name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</option>`).join('');
+      sel.value = String(ptmCurrentSchoolId);
+      await PTM_loadTopClassSelector(ptmCurrentClassId);
+      PTM_renderDashboardForCurrentSelection();
+    } catch(err){
+      sel.innerHTML = '<option value="">Could not reach the server</option>';
+    }
+  }
+
+  async function PTM_loadTopClassSelector(preselectClassId){
+    const classSel = document.getElementById('ptmTopClassSelect');
+    const schoolId = document.getElementById('ptmTopSchoolSelect').value;
+    classSel.innerHTML = '<option value="">Loading…</option>';
+    try{
+      const params = new URLSearchParams(window.location.search);
+      params.set('school_id', schoolId);
+      const res = await fetch('backend/get_classes_for_Schools.php?' + params.toString());
+      const data = await res.json();
+      if(data.status !== 'success' || !data.classes || !data.classes.length){
+        classSel.innerHTML = '<option value="">No classes at this school yet</option>';
+        ptmCurrentClassId = null;
+        return;
+      }
+      classSel.innerHTML = data.classes.map(c =>
+        `<option value="${c.id}">${(c.name || 'Unnamed class').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))} — ${(c.teacher_name || 'Unassigned').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}</option>`
+      ).join('');
+      if(preselectClassId && [...classSel.options].some(o => o.value === String(preselectClassId))){
+        classSel.value = String(preselectClassId);
+      }
+      ptmCurrentClassId = classSel.value ? parseInt(classSel.value, 10) : null;
+    } catch(err){
+      classSel.innerHTML = '<option value="">Could not reach the server</option>';
+      ptmCurrentClassId = null;
+    }
+  }
+
+  async function PTM_onTopSchoolChange(){
+    ptmCurrentSchoolId = parseInt(document.getElementById('ptmTopSchoolSelect').value, 10);
+    await PTM_loadTopClassSelector(null); // new school — no class preselected, pick fresh
+    PTM_renderDashboardForCurrentSelection();
+  }
+
+  function PTM_onTopClassChange(){
+    const classSel = document.getElementById('ptmTopClassSelect');
+    ptmCurrentClassId = classSel.value ? parseInt(classSel.value, 10) : null;
+    PTM_renderDashboardForCurrentSelection();
+  }
+
+  function PTM_renderDashboardForCurrentSelection(){
+    const classSel = document.getElementById('ptmTopClassSelect');
+    const schoolSel = document.getElementById('ptmTopSchoolSelect');
+    const contextLabel = (schoolSel.selectedOptions[0] ? schoolSel.selectedOptions[0].textContent : '')
+      + (classSel.selectedOptions[0] ? ' — ' + classSel.selectedOptions[0].textContent : '');
+    renderPTMView('ptm-schedule-body', {
+      schoolId: ptmCurrentSchoolId,
+      classId: ptmCurrentClassId,
+      role: 'supervisor',
+      canSchedule: true,
+      showScheduleForm: true,
+      canToggleTeacherPrep: false,
+      canToggleSupervisorPrep: true,
+      contextLabel,
+      querySuffix: window.location.search
+    });
+  }
+
+</script>
+
 </body>
 </html>

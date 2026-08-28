@@ -54,7 +54,7 @@ if (!$schoolId || !$eventDate || $title === '') {
     exit;
 }
 
-if (!in_array($eventType, ['PTM', 'Teacher Training', 'Other'], true)) {
+if (!in_array($eventType, ['PTM', 'Teacher Training', 'Workshop', 'Other'], true)) {
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Invalid event type.']);
     exit;

@@ -10,10 +10,10 @@
 //
 // DEV BYPASS — same pattern as session_check.php, add_materials.php,
 // toggle_material.php etc. ?dev_role=teacher on localhost has no real
-// $_SESSION['user_id'] to look up a class for, so this falls back to
-// whatever real teacher account happens to be first — a testing
-// convenience only, never real per-teacher scoping. Does nothing
-// outside localhost.
+// $_SESSION['user_id'] to look up a class for, so this falls back to a
+// real teacher account that actually has a class linked to it — a
+// testing convenience only, never real per-teacher scoping. Does
+// nothing outside localhost.
 // =========================================================================
 
 session_start();
@@ -36,16 +36,12 @@ $conn = get_db_connection();
 if (isset($_SESSION['user_id'])) {
     $teacherId = $_SESSION['user_id'];
 } else {
-    // Dev-mode bypass has no real user_id — fall back to any real
-    // teacher account, same convention as add_materials.php.
-    $lookup = $conn->query("SELECT id FROM users WHERE role = 'teacher' ORDER BY id LIMIT 1");
-    $row = $lookup ? $lookup->fetch_assoc() : null;
-    if (!$row) {
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'No teacher account exists yet.']);
-        exit;
-    }
-    $teacherId = $row['id'];
+    // Dev-mode bypass has no real user_id — hardcoded to teacher 49
+    // (Reena Chinchankar), the one real teacher-to-class link that
+    // actually exists in this database right now (class 47, school 1).
+    // Once more classes are linked, switch this back to the "any
+    // linked teacher" lookup query.
+    $teacherId = 49;
 }
 
 $stmt = $conn->prepare("
@@ -66,5 +62,5 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 $conn->close();
 
-echo json_encode(['status' => 'success', 'classes' => $classes]);
+echo json_encode(['status' => 'success', 'classes' => $classes, 'debug_teacherId_used' => $teacherId]);
 ?>

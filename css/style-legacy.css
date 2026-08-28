@@ -171,7 +171,7 @@
   .day-topic-row.active-day .dt-label{color:var(--primary-dark); font-weight:bold;}
   .day-topic-row .dt-label.dt-done{color:var(--text-muted); text-decoration:line-through;}
 
-  .dash{flex:1; padding:24px; max-width:960px; margin:0;}
+  .dash{flex:1; padding:24px; max-width:1600px; margin:0;}
   .banner-success{display:flex; align-items:center; justify-content:space-between; background:var(--success-bg); color:var(--success); border-radius:10px; padding:10px 16px; margin-bottom:20px; font-size:13px;}
   .banner-success.pending{background:var(--warning-bg); color:var(--warning);}
   .dash h1{font-size:20px; margin:0 0 4px;}

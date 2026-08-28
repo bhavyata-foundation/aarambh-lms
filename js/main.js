@@ -196,16 +196,25 @@ function logout(){
    etc.), otherwise it fires too early and hits a "cannot access
    before initialization" error. See the bottom of the file.
 
-   On localhost, this runs AUTOMATICALLY on every page load — no
-   click needed, so a reload during frontend work drops you straight
-   onto the dashboard instead of back at the login screen.
+   CHANGED: this no longer fires automatically on every localhost page
+   load. It used to (see git history / earlier version of this file),
+   which meant anyone visiting the bare index.html URL — including an
+   official or demo viewer with no idea "dev mode" existed — got
+   silently bounced past the login page with no way to reach it short
+   of knowing to add ?no_dev=1. That's backwards: the REAL login page
+   should be what a stranger sees by default; skipping it should be
+   something YOU ask for, not something that happens to everyone else.
 
-   Defaults to the teacher dashboard. To test a different role:
+   New behaviour: the real login page always shows first. Auto-skip
+   only fires when a role is explicitly requested in the URL:
+     index.html?dev_role=teacher
      index.html?dev_role=supervisor
      index.html?dev_role=superadmin
      index.html?dev_role=parent
-   To see the REAL login screen on localhost, add ?no_dev=1 to the
-   URL — that one flag turns the auto-bypass off for that page load.
+   Visiting bare index.html (no dev_role param) always shows the real
+   login page now — no flag needed for that anymore. The "Skip login
+   (dev mode)" link is still there for manually picking a role and
+   skipping on demand.
    ========================================================= */
 
 function devSkipLogin(){
@@ -246,8 +255,8 @@ function devSkipLogin(){
 })();
 
 /* =========================================================
-   DEV MODE — the actual trigger (restored). Runs last, after every
-   let/const in this file is initialized.
+   DEV MODE — the actual trigger. Runs last, after every let/const in
+   this file is initialized.
 
    Also activates on the GitHub Pages demo URL
    (bhavyata-foundation.github.io) — deliberately, for showing
@@ -258,6 +267,11 @@ function devSkipLogin(){
    This check must NEVER be widened to include the real live domain
    (bhavyatafoundation.com), since that one IS connected to a
    real database.
+
+   IMPORTANT CHANGE from the previous version: this only auto-skips
+   when ?dev_role=... is EXPLICITLY present in the URL. No dev_role
+   param means the real login page stays up — see the long comment
+   on devSkipLogin() above for why this changed.
    ========================================================= */
 (function autoDevBypassOnLoad(){
   const DEMO_HOSTNAMES = ['localhost', '127.0.0.1', 'bhavyata-foundation.github.io'];
@@ -269,14 +283,13 @@ function devSkipLogin(){
     if(wrap) wrap.classList.remove('hidden');
   }
 
-  if(!isLocal || params.has('no_dev')) return;
+  // Only auto-skip when a role was explicitly requested in the URL.
+  // Bare index.html (no dev_role param) always shows the real login
+  // page now, even on localhost/the demo URL.
+  if(!isLocal || !params.has('dev_role')) return;
 
-  const role = params.get('dev_role') || 'teacher';
+  const role = params.get('dev_role');
   selectedRole = role;
-
-  if(!params.has('dev_role')){
-    history.replaceState(null, '', window.location.pathname + '?dev_role=' + role);
-  }
 
   devSkipLogin();
 })();
